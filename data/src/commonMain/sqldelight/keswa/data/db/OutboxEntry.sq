@@ -1,0 +1,11 @@
+insert:
+INSERT INTO outbox_entry (
+    id, tenant_id, store_id, entity_table, entity_id, op, entity_updated_at,
+    created_at, status, attempt_count, last_error, batch_id
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'PENDING', 0, NULL, NULL);
+
+selectPending:
+SELECT * FROM outbox_entry WHERE status = 'PENDING' ORDER BY created_at;
+
+countAll:
+SELECT count(*) FROM outbox_entry;

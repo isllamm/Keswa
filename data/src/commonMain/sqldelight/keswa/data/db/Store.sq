@@ -1,0 +1,6 @@
+selectFirst:
+SELECT * FROM store LIMIT 1;
+
+insert:
+INSERT INTO store (id, tenant_id, code, name, address, phone, timezone, is_active, created_at, updated_at, deleted_at, revision, origin_device_id, server_seq)
+VALUES (?, ?, ?, ?, NULL, NULL, ?, 1, ?, ?, NULL, 1, ?, NULL);

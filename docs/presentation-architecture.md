@@ -157,18 +157,19 @@ abstract class MviStore<S : MviState, I : MviIntent, E : MviEffect>(
   private val _effects = Channel<E>(Channel.BUFFERED) // Channel, not SharedFlow: consumed once
   val effects: Flow<E> = _effects.receiveAsFlow()
 
-  private val intents = MutableSharedFlow<I>(extraBufferCapacity = 64)
+  private val intents = Channel<I>(capacity = 64)     // Channel here too — see note below
 
   init {
     viewModelScope.launch {
-      intents.collect { intent ->
+      for (intent in intents) {
+        val stateBeforeThisIntent = _state.value
         _state.update { current -> reduce(current, intent) }   // ordered, synchronous
-        launch { handle(intent, _state.value) }                // concurrent: never stalls the pipeline
+        launch { handle(intent, stateBeforeThisIntent) }        // concurrent: never stalls the pipeline
       }
     }
   }
 
-  fun dispatch(intent: I) { intents.tryEmit(intent) }
+  fun dispatch(intent: I) { intents.trySend(intent) }
 
   /** PURE. No I/O, no coroutines, no clock, no randomness. Fully unit-testable. */
   protected abstract fun reduce(state: S, intent: I): S
@@ -177,17 +178,26 @@ abstract class MviStore<S : MviState, I : MviIntent, E : MviEffect>(
   protected open suspend fun handle(intent: I, state: S) {}
 
   protected fun emit(effect: E) { _effects.trySend(effect) }
-  protected fun dispatchInternal(intent: I) { intents.tryEmit(intent) }
 }
 ```
+
+**Why `Channel`, not `SharedFlow`, for intents too:** a `SharedFlow` with no replay only delivers to
+a collector that is *already* suspended in `collect` at the moment of emission. The store's own
+collector is launched asynchronously in `init` — it is queued on `viewModelScope`, not guaranteed to
+be running yet — so an intent dispatched immediately after construction can be silently dropped. This
+is not theoretical: it is exactly what an early version of this store did, and a screen's first
+intent (or the first of a rapid burst in a test) vanished. `Channel` is the correct primitive for a
+point-to-point work queue — a value sent is reliably buffered until *some* consumer reads it, whenever
+that turns out to be.
 
 **Two-phase handling is the whole design:**
 1. `reduce` is pure and synchronous — every state transition is a function you can test with no mocks.
 2. `handle` performs I/O by calling use cases and feeds results back as `Intent.Internal.*`, which go
    through `reduce` like anything else.
 
-A use case result **never** writes state directly. It always re-enters as an intent. That single rule
-is what keeps the state machine inspectable.
+A use case result **never** writes state directly. It always re-enters as an intent (via `dispatch` —
+there is no separate "internal" entry point; an `Internal` intent is dispatched exactly like a user
+one). That single rule is what keeps the state machine inspectable.
 
 ### Ordering guarantees — read this before implementing
 
@@ -195,9 +205,10 @@ is what keeps the state machine inspectable.
 |---|---|
 | **Reductions are strictly ordered** | Intents reduce one at a time, in arrival order, on the store's scope. State transitions can never interleave. |
 | **`handle` runs concurrently** | It is launched in a child coroutine, so a slow sale commit cannot stall a barcode scan arriving behind it. This matters: a serialized pipeline makes the POS feel frozen during I/O. |
-| **Concurrent handlers must not race** | Serialize at the *state* level, not the coroutine level: `CompleteSaleClicked` sets `isLoading = true` in `reduce`, and `handle` ignores the intent when `state.isLoading` is already set. Double-submit becomes unrepresentable rather than merely unlikely. |
+| **`handle` receives the *pre*-reduction state** | Specifically, the state as of just before this intent's own `reduce` call — see the note under "Concrete store" below. Passing the post-reduce state instead breaks the double-submit guard: the very first dispatch would already see its own just-set flag and bail out. |
+| **Concurrent handlers must not race** | Serialize at the *state* level, not the coroutine level: `CompleteSaleClicked` sets `isLoading = true` in `reduce` (idempotently — a no-op if already `true`), and `handle` checks that same flag on the *pre-reduction* state it was handed. Double-submit becomes unrepresentable rather than merely unlikely. |
 | **Effects are exactly-once** | `Channel`, not `SharedFlow` — no replay, no double print. |
-| **Intent buffer is bounded** | `extraBufferCapacity = 64`. A scanner firing faster than that means something is wrong; `tryEmit` returning false should log, not silently drop. |
+| **Intents are never silently dropped while flowing, only when the buffer is genuinely full** | `Channel(capacity = 64)`. A scanner firing faster than that means something is wrong; `trySend` failing should log, not silently drop. |
 
 ### Concrete store
 
@@ -212,7 +223,8 @@ class PosStore(
   override fun reduce(state: State, intent: Intent) = when (intent) {
     is Intent.SearchChanged   -> state.copy(searchQuery = intent.query)
     is Intent.ChangeQty       -> state.withLineQty(intent.lineId, intent.qty).recalculated()
-    is Intent.CompleteSaleClicked -> state.copy(isLoading = true, error = null)
+    is Intent.CompleteSaleClicked ->
+      if (state.isLoading) state else state.copy(isLoading = true, error = null)
     is Intent.ErrorDismissed  -> state.copy(error = null)
     is Intent.Internal.SearchLoaded  -> state.copy(searchResults = intent.results)
     is Intent.Internal.SaleCompleted -> State()                      // fresh cart
@@ -223,14 +235,15 @@ class PosStore(
   override suspend fun handle(intent: Intent, state: State) {
     when (intent) {
       is Intent.CompleteSaleClicked -> {
+        // `state` here is pre-reduction: false on the first click, already true on a duplicate.
         if (state.isLoading) return                   // guard: double-submit is unrepresentable
         when (val r = completeSale(principal.require(), state.toDraft())) {
           is AppResult.Ok -> {
-            dispatchInternal(Intent.Internal.SaleCompleted(r.value))
+            dispatch(Intent.Internal.SaleCompleted(r.value))
             emit(Effect.PrintReceipt(r.value))
             if (state.hasCashPayment) emit(Effect.OpenCashDrawer)
           }
-          is AppResult.Err -> dispatchInternal(Intent.Internal.Failed(r.error.toKey()))
+          is AppResult.Err -> dispatch(Intent.Internal.Failed(r.error.toKey()))
         }
       }
       else -> Unit

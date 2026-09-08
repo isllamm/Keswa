@@ -1,0 +1,6 @@
+selectByCode:
+SELECT * FROM currency WHERE code = :code;
+
+insert:
+INSERT OR IGNORE INTO currency (code, minor_unit_exponent, symbol_ar, symbol_en)
+VALUES (?, ?, ?, ?);

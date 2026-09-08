@@ -185,7 +185,7 @@ Compose screen (stateless)
                  4. append audit_event                             (same tx)
                  5. append outbox_entry                            (same tx)
                }
-      → dispatchInternal(Intent.Internal.Result)    result re-enters as an intent
+      → dispatch(Intent.Internal.Result)             result re-enters as an intent, same entry point
       → emit(Effect.PrintReceipt)                   one-shot side effect
 ```
 

@@ -1,0 +1,11 @@
+<resources>
+    <string name="select_user">اختر المستخدم</string>
+    <string name="enter_pin">أدخل الرقم السري</string>
+    <string name="unlock">دخول</string>
+    <string name="back">رجوع</string>
+    <string name="error_auth_invalid_pin">الرقم السري غير صحيح</string>
+    <string name="error_auth_locked_out">الحساب مقفل مؤقتاً، حاول لاحقاً</string>
+    <string name="error_auth_no_such_user">المستخدم غير موجود</string>
+    <string name="error_auth_no_users_configured">لا يوجد مستخدمون بعد</string>
+    <string name="error_common_unexpected">حدث خطأ غير متوقع</string>
+</resources>

@@ -1,0 +1,11 @@
+<resources>
+    <string name="select_user">Select user</string>
+    <string name="enter_pin">Enter PIN</string>
+    <string name="unlock">Unlock</string>
+    <string name="back">Back</string>
+    <string name="error_auth_invalid_pin">Incorrect PIN</string>
+    <string name="error_auth_locked_out">Account temporarily locked. Try again later.</string>
+    <string name="error_auth_no_such_user">User not found</string>
+    <string name="error_auth_no_users_configured">No users configured</string>
+    <string name="error_common_unexpected">Something went wrong</string>
+</resources>

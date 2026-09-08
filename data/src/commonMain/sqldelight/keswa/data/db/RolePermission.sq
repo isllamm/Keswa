@@ -1,0 +1,5 @@
+selectByRole:
+SELECT permission_code FROM role_permission WHERE role_code = :roleCode;
+
+insert:
+INSERT OR IGNORE INTO role_permission (role_code, permission_code) VALUES (?, ?);

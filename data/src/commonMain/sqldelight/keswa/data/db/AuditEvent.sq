@@ -1,0 +1,8 @@
+insert:
+INSERT INTO audit_event (
+    id, tenant_id, store_id, occurred_at, user_id, device_id, entity_type, entity_id,
+    action, summary_json, before_json, after_json, reason, ip_or_host, server_seq
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL);
+
+selectRecent:
+SELECT * FROM audit_event WHERE tenant_id = :tenantId ORDER BY occurred_at DESC LIMIT :limit;
