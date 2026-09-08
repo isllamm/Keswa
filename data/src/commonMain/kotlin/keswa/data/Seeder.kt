@@ -28,9 +28,21 @@ class Seeder(
         database.tenantQueries.insert(tenantId, "Keswa", CurrencyCode.EGP.iso, now, now, deviceId)
         database.currencyQueries.insert(CurrencyCode.EGP.iso, 2, "ج.م", "EGP")
         database.storeQueries.insert(storeId, tenantId, "ST01", "المتجر الرئيسي", "Africa/Cairo", now, now, deviceId)
-        database.locationQueries.insert(
-            idFactory.next(), tenantId, storeId, "SF01", "صالة العرض", "SALES_FLOOR", now, now, deviceId,
+
+        // Real locations plus the double-entry pseudo-locations every stock movement needs on
+        // one side or the other — see docs/data-model.md §5.
+        val locations = listOf(
+            "SF01" to ("صالة العرض" to "SALES_FLOOR"),
+            "STK01" to ("المخزن" to "STOCKROOM"),
+            "ADJ01" to ("تسويات" to "ADJUSTMENT"),
+            "SUP01" to ("الموردون" to "SUPPLIER"),
+            "CUS01" to ("العملاء" to "CUSTOMER"),
+            "TRN01" to ("النقل بين الفروع" to "TRANSIT"),
         )
+        for ((code, nameAndKind) in locations) {
+            val (name, kind) = nameAndKind
+            database.locationQueries.insert(idFactory.next(), tenantId, storeId, code, name, kind, now, now, deviceId)
+        }
 
         for (permission in OWNER_PERMISSIONS) {
             database.rolePermissionQueries.insert("OWNER", permission)

@@ -4,6 +4,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -19,12 +20,14 @@ import androidx.compose.ui.window.application
 import keswa.core.ui.theme.KeswaTheme
 import keswa.domain.Principal
 import keswa.feature.auth.PinRoute
+import keswa.feature.catalog.CatalogRoute
 import org.koin.core.context.startKoin
 import java.util.Locale
 
 private sealed interface Screen {
     data object Pin : Screen
     data class Home(val principal: Principal) : Screen
+    data class Catalog(val principal: Principal) : Screen
 }
 
 fun main() {
@@ -56,16 +59,23 @@ private fun KeswaApp() {
     Surface(modifier = Modifier.fillMaxSize()) {
         when (val current = screen) {
             is Screen.Pin -> PinRoute(onUnlocked = { principal -> screen = Screen.Home(principal) })
-            is Screen.Home -> HomePlaceholder(current.principal)
+            is Screen.Home -> Home(current.principal, onOpenCatalog = { screen = Screen.Catalog(current.principal) })
+            is Screen.Catalog -> Column(Modifier.fillMaxSize()) {
+                Button(onClick = { screen = Screen.Home(current.principal) }, modifier = Modifier.padding(8.dp)) {
+                    Text("← Home")
+                }
+                CatalogRoute()
+            }
         }
     }
 }
 
 @Composable
-private fun HomePlaceholder(principal: Principal) {
+private fun Home(principal: Principal, onOpenCatalog: () -> Unit) {
     Column(Modifier.fillMaxSize().padding(24.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Keswa", style = MaterialTheme.typography.headlineMedium)
         Text("Unlocked as ${principal.roleCode} (user ${principal.userId})")
-        Text("Catalog, POS and the rest of Phase 0 land in a follow-up session.")
+        Button(onClick = onOpenCatalog) { Text("Products") }
+        Text("POS and the rest of Phase 0 land in a follow-up session.")
     }
 }

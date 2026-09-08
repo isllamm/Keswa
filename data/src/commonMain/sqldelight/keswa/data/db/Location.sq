@@ -1,6 +1,9 @@
 selectByStore:
 SELECT * FROM location WHERE tenant_id = :tenantId AND store_id = :storeId AND deleted_at IS NULL;
 
+selectByKind:
+SELECT * FROM location WHERE tenant_id = :tenantId AND store_id = :storeId AND kind = :kind AND deleted_at IS NULL LIMIT 1;
+
 insert:
 INSERT INTO location (id, tenant_id, store_id, code, name, kind, created_at, updated_at, deleted_at, revision, origin_device_id, server_seq)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, 1, ?, NULL);

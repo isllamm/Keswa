@@ -1,0 +1,10 @@
+insertOpeningBalance:
+INSERT INTO stock_movement (
+    id, tenant_id, store_id, created_at, origin_device_id, server_seq,
+    occurred_at, variant_id, from_location_id, to_location_id, qty, unit_cost_minor, currency_code,
+    reason_code, ref_type, ref_id, note, user_id
+) VALUES (
+    ?, ?, ?, ?, ?, NULL,
+    ?, ?, ?, ?, ?, ?, ?,
+    'OPENING_BALANCE', NULL, NULL, NULL, ?
+);

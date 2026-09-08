@@ -28,5 +28,6 @@ include(
     ":printing:api",
     ":sync:contract",
     ":feature:auth",
+    ":feature:catalog",
     ":app:desktop",
 )

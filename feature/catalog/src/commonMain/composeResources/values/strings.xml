@@ -1,0 +1,23 @@
+<resources>
+    <string name="catalog_title">Products</string>
+    <string name="search_hint">Search by name or code</string>
+    <string name="add_product">Add product</string>
+    <string name="product_name_ar">Name (Arabic)</string>
+    <string name="product_name_en">Name (English) — optional</string>
+    <string name="size_values_hint">Sizes, comma-separated (e.g. S,M,L)</string>
+    <string name="color_values_hint">Colours, comma-separated</string>
+    <string name="generate_variants">Generate variants</string>
+    <string name="variant_cost">Cost</string>
+    <string name="variant_qty">Opening qty</string>
+    <string name="variant_barcode">Barcode (optional)</string>
+    <string name="save">Save</string>
+    <string name="cancel">Cancel</string>
+    <string name="no_products_yet">No products yet — add the first one</string>
+    <string name="error_catalog_too_many_variants">Too many variants — reduce the option values</string>
+    <string name="error_catalog_duplicate_code">This product code is already used</string>
+    <string name="error_catalog_duplicate_sku">This SKU already exists</string>
+    <string name="error_catalog_duplicate_barcode">This barcode is already assigned to another variant</string>
+    <string name="error_catalog_name_required">Enter a product name</string>
+    <string name="error_catalog_no_variants">Generate at least one variant first</string>
+    <string name="error_common_unexpected">Something went wrong</string>
+</resources>

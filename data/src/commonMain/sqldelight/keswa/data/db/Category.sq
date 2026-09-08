@@ -1,0 +1,6 @@
+selectAll:
+SELECT * FROM category WHERE tenant_id = :tenantId AND deleted_at IS NULL ORDER BY position, name_ar;
+
+insert:
+INSERT INTO category (id, tenant_id, name_ar, name_en, parent_id, position, created_at, updated_at, deleted_at, revision, origin_device_id, server_seq)
+VALUES (?, ?, ?, ?, NULL, 0, ?, ?, NULL, 1, ?, NULL);

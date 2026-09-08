@@ -1,0 +1,6 @@
+selectByProduct:
+SELECT * FROM product_option WHERE tenant_id = :tenantId AND product_id = :productId AND deleted_at IS NULL ORDER BY position;
+
+insert:
+INSERT INTO product_option (id, tenant_id, product_id, name_ar, name_en, position, created_at, updated_at, deleted_at, revision, origin_device_id, server_seq)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, 1, ?, NULL);

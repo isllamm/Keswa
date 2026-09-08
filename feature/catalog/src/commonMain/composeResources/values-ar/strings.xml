@@ -1,0 +1,23 @@
+<resources>
+    <string name="catalog_title">المنتجات</string>
+    <string name="search_hint">ابحث بالاسم أو الكود</string>
+    <string name="add_product">إضافة منتج</string>
+    <string name="product_name_ar">الاسم (عربي)</string>
+    <string name="product_name_en">الاسم (إنجليزي) — اختياري</string>
+    <string name="size_values_hint">المقاسات، مفصولة بفاصلة (مثال: S,M,L)</string>
+    <string name="color_values_hint">الألوان، مفصولة بفاصلة</string>
+    <string name="generate_variants">توليد المتغيرات</string>
+    <string name="variant_cost">التكلفة</string>
+    <string name="variant_qty">الكمية الافتتاحية</string>
+    <string name="variant_barcode">الباركود (اختياري)</string>
+    <string name="save">حفظ</string>
+    <string name="cancel">إلغاء</string>
+    <string name="no_products_yet">لا توجد منتجات بعد — أضف أول منتج</string>
+    <string name="error_catalog_too_many_variants">عدد كبير جدًا من المتغيرات — قلل القيم</string>
+    <string name="error_catalog_duplicate_code">كود المنتج هذا مستخدم بالفعل</string>
+    <string name="error_catalog_duplicate_sku">رمز الصنف (SKU) هذا موجود بالفعل</string>
+    <string name="error_catalog_duplicate_barcode">هذا الباركود مخصص لمتغير آخر بالفعل</string>
+    <string name="error_catalog_name_required">أدخل اسم المنتج</string>
+    <string name="error_catalog_no_variants">قم بتوليد متغير واحد على الأقل أولاً</string>
+    <string name="error_common_unexpected">حدث خطأ غير متوقع</string>
+</resources>

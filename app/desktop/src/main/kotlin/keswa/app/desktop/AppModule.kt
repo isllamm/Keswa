@@ -14,6 +14,10 @@ import keswa.data.SqlStoreContext
 import keswa.data.SqlUnitOfWork
 import keswa.data.UnitOfWork
 import keswa.data.auth.SqlAppUserRepository
+import keswa.data.catalog.SqlBrandRepository
+import keswa.data.catalog.SqlCategoryRepository
+import keswa.data.catalog.SqlProductRepository
+import keswa.data.catalog.SqlStockLevelRepository
 import keswa.data.db.KeswaDatabase
 import keswa.domain.InMemoryPrincipalHolder
 import keswa.domain.PrincipalHolder
@@ -21,11 +25,25 @@ import keswa.domain.auth.AppUserRepository
 import keswa.domain.auth.PasswordHasher
 import keswa.domain.auth.StoreContext
 import keswa.domain.auth.UnlockWithPin
+import keswa.domain.catalog.BrandRepository
+import keswa.domain.catalog.CategoryRepository
+import keswa.domain.catalog.CreateProductWithVariants
+import keswa.domain.catalog.ProductRepository
+import keswa.domain.catalog.StockLevelRepository
 import keswa.feature.auth.PinStore
+import keswa.feature.catalog.CatalogStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import org.koin.core.module.dsl.viewModel
 import org.koin.dsl.module
+
+// Must be declared before `appModule`: it's referenced inside that module{} block, and Kotlin
+// initializes top-level properties in one file in textual order. Declaring it after appModule
+// compiles fine but means `single(WRITER_DISPATCHER)` registers under whatever this property's
+// default value is at that point (effectively null) — a real bug this project hit once already:
+// the registration silently used a different qualifier than every later get(WRITER_DISPATCHER)
+// lookup, which then failed with "No definition found".
+private val WRITER_DISPATCHER = org.koin.core.qualifier.named("writerDispatcher")
 
 @OptIn(ExperimentalCoroutinesApi::class)
 val appModule = module {
@@ -49,7 +67,16 @@ val appModule = module {
     single { Seeder(get(), get(), get(), get()) }
     single { UnlockWithPin(get(), get(), get(), get()) }
 
-    viewModel { PinStore(get(), get(), get()) }
-}
+    single<CategoryRepository> {
+        SqlCategoryRepository(get(), get(), get(), get<DeviceIdProvider>().current().value, get(), get())
+    }
+    single<BrandRepository> {
+        SqlBrandRepository(get(), get(), get(), get<DeviceIdProvider>().current().value, get(), get())
+    }
+    single<ProductRepository> { SqlProductRepository(get(), get(), get(), get(), get(), get()) }
+    single<StockLevelRepository> { SqlStockLevelRepository(get(), get(), get()) }
+    single { CreateProductWithVariants(get()) }
 
-private val WRITER_DISPATCHER = org.koin.core.qualifier.named("writerDispatcher")
+    viewModel { PinStore(get(), get(), get()) }
+    viewModel { CatalogStore(get(), get(), get()) }
+}

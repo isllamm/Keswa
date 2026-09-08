@@ -17,6 +17,7 @@ dependencies {
     implementation(project(":printing:api"))
     implementation(project(":sync:contract"))
     implementation(project(":feature:auth"))
+    implementation(project(":feature:catalog"))
 
     implementation(compose.desktop.currentOs)
     implementation(compose.runtime)

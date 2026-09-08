@@ -31,7 +31,7 @@ class DatabaseIntegrationTest {
     }
 
     @Test
-    fun `schema creates cleanly and seeding produces one tenant, store, location and owner user`() {
+    fun `schema creates cleanly and seeding produces one tenant, store, locations and owner user`() {
         val database = freshDatabase()
         val clock = FixedClock(1_700_000_000_000L)
         val idFactory = MonotonicUlidFactory(clock)
@@ -46,8 +46,8 @@ class DatabaseIntegrationTest {
 
         assertEquals("Keswa", tenant.name)
         assertEquals(tenant.id, store.tenant_id)
-        assertEquals(1, locations.size)
-        assertEquals("SALES_FLOOR", locations.single().kind)
+        assertEquals(6, locations.size) // sales floor + stockroom + the double-entry pseudo-locations
+        assertEquals(1, locations.count { it.kind == "SALES_FLOOR" })
         assertEquals("OWNER", owner.role_code)
         assertTrue(fakeHasher.verify("1234", owner.pin_hash, owner.pin_salt))
 

@@ -50,6 +50,12 @@ class DependencyRulesTest {
     }
 
     @Test
+    fun `feature catalog depending on data is forbidden`() {
+        val violations = DependencyRules.findViolations(":feature:catalog", setOf(":domain", ":core:ui", ":data"))
+        assertEquals(setOf(":data"), violations)
+    }
+
+    @Test
     fun `an unregistered module may declare no project dependencies`() {
         val violations = DependencyRules.findViolations(":feature:pos", setOf(":domain"))
         assertEquals(setOf(":domain"), violations)

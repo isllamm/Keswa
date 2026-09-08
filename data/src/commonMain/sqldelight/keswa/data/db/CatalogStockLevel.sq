@@ -1,0 +1,21 @@
+-- Opening balance is always the first stock event for a brand-new variant, so this is a plain
+-- insert, never a conflict. A "receive against existing stock" path (Phase 2 purchasing) needs
+-- the real weighted-average UPDATE and is a different query.
+insertInitial:
+INSERT INTO stock_level (tenant_id, store_id, location_id, variant_id, qty_on_hand, qty_reserved, avg_cost_minor, last_movement_at)
+VALUES (?, ?, ?, ?, ?, 0, ?, ?);
+
+selectOnHand:
+SELECT
+    sl.variant_id AS variantId,
+    pv.sku AS sku,
+    p.name_ar AS productName,
+    pv.name_suffix AS nameSuffix,
+    sl.qty_on_hand AS qtyOnHand,
+    sl.avg_cost_minor AS avgCostMinor
+FROM stock_level sl
+JOIN product_variant pv ON pv.id = sl.variant_id
+JOIN product p ON p.id = pv.product_id
+WHERE sl.tenant_id = :tenantId
+  AND (p.name_sort LIKE '%' || :query || '%' OR pv.sku LIKE '%' || :query || '%')
+ORDER BY p.name_sort;

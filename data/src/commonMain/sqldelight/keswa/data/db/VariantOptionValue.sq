@@ -1,0 +1,2 @@
+insert:
+INSERT INTO variant_option_value (variant_id, option_value_id) VALUES (?, ?);

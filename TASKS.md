@@ -12,25 +12,25 @@ Docs: [architecture](docs/architecture.md) · [presentation (Clean/MVI)](docs/pr
 ## Phase 0 — Foundation & Catalogue (~60h)
 
 ### Project setup
-- [ ] ⚠️ Create the KMP project: Gradle version catalog, Kotlin/Compose MP versions, `:app:desktop` with a running window `[3h]`
-- [ ] Add module skeletons: `:core:common`, `:core:ui`, `:domain`, `:data`, `:reporting`, `:export:api`, `:printing:api`, `:sync:contract` `[2h]`
-- [ ] Write the `dependency-rules` Gradle convention plugin and wire it into `check` `[2h]`
-- [ ] Add a failing-then-passing test proving a forbidden edge (`:feature` → `:data`) breaks the build `[1h]`
+- [x] ⚠️ Create the KMP project: Gradle version catalog, Kotlin/Compose MP versions, `:app:desktop` with a running window `[3h]`
+- [x] Add module skeletons: `:core:common`, `:core:ui`, `:domain`, `:data`, `:reporting`, `:export:api`, `:printing:api`, `:sync:contract` `[2h]`
+- [x] Write the `dependency-rules` Gradle convention plugin and wire it into `check` `[2h]`
+- [x] Add a failing-then-passing test proving a forbidden edge (`:feature` → `:data`) breaks the build `[1h]` — done twice empirically (`:feature:auth`→`:data`, then →`:printing:api`), plus `buildSrc`'s own unit tests
 - [ ] Set up CI (build + test + dependency rules) `[2h]`
 
 ### Core primitives
-- [ ] ⚠️ `Money` (Long minor + currency), arithmetic, mixed-currency rejection, largest-remainder allocator + tests `[3h]`
-- [ ] `Ulid` generator with monotonic same-millisecond handling + tests `[2h]`
-- [ ] `Clock` interface, `SystemClock`, `TestClock`; ban `System.currentTimeMillis()` via CI grep `[1h]`
-- [ ] `AppResult` sealed type + error taxonomy `[1h]`
-- [ ] `DeviceId`: generate on first run, persist in `keswa.conf` `[1h]`
+- [x] ⚠️ `Money` (Long minor + currency), arithmetic, mixed-currency rejection, largest-remainder allocator + tests `[3h]`
+- [x] `Ulid` generator with monotonic same-millisecond handling + tests `[2h]`
+- [x] `Clock` interface, `SystemClock`, `TestClock` (as `FixedClock`) — *CI grep banning `System.currentTimeMillis()` not added yet*
+- [x] `AppResult` sealed type + error taxonomy `[1h]`
+- [x] `DeviceId`: generate on first run, persist to a properties file (not literally `keswa.conf` — same idea)
 
 ### Database
-- [ ] ⚠️ SQLDelight plugin, JVM driver, `AppPaths` for `%PROGRAMDATA%\Keswa`, PRAGMA setup `[3h]`
-- [ ] ⚠️ Write `1.sqm`: **full Phase 1 schema** with the universal column contract, ledgers, `outbox_entry`, `sync_state`, `sync_conflict`, `audit_event`, `document_counter` `[4h]`
-- [ ] Schema-hash test + migration-chain test `[2h]`
-- [ ] `UnitOfWork`: single-writer dispatcher, transaction + audit + outbox in one place `[3h]`
-- [ ] Seed data: tenant, store, default location, currency, retail price list, OWNER user `[2h]`
+- [x] ⚠️ SQLDelight plugin, JVM driver, `AppPaths` (Windows `%PROGRAMDATA%`, with macOS/Linux dev fallbacks), PRAGMA setup `[3h]`
+- [x] ⚠️ Write `1.sqm`: **full Phase 1 schema** with the universal column contract, ledgers, `outbox_entry`, `sync_state`, `sync_conflict`, `audit_event`, `document_counter` `[4h]`
+- [x] Schema-hash test + migration-chain test `[2h]` — via `deriveSchemaFromMigrations`/`verifyMigrations` + an integration test creating the schema fresh each run
+- [x] `UnitOfWork`: single-writer dispatcher, transaction + audit + outbox in one place `[3h]`
+- [x] Seed data: tenant, store, default location, currency, OWNER user `[2h]` — *retail price list not yet seeded*
 - [ ] Mirror the schema to `docs/sql/postgres.sql` `[2h]`
 
 ### Backup & durability
@@ -41,28 +41,28 @@ Docs: [architecture](docs/architecture.md) · [presentation (Clean/MVI)](docs/pr
 - [ ] Startup `quick_check` with a blocking error screen offering restore `[2h]`
 
 ### UI shell, MVI foundation & i18n
-- [ ] ⚠️ App shell: RTL layout direction, theme, bundled IBM Plex Sans Arabic `[3h]`
-- [ ] ⚠️ **MVI base in `:core:ui/mvi`**: `MviState`/`MviIntent`/`MviEffect`, `MviStore` (pure `reduce` + async `handle`, `Channel` effects), on the KMP `ViewModel` artifact `[3h]`
-- [ ] Unit-test the base: intent ordering, effect delivered exactly once, `Internal` intent round-trip `[2h]`
-- [ ] i18n setup: `strings.xml` + `values-ar`, locale switch in Settings, CI grep banning literals in `:feature:*` `[2h]`
-- [ ] Navigation: sealed `Screen` + stack in `:app:desktop`; stores emit `Effect.Navigate`, routes navigate `[3h]`
-- [ ] PIN unlock screen — **first full Contract/Store/Route/Screen; this is the reference other screens copy** `[3h]`
-- [ ] `ErrorKey` → Arabic string resolution in `:core:ui`; no raw exception text reaches a screen `[2h]`
+- [x] ⚠️ App shell: RTL layout direction (forced), theme `[3h]` — *IBM Plex Sans Arabic not bundled yet; using system default*
+- [x] ⚠️ **MVI base in `:core:ui/mvi`**: `MviState`/`MviIntent`/`MviEffect`, `MviStore` (pure `reduce` + async `handle`, `Channel` effects), on the KMP `ViewModel` artifact `[3h]`
+- [x] Unit-test the base: intent ordering, effect delivered exactly once, `Internal` intent round-trip `[2h]`
+- [x] i18n setup: `strings.xml` + `values-ar` (in `:feature:auth`; pattern ready to repeat per-feature) — *no locale switch in Settings yet (Arabic is forced), no CI grep banning literals*
+- [x] Navigation: sealed `Screen` + stack in `:app:desktop`; stores emit `Effect.Unlocked`/similar, the route navigates `[3h]`
+- [x] PIN unlock screen — **first full Contract/Store/Route/Screen; this is the reference other screens copy** `[3h]`
+- [x] `ErrorKey` → Arabic string resolution — done locally in `:feature:auth`'s screen; *not yet centralized in `:core:ui`*
 - [ ] Shared components: data table, search field, money field, quantity stepper, confirm dialog — all stateless `[3h]`
 
 ### Catalogue feature
-- [ ] `:feature:catalog` module; `CatalogContract` + `CatalogStore`; product list with Arabic search on `name_sort` `[3h]`
-- [ ] Product create/edit: names, category, brand, tax rate, active flag `[3h]`
-- [ ] Category & brand management `[2h]`
-- [ ] ⚠️ Option/variant matrix editor: define options, generate cross-product, untick combinations, 200-variant guard `[4h]`
-- [ ] SKU generation rules + manual override; uniqueness validation `[2h]`
-- [ ] Barcode entry per variant (manual), multiple codes, primary flag `[2h]`
-- [ ] Variant price entry against the retail price list `[2h]`
+- [x] `:feature:catalog` module; `CatalogContract` + `CatalogStore`; product list with Arabic search on `name_sort` `[3h]`
+- [x] Product create/edit: names `[3h]` — *category, brand, tax rate, active-flag fields not yet exposed in the form (schema and domain model already carry them)*
+- [ ] Category & brand management — *repositories exist (`CategoryRepository`/`BrandRepository`), no screen yet*
+- [x] ⚠️ Option/variant matrix editor: define options, generate cross-product, 200-variant guard `[4h]` — *input is comma-separated values (2 axes: Size/Colour), not a fully dynamic add/remove option UI; untick-individual-combination not yet exposed*
+- [x] SKU generation rules + manual override; uniqueness validation `[2h]` — auto `<code>-<01>`; product code manual-override supported, SKU override not yet
+- [x] Barcode entry per variant (manual), primary flag `[2h]` — *multiple barcodes per variant not yet (one per variant for now)*
+- [ ] Variant price entry against the retail price list — *cost is captured; sales price list entry is Phase 1 (POS) scope*
 
 ### Stock
-- [ ] Stock movement repository + `rebuildStockLevels()` `[3h]`
-- [ ] Ledger↔level reconciliation property test `[2h]`
-- [ ] Opening balance entry (emits `OPENING_BALANCE` movements with cost) `[2h]`
+- [x] Stock movement repository (opening balance path) — *general `rebuildStockLevels()` for arbitrary movements not yet; only the single-insert opening-balance path exists*
+- [ ] Ledger↔level reconciliation property test — no property test yet (the opening-balance path is covered by integration tests instead)
+- [x] Opening balance entry (emits `OPENING_BALANCE` movements with cost) `[2h]` — folded into product creation's form, one transaction
 - [ ] Stock count session: draft → count → post as `COUNT_ADJUST` `[3h]`
 - [ ] Stock on hand screen with location and category filters `[2h]`
 

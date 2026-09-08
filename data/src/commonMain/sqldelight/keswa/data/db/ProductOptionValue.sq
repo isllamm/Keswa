@@ -1,0 +1,3 @@
+insert:
+INSERT INTO product_option_value (id, tenant_id, option_id, value_ar, value_en, position, created_at, updated_at, deleted_at, revision, origin_device_id, server_seq)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, NULL, 1, ?, NULL);

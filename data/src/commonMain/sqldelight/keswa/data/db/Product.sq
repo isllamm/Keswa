@@ -1,0 +1,26 @@
+searchActive:
+SELECT * FROM product
+WHERE tenant_id = :tenantId AND deleted_at IS NULL
+  AND (name_sort LIKE '%' || :query || '%' OR code LIKE '%' || :query || '%')
+ORDER BY name_sort
+LIMIT 200;
+
+countAll:
+SELECT count(*) FROM product WHERE tenant_id = :tenantId;
+
+selectSkuTaken:
+SELECT count(*) FROM product_variant WHERE tenant_id = :tenantId AND sku = :sku;
+
+selectBarcodeTaken:
+SELECT count(*) FROM barcode WHERE tenant_id = :tenantId AND code = :code;
+
+insert:
+INSERT INTO product (
+    id, tenant_id, store_id, code, name_ar, name_en, name_sort, category_id, brand_id,
+    supplier_default_id, description, is_active, track_stock, tax_rate_bp, image_path,
+    created_at, updated_at, deleted_at, revision, origin_device_id, server_seq
+) VALUES (
+    ?, ?, ?, ?, ?, ?, ?, ?, ?,
+    NULL, NULL, 1, 1, ?, NULL,
+    ?, ?, NULL, 1, ?, NULL
+);

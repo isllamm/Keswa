@@ -20,6 +20,7 @@ object DependencyRules {
         ":printing:api" to setOf(":core:common"),
         ":sync:contract" to setOf(":core:common"),
         ":feature:auth" to setOf(":domain", ":core:ui", ":core:common"),
+        ":feature:catalog" to setOf(":domain", ":core:ui", ":core:common"),
     )
 
     /**

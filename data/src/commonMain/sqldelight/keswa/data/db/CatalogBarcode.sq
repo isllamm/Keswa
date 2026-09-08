@@ -1,0 +1,6 @@
+selectByVariant:
+SELECT * FROM barcode WHERE tenant_id = :tenantId AND variant_id = :variantId AND deleted_at IS NULL;
+
+insert:
+INSERT INTO barcode (id, tenant_id, variant_id, code, kind, is_primary, created_at, updated_at, deleted_at, revision, origin_device_id, server_seq)
+VALUES (?, ?, ?, ?, ?, 1, ?, ?, NULL, 1, ?, NULL);

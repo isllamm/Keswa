@@ -1,0 +1,13 @@
+selectByProduct:
+SELECT * FROM product_variant WHERE tenant_id = :tenantId AND product_id = :productId AND deleted_at IS NULL ORDER BY position;
+
+insert:
+INSERT INTO product_variant (
+    id, tenant_id, store_id, product_id, sku, name_suffix, cost_minor, currency_code,
+    is_active, weight_grams, position, cost_rounding_minor,
+    created_at, updated_at, deleted_at, revision, origin_device_id, server_seq
+) VALUES (
+    ?, ?, ?, ?, ?, ?, ?, ?,
+    1, NULL, ?, 0,
+    ?, ?, NULL, 1, ?, NULL
+);
