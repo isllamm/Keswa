@@ -2,7 +2,7 @@
 
 > *"The shop rings up every sale in Keswa, and the till reconciles at close."*
 
-**Effort:** ~95h · **Calendar:** ~10 weeks @10h/wk
+**Effort:** ~100h · **Calendar:** ~10 weeks @10h/wk
 
 ---
 
@@ -77,6 +77,8 @@ You marked **purchase orders**, **returns/exchanges**, and **customer credit** a
 - [ ] Power-off during sale completion leaves either a complete sale or no sale (test 10 times, scripted)
 - [ ] Cashier can complete a 5-line cash sale in under 40 seconds without a mouse
 - [ ] Every money- or stock-affecting action appears in `AUDIT_TRAIL` with the right user
+- [ ] Reducer tests cover every POS state transition; a store test proves `PrintReceipt` fires exactly once
+- [ ] No business rule (pricing, return limit, credit check) lives in a `reduce` function
 
 ## Migration impact
 Additive only: `sale`, `sale_line`, `payment`, `shift`, `cash_movement`, `document_counter`,

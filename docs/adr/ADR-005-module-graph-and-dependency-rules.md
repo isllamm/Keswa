@@ -1,4 +1,4 @@
-# ADR-005 — Module graph and enforced dependency rules
+# ADR-005 — Clean Architecture module graph and enforced dependency rules
 
 **Status:** Accepted · **Date:** 2026-09-08 · **Phase:** 0
 
@@ -8,8 +8,10 @@ is kept or broken by exactly two things: whether a JVM-only dependency leaks int
 whether the UI reaches directly into persistence.
 
 ## Decision
-The module graph in `docs/architecture.md` §2, with these rules **enforced by a Gradle convention
-plugin that fails the build** on a violating `project(...)` edge:
+**Clean Architecture layering** — presentation → domain ← data, with repository interfaces declared in
+`:domain` and implemented in `:data` — expressed as the module graph in `docs/architecture.md` §2, with
+these rules **enforced by a Gradle convention plugin that fails the build** on a violating
+`project(...)` edge:
 
 - `:domain` depends only on `:core:common` + kotlinx. No SQLDelight, Compose, Ktor, POI, or `java.*`.
 - `:feature:*` may **not** depend on `:data`, `:database`, `:export:xlsx`, or `:printing:escpos`.
@@ -20,6 +22,9 @@ plugin that fails the build** on a violating `project(...)` edge:
 
 **Platform variation is expressed as interfaces + DI, not `expect/actual`,** except where the type
 must be resolved at compile time (realistically only `SqlDriverFactory`).
+
+The presentation layer inside `:feature:*` follows MVI — see
+[ADR-011](ADR-011-mvi-unidirectional-presentation.md) and `docs/presentation-architecture.md`.
 
 ## Alternatives considered
 | Option | Rejected because |

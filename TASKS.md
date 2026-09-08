@@ -3,13 +3,13 @@
 Tasks are sized for **one sitting (1–3h)**. `[2h]` is the rough estimate. Order within a phase is
 mostly the order to do them in; `⚠️` marks a task that unblocks several others — do it early.
 
-Docs: [architecture](docs/architecture.md) · [data model](docs/data-model.md) ·
+Docs: [architecture](docs/architecture.md) · [presentation (Clean/MVI)](docs/presentation-architecture.md) · [data model](docs/data-model.md) ·
 [reporting](docs/reporting-and-export.md) · [sync](docs/sync-strategy.md) ·
 [plan](docs/plan/README.md) · [ADRs](docs/adr/README.md) · [risks](docs/risks.md)
 
 ---
 
-## Phase 0 — Foundation & Catalogue (~55h)
+## Phase 0 — Foundation & Catalogue (~60h)
 
 ### Project setup
 - [ ] ⚠️ Create the KMP project: Gradle version catalog, Kotlin/Compose MP versions, `:app:desktop` with a running window `[3h]`
@@ -40,14 +40,18 @@ Docs: [architecture](docs/architecture.md) · [data model](docs/data-model.md) �
 - [ ] Guided restore flow: pick file → verify → snapshot current → swap → restart `[3h]`
 - [ ] Startup `quick_check` with a blocking error screen offering restore `[2h]`
 
-### UI shell & i18n
+### UI shell, MVI foundation & i18n
 - [ ] ⚠️ App shell: RTL layout direction, theme, bundled IBM Plex Sans Arabic `[3h]`
+- [ ] ⚠️ **MVI base in `:core:ui/mvi`**: `MviState`/`MviIntent`/`MviEffect`, `MviStore` (pure `reduce` + async `handle`, `Channel` effects), on the KMP `ViewModel` artifact `[3h]`
+- [ ] Unit-test the base: intent ordering, effect delivered exactly once, `Internal` intent round-trip `[2h]`
 - [ ] i18n setup: `strings.xml` + `values-ar`, locale switch in Settings, CI grep banning literals in `:feature:*` `[2h]`
-- [ ] Navigation: sealed `Screen` + stack, sidebar, PIN unlock screen `[3h]`
-- [ ] Shared components: data table, search field, money field, quantity stepper, confirm dialog `[3h]`
+- [ ] Navigation: sealed `Screen` + stack in `:app:desktop`; stores emit `Effect.Navigate`, routes navigate `[3h]`
+- [ ] PIN unlock screen — **first full Contract/Store/Route/Screen; this is the reference other screens copy** `[3h]`
+- [ ] `ErrorKey` → Arabic string resolution in `:core:ui`; no raw exception text reaches a screen `[2h]`
+- [ ] Shared components: data table, search field, money field, quantity stepper, confirm dialog — all stateless `[3h]`
 
 ### Catalogue feature
-- [ ] `:feature:catalog` module; product list with Arabic search on `name_sort` `[3h]`
+- [ ] `:feature:catalog` module; `CatalogContract` + `CatalogStore`; product list with Arabic search on `name_sort` `[3h]`
 - [ ] Product create/edit: names, category, brand, tax rate, active flag `[3h]`
 - [ ] Category & brand management `[2h]`
 - [ ] ⚠️ Option/variant matrix editor: define options, generate cross-product, untick combinations, 200-variant guard `[4h]`
@@ -80,14 +84,15 @@ Docs: [architecture](docs/architecture.md) · [data model](docs/data-model.md) �
 ### Wrap-up
 - [ ] Write ADR-001…010 as decisions are made (not at the end) `[3h]`
 - [ ] Verify `outbox_entry` has rows for every catalogue mutation `[1h]`
+- [ ] Architecture review: no repository reaches a composable, no SQLDelight type in any `State`, every screen has a Contract `[2h]`
 - [ ] Populate the real catalogue with the owner; post the opening count `[4h — with the owner]`
 - [ ] Rehearse a restore on a second machine `[2h]`
 
 ---
 
-## Phase 1 — Point of Sale (~95h)
+## Phase 1 — Point of Sale (~100h)
 
-### Domain
+### Domain (use cases — business rules live here, never in a reducer)
 - [ ] Price resolution policy (customer → channel → default, min_qty) + tests `[3h]`
 - [ ] Discount policy: line and document, percent/amount, role limits, largest-remainder allocation + tests `[3h]`
 - [ ] Sale totals calculation with the `Σ(lines) == Σ(payments)` invariant test `[2h]`
@@ -103,7 +108,8 @@ Docs: [architecture](docs/architecture.md) · [data model](docs/data-model.md) �
 
 ### POS
 - [ ] ⚠️ Design the keyboard flow on paper **with the cashier**; write down the key map `[2h — with the cashier]`
-- [ ] POS screen layout: search, cart, totals panel, action bar `[4h]`
+- [ ] ⚠️ `PosContract`: `State`, `Intent` (+ `Internal`), `Effect` — write this before any composable `[2h]`
+- [ ] POS screen layout: search, cart, totals panel, action bar — stateless `Screen(state, onIntent)` `[4h]`
 - [ ] Product search by SKU/name/manual barcode, add line, keyboard-only `[3h]`
 - [ ] Line editing: quantity, price override (permissioned), line discount, remove `[3h]`
 - [ ] Document discount + channel selector `[2h]`
@@ -112,6 +118,8 @@ Docs: [architecture](docs/architecture.md) · [data model](docs/data-model.md) �
 - [ ] Split payments (multiple payment rows) `[2h]`
 - [ ] ⚠️ Sale completion in one transaction: number, movements, payments, audit, outbox `[4h]`
 - [ ] Sale search/history screen with filters `[3h]`
+- [ ] `PosReducerTest`: cart add/remove/qty/discount transitions, pure, no mocks `[3h]`
+- [ ] `PosStoreTest` with Turbine + fake use cases: completion emits `PrintReceipt` **once** and resets state `[2h]`
 - [ ] Void a sale: reversing movements, opposite payments, reason, audit `[3h]`
 
 ### Returns & exchanges
@@ -141,6 +149,7 @@ Docs: [architecture](docs/architecture.md) · [data model](docs/data-model.md) �
 
 ### Hardening
 - [ ] Scripted power-off test during sale completion, 10 iterations `[2h]`
+- [ ] Reducer tests for the returns and shift-close screens `[2h]`
 - [ ] Arabic error messages for every domain error `[2h]`
 - [ ] Two-database merge test (sync assumption check, `sync-strategy.md` §6) `[3h]`
 - [ ] Outbox completeness property test `[2h]`
@@ -195,6 +204,7 @@ Docs: [architecture](docs/architecture.md) · [data model](docs/data-model.md) �
 - [ ] Cash drawer kick on cash sales only `[1h]`
 - [ ] Arabic reader reviews a real printed receipt; fix layout `[2h]`
 - [ ] Performance pass: profile reports and search with real data, add indexes `[3h]`
+- [ ] Compose recomposition pass: list keys, state slicing, compiler metrics report; hit scan-to-line under 100ms `[3h]`
 - [ ] `SALES_BY_HOUR` and `DEAD_STOCK` reports `[3h]`
 - [ ] Manual update check: `latest.json`, download, SHA-256 verify, launch installer `[3h]`
 - [ ] Diagnostics screen: logs, DB location, version, copy-diagnostics button `[2h]`
@@ -253,7 +263,7 @@ Docs: [architecture](docs/architecture.md) · [data model](docs/data-model.md) �
 - [ ] `HttpReportEngine` + remote repositories `[5h]`
 - [ ] JWT login on Android `[3h]`
 - [ ] Owner dashboard: today's sales, cash, low stock, top products `[6h]`
-- [ ] Report screens reusing `:feature:reports` unchanged — **verify no `:domain` change was needed** `[3h]`
+- [ ] Report screens reusing `:feature:reports` unchanged — **verify no `:domain`, contract or store change was needed** `[3h]`
 - [ ] Play Store internal distribution `[3h]`
 
 ### Web

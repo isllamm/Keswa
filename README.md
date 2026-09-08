@@ -1,6 +1,7 @@
 # Keswa
 
-Clothing retail store management. Kotlin Multiplatform + Compose Multiplatform.
+Clothing retail store management. Kotlin Multiplatform + Compose Multiplatform,
+Clean Architecture with MVI presentation.
 
 **Phase 1 target:** a Windows desktop app running on one machine in the shop, 100% offline, with
 Arabic-first RTL UI and Excel export. Cloud backend, mobile apps and multi-store come later — and
@@ -14,7 +15,8 @@ Status: **planning complete, no code yet.**
 
 | Document | What it covers |
 |---|---|
-| [docs/architecture.md](docs/architecture.md) | Module graph, dependency rules, commonMain vs desktopMain, Windows specifics (DB location, durability, backup, barcode, printing, packaging) |
+| [docs/architecture.md](docs/architecture.md) | Clean Architecture layering, module graph, dependency rules, commonMain vs desktopMain, Windows specifics (DB location, durability, backup, barcode, printing, packaging) |
+| [docs/presentation-architecture.md](docs/presentation-architecture.md) | Clean Architecture layers in detail + the full MVI contract: State/Intent/Effect, store base class, testing, anti-patterns |
 | [docs/data-model.md](docs/data-model.md) | Universal column contract, all tables, ERD, migration discipline |
 | [docs/reporting-and-export.md](docs/reporting-and-export.md) | Report query layer; Excel as one renderer among several |
 | [docs/sync-strategy.md](docs/sync-strategy.md) | The Phase 1 decisions that make cloud sync possible later, and the cost of skipping each |
@@ -33,6 +35,8 @@ Status: **planning complete, no code yet.**
 - **Offline is the default code path.** Nothing may assume a network call can succeed.
 - **Excel export** lives in a JVM-only module behind a shared interface, so it never blocks iOS or Web. ([ADR-006](docs/adr/ADR-006-reporting-layer-excel-as-renderer.md))
 - **Arabic-first RTL** with i18n from the first screen. No hardcoded strings.
+- **Clean Architecture** — dependencies point inward; repository interfaces in `:domain`, implementations in `:data`. ([ADR-005](docs/adr/ADR-005-module-graph-and-dependency-rules.md))
+- **MVI presentation** — one `Contract` (State/Intent/Effect) and one `Store` per screen; `reduce` is pure; effects fire exactly once. ([ADR-011](docs/adr/ADR-011-mvi-unidirectional-presentation.md))
 - **Audit log** for every money- or stock-affecting action, with the acting user.
 - **Local backup/restore** is a Phase 0 feature. One machine is a single point of failure. ([ADR-004](docs/adr/ADR-004-sqldelight-sqlite-durability-backup.md))
 

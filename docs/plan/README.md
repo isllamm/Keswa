@@ -4,14 +4,14 @@ Solo developer, ~10 hours/week. Every phase ends in something the shop can actua
 
 | Phase | Goal | Effort | Calendar @10h/wk | Cumulative |
 |---|---|---|---|---|
-| [00](phase-00.md) | Skeleton + catalog + stock — replaces the inventory spreadsheet | ~55h | ~6 weeks | ~6 wk |
-| [01](phase-01.md) | POS, payments, returns, shifts — the shop rings up sales | ~95h | ~10 weeks | ~16 wk |
+| [00](phase-00.md) | Skeleton + MVI foundation + catalog + stock — replaces the inventory spreadsheet | ~60h | ~6 weeks | ~6 wk |
+| [01](phase-01.md) | POS, payments, returns, shifts — the shop rings up sales | ~100h | ~10 weeks | ~16 wk |
 | [02](phase-02.md) | Purchasing + customer credit — full inbound and A/R | ~55h | ~6 weeks | ~22 wk |
 | [03](phase-03.md) | Hardware + speed — barcode scanning, thermal receipts, auto-update | ~40h | ~4 weeks | ~26 wk |
 | [04](phase-04.md) | Backend + sync — Ktor/Postgres, outbox drain, JWT auth | ~90h | ~9 weeks | ~35 wk |
 | [05](phase-05.md) | Multi-store + mobile/web — store #2, transfers, owner app | ~85h | ~9 weeks | ~44 wk |
 
-**Total to a synced multi-store system: ~420 hours ≈ 10 months at 10h/week.**
+**Total to a synced multi-store system: ~430 hours ≈ 10–11 months at 10h/week.**
 
 ## Reading the estimates
 Hours are *focused development hours* and already include the tests named in each phase. They do
@@ -19,7 +19,7 @@ Hours are *focused development hours* and already include the tests named in eac
 to a Windows printer driver. Add ~20% for a first KMP desktop project.
 
 ## The scope tension, stated once
-You want a cloud backend in ~3 months. Phases 00+01 alone are ~150h ≈ 15 weeks. A backend cannot
+You want a cloud backend in ~3 months. Phases 00+01 alone are ~160h ≈ 16 weeks. A backend cannot
 precede a usable POS without syncing an app the shop can't run on. See `docs/sync-strategy.md` §8 for
 the two viable resolutions. Everything below assumes **Option 1: ship the shop first.**
 

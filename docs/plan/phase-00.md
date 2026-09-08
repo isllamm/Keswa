@@ -2,7 +2,7 @@
 
 > *"The shop's inventory lives in Keswa instead of a spreadsheet, and it is backed up."*
 
-**Effort:** ~55h · **Calendar:** ~6 weeks @10h/wk
+**Effort:** ~60h · **Calendar:** ~6 weeks @10h/wk
 
 ---
 
@@ -17,7 +17,7 @@ front-loads every decision that would be expensive to change later.
 ## In scope
 
 **Infrastructure**
-- Gradle KMP project, module graph per `docs/architecture.md` §2, `dependency-rules` convention plugin
+- Gradle KMP project, Clean Architecture module graph per `docs/architecture.md` §2, `dependency-rules` convention plugin
 - `:core:common`: `Money`, `CurrencyCode`, `Ulid`, `Clock`, `DeviceId`, `AppResult`
 - `:data`: SQLDelight, migration `1.sqm` containing the **full Phase 1 schema** including
   `outbox_entry`, `sync_state`, `sync_conflict`, `audit_event`, and all sync columns
@@ -25,10 +25,12 @@ front-loads every decision that would be expensive to change later.
 - Schema-hash test and migration-chain test in CI
 - `:sync:contract` module with DTOs and `ChangeEnvelope` (compiled, unused)
 - `docs/sql/postgres.sql` mirror of the schema
+- **MVI base** in `:core:ui/mvi` (`MviStore`, State/Intent/Effect) per `docs/presentation-architecture.md`
 - DI graph (Koin), `AppPaths`, `%PROGRAMDATA%\Keswa` layout, PRAGMA configuration
 - Backup: `VACUUM INTO`, scheduling, verification, retention, guided restore
 - jpackage MSI installer, bundled JRE, upgrade-preserves-data test
 - Arabic-first i18n + RTL shell, bundled IBM Plex Sans Arabic, no-string-literal CI check
+- PIN unlock screen as the **reference Contract/Store/Route/Screen** every later screen copies
 
 **Features**
 - Products: create/edit/deactivate, Arabic + English names, category, brand
@@ -60,7 +62,8 @@ code · any sync execution · auto-update · product images
 - [ ] Killing the app mid-edit loses at most the current form, never the database
 - [ ] `PRAGMA quick_check` clean after a hard power-off during a stock count post
 - [ ] Restore-from-backup performed successfully on a second machine
-- [ ] `./gradlew check` green: dependency rules, schema hash, migration chain, domain tests
+- [ ] `./gradlew check` green: dependency rules, schema hash, migration chain, domain tests, MVI base tests
+- [ ] Every screen has a Contract; no repository is reachable from a composable; no SQLDelight type appears in any `State`
 - [ ] `outbox_entry` contains rows for every catalogue mutation (verified by query, not by faith)
 
 ## Migration impact
@@ -75,6 +78,7 @@ Phase 4 is not.
 | Owner's spreadsheet is messier than expected | Build the importer with a dry-run preview and a rejected-rows report. Budget 6h; do it *with* the owner |
 | Arabic font/RTL rendering surprises on Windows | Test on the real shop PC in week 2, not week 6 |
 | Over-engineering the module graph | 8 modules maximum this phase. `:feature:*` beyond catalog can wait |
+| MVI ceremony slows the first screens | The base is ~120 lines and written once. If it grows past ~200, stop and adopt Orbit instead ([ADR-011](../adr/ADR-011-mvi-unidirectional-presentation.md)) |
 | jpackage/MSI eats a weekend | Do it in week 3, not week 6 — packaging failures are worse when discovered late |
 
 ## Notes

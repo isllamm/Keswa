@@ -1,8 +1,12 @@
 # Keswa — Architecture
 
-Kotlin Multiplatform + Compose Multiplatform. Desktop (JVM/Windows) first, offline-only,
+**Clean Architecture + MVI.** Kotlin Multiplatform + Compose Multiplatform. Desktop (JVM/Windows) first, offline-only,
 single machine. Android / iOS / Web and a Ktor+Postgres backend arrive later and must be
 **additive**: new modules and new source sets, no rewrite of domain, schema, or sync semantics.
+
+> The presentation contract (MVI store, contracts, reducer purity, effects) is specified in
+> [presentation-architecture.md](presentation-architecture.md). This document covers modules,
+> dependency rules and platform concerns.
 
 ---
 
@@ -77,8 +81,8 @@ graph TD
 | `:printing:escpos` | **jvm only** | Raster rendering + ESC/POS, `javax.print` transport, A4 via PDFBox | Domain logic |
 | `:sync:contract` | common | Wire DTOs, `ChangeEnvelope`, `PullRequest/Response`, error codes, protocol version | Persistence, HTTP client |
 | `:sync:engine` | common | Outbox drain, cursor pull, conflict application (Phase 4) | UI |
-| `:core:ui` | common | Theme, typography (Arabic fonts), RTL scaffolding, shared components, `Strings` accessor | Business rules |
-| `:feature:*` | common | Compose screens + ViewModels/state holders, navigation | Direct DB access, platform APIs |
+| `:core:ui` | common | Theme, typography (Arabic fonts), RTL scaffolding, shared components, `Strings` accessor, **MVI base (`MviStore`, `MviState`, `MviIntent`, `MviEffect`)** | Business rules |
+| `:feature:*` | common | Per screen: `Contract` (State/Intent/Effect), `Store`, stateless `Screen`, thin `Route` | Direct DB access, platform APIs, business rules |
 | `:app:desktop` | jvm | `main()`, window, DI graph, platform bindings, jpackage config | Business logic |
 
 ### Dependency rules (enforced, not aspirational)
@@ -132,8 +136,8 @@ test overrides. **ASSUMPTION:** Koin over Kodein/manual — swap freely, nothing
 | Entities, use cases, policy | ✅ all | — |
 | SQLDelight queries & migrations | ✅ `.sq` files | driver creation, file path, PRAGMAs |
 | Repositories | ✅ interfaces + impls | — |
-| ViewModels / state holders | ✅ | — |
-| Compose screens | ✅ | window chrome, menu bar, keyboard hooks |
+| MVI stores + contracts | ✅ | — |
+| Compose screens (stateless) | ✅ | window chrome, menu bar, keyboard hooks |
 | i18n strings | ✅ | — |
 | Money/date formatting | ✅ (kotlinx-datetime + own formatter) | — |
 | Report specs & SQL | ✅ | — |
@@ -149,44 +153,72 @@ are platform-bound. That is what makes the Android app cheap later.
 
 ---
 
-## 4. Layering and the mutation path
+## 4. Clean Architecture layering and the mutation path
+
+Three layers, dependencies pointing **inward only**. Full contract in
+[presentation-architecture.md](presentation-architecture.md).
+
+| Layer | Modules | Owns | Never knows about |
+|---|---|---|---|
+| **Presentation** | `:feature:*`, `:core:ui`, `:app:*` | Compose screens, MVI stores, navigation, formatting | SQL, SQLDelight types, HTTP, POI, `java.*` |
+| **Domain** | `:domain`, `:core:common` | Entities, value objects, use cases, policy, repository **interfaces**, `Principal`, typed errors | Compose, persistence, platform, frameworks |
+| **Data** | `:data`, `:sync:*` | Repository **implementations**, SQLDelight, mappers, `UnitOfWork`, `ReportEngine` impl | UI state, navigation, Compose |
+
+`:domain` declares `interface SaleRepository`; `:data` implements it; `:feature:pos` only ever sees the
+interface; `:app:desktop` binds them. That inversion is what makes local↔remote data sources swappable,
+and it is enforced by the dependency-rules plugin rather than by discipline.
+
+### The mutation path, end to end
 
 ```
-Compose screen
-  → StateHolder (feature)
-    → UseCase (domain)
-      → Repository interface (domain)
-        → RepositoryImpl (data)
-          → UnitOfWork.transaction(principal) {
-               1. write business rows
-               2. append stock_movement / customer_ledger rows   (append-only)
-               3. update materialized levels                     (same tx)
-               4. append audit_event                             (same tx)
-               5. append outbox_entry                            (same tx)
-             }
+Compose screen (stateless)
+  → Store.dispatch(Intent)                          presentation, MVI
+    → reduce(state, intent)                         pure, synchronous
+    → handle(intent, state)                         async
+      → UseCase(principal, …)                       domain — business rules live here
+        → Repository interface                      domain
+          → RepositoryImpl                          data
+            → UnitOfWork.transaction(principal) {
+                 1. write business rows
+                 2. append stock_movement / customer_ledger rows   (append-only)
+                 3. update materialized levels                     (same tx)
+                 4. append audit_event                             (same tx)
+                 5. append outbox_entry                            (same tx)
+               }
+      → dispatchInternal(Intent.Internal.Result)    result re-enters as an intent
+      → emit(Effect.PrintReceipt)                   one-shot side effect
 ```
 
-`UnitOfWork` is the single choke point for every mutation. It guarantees that audit and outbox
-can never drift from the data — the property that makes sync and audit trustworthy. Reads bypass it.
+`UnitOfWork` is the single choke point for every mutation. It guarantees that audit and outbox can
+never drift from the data — the property that makes sync and audit trustworthy. Reads bypass it.
+
+**Model mapping:** DB↔domain and wire↔domain are always mapped (generated and DTO types stay inside
+`:data`). Domain↔UI is normally *not* mapped — domain models go straight into `State` and are formatted
+at render time. See presentation-architecture.md §1.1 for why, and what the strict alternative costs.
 
 **Concurrency:** one SQLite writer. All writes go through a single-threaded dispatcher owned by
 `UnitOfWork`; reads use SQLDelight flows on IO. With WAL, readers never block the writer.
 
 **Errors:** `AppResult<T>` (sealed) across module boundaries — no exceptions as control flow across
-layers. Domain errors are typed (`InsufficientStock`, `ReturnExceedsOriginal`, `ShiftAlreadyOpen`)
-and map to i18n keys in `:core:ui`. Never surface an English exception message to the cashier.
+layers. Domain errors are typed (`InsufficientStock`, `ReturnExceedsOriginal`, `ShiftAlreadyOpen`) and
+carried into `State` as an `ErrorKey`, resolved to Arabic in `:core:ui`. Never surface an English
+exception message to the cashier.
 
 ---
 
-## 5. Navigation, state, and screen shape
+## 5. MVI presentation, navigation, and screen shape
 
-- **Navigation:** a sealed `Screen` hierarchy + a stack held in `:app:desktop`. **ASSUMPTION:** no
-  navigation library in Phase 0–3; ~9 screens do not justify one, and Compose Navigation's
-  multiplatform story is not worth the churn for a solo dev. Revisit at Android (Phase 5).
-- **State:** one immutable `UiState` data class per screen, one `Flow<UiState>`, events in via a
-  single `onEvent(Event)`. Keeps ViewModels portable to Android verbatim.
-- **POS is keyboard-first**: every action reachable without a mouse. This is a hard UX constraint that
-  affects component choice (custom focus handling, no reliance on hover).
+Every screen is one **Contract** (`State`, `Intent`, `Effect`), one **Store**, one stateless
+**Screen** composable, and a thin **Route** that owns the store and consumes effects.
+Full specification, base class and examples: [presentation-architecture.md](presentation-architecture.md).
+
+- **State** — immutable, everything needed to render. If restoring it would reproduce the screen exactly, it is State.
+- **Intent** — user actions plus `Internal` results fed back from use cases. Nothing else mutates state.
+- **Effect** — one-shot only (print, navigate, focus, open drawer). If doing it twice would be a bug, it is an Effect. Errors and loading flags are **State**, not effects.
+- **`reduce(state, intent)` is pure** — no I/O, no clock, no coroutines — so every transition is testable with zero infrastructure. Async work lives in `handle`, and its results re-enter as intents.
+- **Store host:** `androidx.lifecycle.ViewModel` (the KMP artifact — jvm/android/ios/wasm) for `viewModelScope`. **ASSUMPTION:** if that artifact causes friction on a target, the fallback is a plain class with an explicitly cancelled `CoroutineScope`; nothing else changes. See [ADR-011](adr/ADR-011-mvi-unidirectional-presentation.md).
+- **Navigation:** a sealed `Screen` hierarchy + a stack held in `:app:desktop`. Stores never navigate; they emit `Effect.Navigate`. **ASSUMPTION:** no navigation library in Phase 0–3; ~9 screens do not justify one. Revisit at Android (Phase 5).
+- **POS is keyboard-first**: every action reachable without a mouse — a hard UX constraint that affects component choice (custom focus handling, no reliance on hover). See presentation-architecture.md §4 for the recomposition budget that keeps scanning fast.
 
 ---
 
@@ -301,10 +333,11 @@ ScanBuffer: chars arriving < 40ms apart, terminated by Enter, length >= 6  ->  S
 
 | Layer | What is tested | Effort |
 |---|---|---|
-| `:domain` | Pricing resolution, discount allocation, return limits, shift math, money arithmetic. Pure, fast, no mocks. | **Highest ROI — write these.** |
+| `:domain` | Use cases: pricing resolution, discount allocation, return limits, shift math, money arithmetic. Pure, fast, no mocks. | **Highest ROI — write these.** |
 | `:data` | Migration chain test (every version → latest), schema-hash test, ledger↔materialized-level reconciliation property test | Non-negotiable |
 | `:reporting` | Each report against a seeded fixture DB, asserting totals | Medium |
 | `:export:xlsx` | Golden-file test: Arabic text round-trips, money cells are numeric | Small, do it once |
+| Presentation | **Reducer tests** (`reduce(state, intent) == expected`) — pure, no mocks, no dispatchers. Store tests with Turbine + fake use cases for POS, returns and shift close. | Cheap; the main reason MVI earns its ceremony here |
 | UI | Manual. **ASSUMPTION:** no Compose UI tests before Phase 4 — not worth the hours solo. | — |
 
 **Schema version test:** the build stores a hash of the current schema; changing `.sq` without
@@ -316,7 +349,7 @@ adding a migration fails CI. This is the guardrail that makes "no rewrite later"
 
 | New target | What you add | What you change |
 |---|---|---|
-| Android | `:app:android`, androidMain driver actual, Android bindings for `AppPaths`/`FileVault` | Nothing in `:domain`, `:data` queries, `:feature:*`, `:reporting` |
+| Android | `:app:android`, androidMain driver actual, Android bindings for `AppPaths`/`FileVault` | Nothing in `:domain`, `:data` queries, `:feature:*` (contracts and stores are commonMain), `:reporting` |
 | iOS | `:app:ios`, native driver actual, iOS bindings | Nothing — provided no `java.*` leaked below `:app:desktop` |
 | Web (Wasm) | `:app:web`, remote-only `ReportEngine` + repos hitting the backend | Nothing — this is why `:reporting` must never depend on `:data` |
 | Backend | Ktor service reusing `:domain` + `:sync:contract` as a Gradle include | Postgres DDL mirrors the SQLite schema; types were chosen to be portable |
