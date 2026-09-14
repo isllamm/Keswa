@@ -3,6 +3,8 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.kotlinxSerialization)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.androidx.room)
 }
 
 kotlin {
@@ -11,6 +13,12 @@ kotlin {
     // commonMain must therefore avoid java.* as well as android.*.
 
     jvmToolchain(17)
+
+    // Room KMP's generated @ConstructedBy object is an expect/actual object, which is still
+    // flagged Beta. The pattern is Room's own, so silence it rather than carry a permanent warning.
+    compilerOptions {
+        freeCompilerArgs.add("-Xexpect-actual-classes")
+    }
 
     sourceSets {
         commonMain.dependencies {
@@ -23,6 +31,9 @@ kotlin {
             api(libs.kotlinx.serialization.json)
             api(libs.kotlinx.datetime)
             api(libs.koin.core)
+
+            api(libs.androidx.room.runtime)
+            api(libs.androidx.sqlite.bundled)
         }
 
         commonTest.dependencies {
@@ -30,4 +41,15 @@ kotlin {
             implementation(libs.kotlinx.coroutines.test)
         }
     }
+}
+
+dependencies {
+    // Per-target KSP, matching kmp_cashimobile. The configuration name follows the *target*
+    // name, so jvm("desktop") gives kspDesktop — not kspJvm.
+    add("kspDesktop", libs.androidx.room.compiler)
+    // add("kspAndroid", libs.androidx.room.compiler)  // Phase 6
+}
+
+room {
+    schemaDirectory("$projectDir/schemas")
 }
