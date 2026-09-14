@@ -1,0 +1,639 @@
+<title>Keswa Sales Console</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+:root{
+  color-scheme: light;
+  --page:#f9f9f7; --surface:#fcfcfb;
+  --ink:#0b0b0b; --ink-2:#52514e; --muted:#898781;
+  --grid:#e1e0d9; --axis:#c3c2b7; --hair:rgba(11,11,11,0.10);
+  --raise:rgba(11,11,11,0.05);
+  --s1:#2a78d6; --s2:#eb6834;
+  --good:#0ca30c; --good-ink:#006300; --warn:#fab219; --crit:#d03b3b;
+  --q1:#cde2fb; --q2:#9ec5f4; --q3:#6da7ec; --q4:#3987e5; --q5:#256abf; --q6:#184f95; --q7:#0d366b;
+  --sans:"IBM Plex Sans","IBM Plex Sans Arabic",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --ar:"IBM Plex Sans Arabic","IBM Plex Sans",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme: dark;
+    --page:#0d0d0d; --surface:#1a1a19;
+    --ink:#ffffff; --ink-2:#c3c2b7; --muted:#898781;
+    --grid:#2c2c2a; --axis:#383835; --hair:rgba(255,255,255,0.10);
+    --raise:rgba(255,255,255,0.04);
+    --s1:#3987e5; --s2:#d95926;
+    --good:#0ca30c; --good-ink:#0ca30c; --warn:#fab219; --crit:#d03b3b;
+    --q1:#0d366b; --q2:#184f95; --q3:#256abf; --q4:#3987e5; --q5:#5598e7; --q6:#86b6ef; --q7:#9ec5f4;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme: dark;
+  --page:#0d0d0d; --surface:#1a1a19;
+  --ink:#ffffff; --ink-2:#c3c2b7; --muted:#898781;
+  --grid:#2c2c2a; --axis:#383835; --hair:rgba(255,255,255,0.10);
+  --raise:rgba(255,255,255,0.04);
+  --s1:#3987e5; --s2:#d95926;
+  --good:#0ca30c; --good-ink:#0ca30c; --warn:#fab219; --crit:#d03b3b;
+  --q1:#0d366b; --q2:#184f95; --q3:#256abf; --q4:#3987e5; --q5:#5598e7; --q6:#86b6ef; --q7:#9ec5f4;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--page);color:var(--ink);font-family:var(--sans);
+  -webkit-font-smoothing:antialiased;font-size:14px;line-height:1.45}
+[dir="rtl"]{font-family:var(--ar)}
+.wrap{max-width:1240px;margin:0 auto;padding:22px 20px 56px}
+
+/* ---------- header ---------- */
+.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px}
+.brand{display:flex;align-items:baseline;gap:9px}
+.brand b{font-size:19px;font-weight:600;letter-spacing:-.01em}
+.brand .ar{font-family:var(--ar);font-size:15px;color:var(--muted)}
+.shop{color:var(--ink-2);font-size:13px;padding-inline-start:14px;
+  border-inline-start:1px solid var(--hair)}
+.chip{font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);
+  border:1px solid var(--hair);border-radius:3px;padding:3px 7px}
+.top .sp{margin-inline-start:auto}
+.btn{font:inherit;font-size:12.5px;color:var(--ink-2);background:var(--surface);
+  border:1px solid var(--hair);border-radius:4px;padding:5px 10px;cursor:pointer}
+.btn:hover{color:var(--ink);background:var(--raise)}
+.btn:focus-visible{outline:2px solid var(--s1);outline-offset:1px}
+.btn[aria-pressed="true"]{color:var(--ink);background:var(--raise);border-color:var(--axis)}
+
+/* ---------- filter row ---------- */
+.filters{display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  padding:9px 11px;background:var(--surface);border:1px solid var(--hair);
+  border-radius:5px;margin-bottom:16px}
+.filters .lbl{font-size:11px;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);
+  margin-inline-end:2px}
+.seg{display:flex;gap:2px;background:var(--page);border:1px solid var(--hair);border-radius:4px;padding:2px}
+.seg button{font:inherit;font-size:12.5px;border:0;background:transparent;color:var(--ink-2);
+  padding:4px 10px;border-radius:3px;cursor:pointer}
+.seg button[aria-pressed="true"]{background:var(--surface);color:var(--ink);font-weight:500;
+  box-shadow:0 1px 2px var(--raise)}
+.seg button:focus-visible{outline:2px solid var(--s1);outline-offset:-1px}
+select.btn{padding-inline-end:24px}
+
+/* ---------- hero + kpis ---------- */
+.headline{display:grid;grid-template-columns:minmax(230px,1fr) 2.15fr;gap:12px;margin-bottom:12px}
+@media(max-width:880px){.headline{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--hair);border-radius:5px;padding:15px 16px}
+.hero .lab{font-size:11.5px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}
+.hero .fig{font-size:50px;font-weight:600;letter-spacing:-.025em;line-height:1.02;margin:9px 0 0}
+.hero .cur{font-size:22px;font-weight:500;color:var(--ink-2);margin-inline-end:5px}
+.hero .sub{margin-top:8px;font-size:12.5px;color:var(--ink-2);display:flex;align-items:center;gap:6px}
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:880px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.kpi .lab{font-size:11.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.07em}
+.kpi .val{font-size:26px;font-weight:600;letter-spacing:-.015em;margin:5px 0 0}
+.kpi .spark{margin-top:9px;height:26px}
+.delta{font-size:12px;font-weight:500;display:inline-flex;align-items:center;gap:3px}
+.delta.up{color:var(--good-ink)} .delta.down{color:var(--crit)}
+.delta .ar,.muted{color:var(--muted);font-weight:400}
+
+/* ---------- chart grid ---------- */
+.grid{display:grid;gap:12px;margin-top:12px}
+.g-2{grid-template-columns:1.32fr 1fr}
+.g-2b{grid-template-columns:1fr 1.04fr}
+@media(max-width:880px){.g-2,.g-2b{grid-template-columns:1fr}}
+.card h3{margin:0;font-size:14px;font-weight:600;letter-spacing:-.005em}
+.card .note{margin:3px 0 0;font-size:12px;color:var(--ink-2);max-width:62ch}
+.chead{display:flex;align-items:flex-start;gap:12px;margin-bottom:12px}
+.chead .sp{margin-inline-start:auto;text-align:end;flex:none}
+.legend{display:flex;gap:13px;align-items:center;flex-wrap:wrap}
+.legend span{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--ink-2)}
+.legend i{width:9px;height:9px;border-radius:2px;display:block}
+.plot{width:100%;display:block;overflow:visible;direction:ltr}
+figure{margin:0}
+
+/* ---------- table view ---------- */
+table{border-collapse:collapse;width:100%;font-size:12.5px}
+th,td{text-align:start;padding:6px 9px;border-bottom:1px solid var(--hair)}
+th{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-weight:500}
+td.n,th.n{text-align:end;font-variant-numeric:tabular-nums;font-family:var(--mono);font-size:12px}
+td.sku{font-family:var(--mono);font-size:11.5px;color:var(--muted)}
+tbody tr:last-child td{border-bottom:0}
+.tv{display:none}
+body.tables .tv{display:block}
+body.tables .gfx{display:none}
+.scroll{overflow-x:auto}
+.bar-mini{height:6px;border-radius:3px;background:var(--grid);position:relative;min-width:54px}
+.bar-mini i{position:absolute;inset-block:0;inset-inline-start:0;border-radius:3px;background:var(--s1);display:block}
+
+/* ---------- tooltip ---------- */
+#tip{position:fixed;z-index:60;pointer-events:none;opacity:0;transition:opacity .09s;
+  background:var(--surface);border:1px solid var(--axis);border-radius:4px;padding:7px 9px;
+  font-size:12px;box-shadow:0 4px 14px rgba(0,0,0,.14);max-width:230px}
+#tip.on{opacity:1}
+#tip .t{font-weight:600;margin-bottom:4px;font-size:12px}
+#tip .r{display:flex;align-items:center;gap:6px;justify-content:space-between;
+  font-variant-numeric:tabular-nums}
+#tip .r b{font-weight:500;font-family:var(--mono);font-size:11.5px}
+#tip i{width:8px;height:8px;border-radius:2px;flex:none}
+.foot{margin-top:22px;font-size:12px;color:var(--muted);display:flex;gap:8px;flex-wrap:wrap;
+  align-items:center;border-top:1px solid var(--hair);padding-top:12px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap" id="root" dir="ltr">
+
+  <header class="top">
+    <div class="brand"><b>Keswa</b><span class="ar">كسوة</span></div>
+    <div class="shop" data-en="Downtown branch · Cairo" data-ar="فرع وسط البلد · القاهرة">Downtown branch · Cairo</div>
+    <span class="chip" data-en="Prototype · sample data" data-ar="نموذج · بيانات تجريبية">Prototype · sample data</span>
+    <span class="sp"></span>
+    <button class="btn" id="lang" type="button">العربية</button>
+    <button class="btn" id="theme" type="button" data-en="Dark" data-ar="داكن">Dark</button>
+  </header>
+
+  <div class="filters">
+    <span class="lbl" data-en="Period" data-ar="الفترة">Period</span>
+    <div class="seg" id="range" role="group">
+      <button type="button" data-d="7"  data-en="7 days"  data-ar="٧ أيام">7 days</button>
+      <button type="button" data-d="30" aria-pressed="true" data-en="30 days" data-ar="٣٠ يوم">30 days</button>
+      <button type="button" data-d="90" data-en="90 days" data-ar="٩٠ يوم">90 days</button>
+    </div>
+    <select class="btn" id="chan">
+      <option value="all" data-en="All channels" data-ar="كل القنوات">All channels</option>
+      <option value="retail" data-en="Retail only" data-ar="تجزئة فقط">Retail only</option>
+      <option value="wholesale" data-en="Wholesale only" data-ar="جملة فقط">Wholesale only</option>
+    </select>
+    <span class="sp" style="margin-inline-start:auto"></span>
+    <button class="btn" id="tbl" type="button" aria-pressed="false" data-en="Table view" data-ar="عرض جدولي">Table view</button>
+  </div>
+
+  <div class="headline">
+    <section class="card hero">
+      <div class="lab" data-en="Revenue today" data-ar="إيراد اليوم">Revenue today</div>
+      <p class="fig"><span class="cur">EGP</span><span id="heroFig">48,320</span></p>
+      <div class="sub">
+        <span class="delta up" id="heroDelta">▲ 12.4%</span>
+        <span class="muted" data-en="vs. same day last week" data-ar="مقارنة بنفس اليوم الأسبوع الماضي">vs. same day last week</span>
+      </div>
+    </section>
+    <div class="kpis" id="kpis"></div>
+  </div>
+
+  <div class="grid">
+    <section class="card">
+      <div class="chead">
+        <div>
+          <h3 data-en="Revenue trend" data-ar="اتجاه الإيرادات">Revenue trend</h3>
+          <p class="note" data-en="Net of returns. Thursday–Saturday carries the week — the Egyptian retail weekend."
+             data-ar="صافي بعد المرتجعات. الخميس إلى السبت يحمل الأسبوع — عطلة التجزئة المصرية.">Net of returns. Thursday–Saturday carries the week — the Egyptian retail weekend.</p>
+        </div>
+      </div>
+      <figure class="gfx"><svg class="plot" id="cLine" height="228" role="img"
+        aria-label="Daily revenue, last 30 days"></svg></figure>
+      <div class="tv scroll" id="tLine"></div>
+    </section>
+  </div>
+
+  <div class="grid g-2">
+    <section class="card">
+      <div class="chead">
+        <div>
+          <h3 data-en="Colour performance" data-ar="أداء الألوان">Colour performance</h3>
+          <p class="note" data-en="Sold vs. still on hand, this season's intake. Beige and green were over-bought — 46 and 41 pieces tying up cash navy would have turned over twice."
+             data-ar="المُباع مقابل المتبقي من دفعة الموسم. تم شراء كميات زائدة من البيج والأخضر — ٤٦ و٤١ قطعة تُجمّد أموالًا كان الكحلي ليُدوّرها مرتين.">Sold vs. still on hand, this season's intake. Beige and green were over-bought — 46 and 41 pieces tying up cash navy would have turned over twice.</p>
+        </div>
+        <div class="sp legend">
+          <span><i style="background:var(--s1)"></i><span data-en="Sold" data-ar="مُباع">Sold</span></span>
+          <span><i style="background:var(--s2)"></i><span data-en="On hand" data-ar="متبقي">On hand</span></span>
+        </div>
+      </div>
+      <figure class="gfx"><svg class="plot" id="cColour" height="216" role="img"
+        aria-label="Units sold and units on hand by colour"></svg></figure>
+      <div class="tv scroll" id="tColour"></div>
+    </section>
+
+    <section class="card">
+      <div class="chead">
+        <div>
+          <h3 data-en="Sell-through by category" data-ar="معدل التصريف حسب الفئة">Sell-through by category</h3>
+          <p class="note" data-en="Share of intake sold. Dotted rule is the 70% season target."
+             data-ar="نسبة المُباع من الوارد. الخط المنقط هو هدف الموسم ٧٠٪.">Share of intake sold. Dotted rule is the 70% season target.</p>
+        </div>
+      </div>
+      <figure class="gfx"><svg class="plot" id="cSell" height="216" role="img"
+        aria-label="Sell-through percentage by category"></svg></figure>
+      <div class="tv scroll" id="tSell"></div>
+    </section>
+  </div>
+
+  <div class="grid g-2b">
+    <section class="card">
+      <div class="chead">
+        <div>
+          <h3 data-en="When the shop is busy" data-ar="أوقات ذروة المتجر">When the shop is busy</h3>
+          <p class="note" data-en="Transactions by day and hour. Darker is busier — staff the Thursday and Friday evenings."
+             data-ar="المعاملات حسب اليوم والساعة. الأغمق أكثر ازدحامًا — عزّز مساء الخميس والجمعة.">Transactions by day and hour. Darker is busier — staff the Thursday and Friday evenings.</p>
+        </div>
+      </div>
+      <figure class="gfx"><svg class="plot" id="cHeat" height="196" role="img"
+        aria-label="Transactions by day of week and hour"></svg></figure>
+      <div class="tv scroll" id="tHeat"></div>
+    </section>
+
+    <section class="card">
+      <div class="chead">
+        <div>
+          <h3 data-en="Top movers" data-ar="الأكثر مبيعًا">Top movers</h3>
+          <p class="note" data-en="By units, this period. Sell-through shown against intake."
+             data-ar="حسب عدد القطع خلال الفترة. معدل التصريف مقارنةً بالوارد.">By units, this period. Sell-through shown against intake.</p>
+        </div>
+      </div>
+      <div class="scroll" id="tMove"></div>
+    </section>
+  </div>
+
+  <div class="foot">
+    <span data-en="Figures are illustrative sample data for design review — not live shop figures."
+          data-ar="الأرقام بيانات تجريبية لمراجعة التصميم — وليست أرقام المتجر الفعلية.">Figures are illustrative sample data for design review — not live shop figures.</span>
+  </div>
+</div>
+<div id="tip" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+"use strict";
+var root=document.getElementById("root"), tip=document.getElementById("tip");
+var LANG="en", NS="http://www.w3.org/2000/svg";
+var css=function(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim();};
+var el=function(t,a){var e=document.createElementNS(NS,t);for(var k in a){if(a[k]!==null&&a[k]!==undefined)e.setAttribute(k,a[k]);}return e;};
+var egp=function(v){return v.toLocaleString("en-US");};
+var kEGP=function(v){return v>=1000?(v/1000).toFixed(v>=10000?0:1)+"K":String(v);};
+
+/* ---------------- sample data ---------------- */
+var DAYNM={en:["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],ar:["أحد","اثنين","ثلاثاء","أربعاء","خميس","جمعة","سبت"]};
+// Egyptian retail week: Thu/Fri/Sat are the peak, Sun/Mon the trough.
+var DOWW=[0.74,0.68,0.78,0.88,1.34,1.46,1.12];
+var series=(function(){
+  var out=[],base=36000,d=new Date(2026,8,14);
+  for(var i=89;i>=0;i--){
+    var dt=new Date(d); dt.setDate(d.getDate()-i);
+    var dow=dt.getDay();
+    var drift=1+(89-i)*0.0022;
+    var wob=1+Math.sin(i*1.37)*0.085+Math.sin(i*0.41)*0.055;
+    var v=Math.round(base*DOWW[dow]*drift*wob/10)*10;
+    out.push({d:dt,v:v,dow:dow});
+  }
+  return out;
+})();
+var CHAN={all:1,retail:0.71,wholesale:0.29};
+
+var COLPERF=[
+  {en:"Black",ar:"أسود", hex:"#1a1a1a", sold:96, on:11},
+  {en:"White",ar:"أبيض", hex:"#f2f2ef", sold:88, on:14},
+  {en:"Navy", ar:"كحلي", hex:"#20304f", sold:74, on:9 },
+  {en:"Blue", ar:"أزرق", hex:"#3e6fa8", sold:68, on:18},
+  {en:"Red",  ar:"أحمر", hex:"#b3322f", sold:52, on:26},
+  {en:"Green",ar:"أخضر", hex:"#3f7a53", sold:21, on:41},
+  {en:"Beige",ar:"بيج",  hex:"#cfbfa4", sold:17, on:46}
+];
+var CATS=[
+  {en:"Dresses", ar:"فساتين",  p:84},
+  {en:"T-shirts",ar:"تيشيرتات",p:77},
+  {en:"Shirts",  ar:"قمصان",   p:71},
+  {en:"Trousers",ar:"بناطيل",  p:58},
+  {en:"Jackets", ar:"جاكيتات", p:34}
+];
+var HOURS=[10,11,12,13,14,15,16,17,18,19,20,21];
+var HEAT=(function(){
+  var m=[],peak=[0.2,0.3,0.45,0.5,0.4,0.55,0.75,0.95,1,0.9,0.7,0.4];
+  for(var r=0;r<7;r++){var row=[];for(var c=0;c<12;c++){
+    row.push(Math.round(14*DOWW[r]*peak[c]*(1+Math.sin(r*2.1+c*0.9)*0.12)));
+  } m.push(row);} return m;
+})();
+var MOVERS=[
+  {sku:"KSW-SHT-001",en:"Oxford shirt",       ar:"قميص أكسفورد",     u:186,rev:92814,st:79},
+  {sku:"KSW-TSH-022",en:"Cotton t-shirt",     ar:"تيشيرت قطن",       u:164,rev:41000,st:88},
+  {sku:"KSW-TRS-014",en:"Slim jeans",         ar:"بنطلون جينز سليم", u:131,rev:98250,st:64},
+  {sku:"KSW-DRS-007",en:"Summer dress",       ar:"فستان صيفي",       u:118,rev:88500,st:84},
+  {sku:"KSW-JKT-003",en:"Denim jacket",       ar:"جاكيت دنيم",       u: 47,rev:56400,st:31}
+];
+var KPI=[
+  {en:"Transactions",  ar:"عدد المعاملات",  val:"312",       d:+8.1, sp:[38,41,37,44,46,43,52,49,55,58,54,61]},
+  {en:"Average basket",ar:"متوسط السلة",    val:"EGP 1,548", d:+4.2, sp:[1380,1410,1365,1442,1470,1455,1502,1488,1521,1540,1519,1548]},
+  {en:"Units sold",    ar:"القطع المُباعة", val:"487",       d:+9.6, sp:[54,58,52,63,66,61,72,69,77,81,76,84]},
+  {en:"Return rate",   ar:"نسبة المرتجعات", val:"6.8%",      d:-1.3, sp:[8.9,8.6,8.8,8.2,7.9,8.1,7.6,7.4,7.2,7.0,7.1,6.8], good:"down"}
+];
+
+/* ---------------- tooltip ---------------- */
+function showTip(html,ev){
+  tip.innerHTML=html; tip.classList.add("on");
+  var r=tip.getBoundingClientRect(), x=ev.clientX+14, y=ev.clientY-10;
+  if(x+r.width>innerWidth-8) x=ev.clientX-r.width-14;
+  if(y+r.height>innerHeight-8) y=innerHeight-r.height-8;
+  if(y<8) y=8;
+  tip.style.left=x+"px"; tip.style.top=y+"px";
+}
+function hideTip(){tip.classList.remove("on");}
+function row(c,label,val){
+  return '<div class="r"><span style="display:flex;align-items:center;gap:6px">'+
+    (c?'<i style="background:'+c+'"></i>':'')+label+'</span><b>'+val+'</b></div>';
+}
+
+/* ---------------- line chart ---------------- */
+var DAYS=30;
+function drawLine(){
+  var svg=document.getElementById("cLine"); svg.textContent="";
+  var W=svg.clientWidth||880, H=228, L=52,R=14,T=14,B=30;
+  var mult=CHAN[document.getElementById("chan").value];
+  var data=series.slice(series.length-DAYS).map(function(p){return{d:p.d,v:Math.round(p.v*mult)};});
+  var iw=W-L-R, ih=H-T-B;
+  var max=Math.max.apply(null,data.map(function(p){return p.v;}));
+  var _raw=max/4,_mag=Math.pow(10,Math.floor(Math.log(_raw)/Math.LN10)),_n=_raw/_mag;
+  var step=(_n<=1?1:_n<=2?2:_n<=2.5?2.5:_n<=5?5:10)*_mag;
+  var top=Math.ceil(max/step)*step;
+  var X=function(i){return L+(data.length<2?iw/2:i*iw/(data.length-1));};
+  var Y=function(v){return T+ih-(v/top)*ih;};
+  svg.setAttribute("viewBox","0 0 "+W+" "+H);
+
+  var ticks=Math.round(top/step),i;
+  for(i=0;i<=ticks;i++){
+    var tv=top*i/ticks, y=Y(tv);
+    svg.appendChild(el("line",{x1:L,x2:W-R,y1:y,y2:y,stroke:css("--grid"),"stroke-width":1}));
+    var tx=el("text",{x:L-9,y:y+4,fill:css("--muted"),"font-size":11,"text-anchor":"end",
+      "font-family":"var(--mono)"}); tx.textContent=kEGP(tv); svg.appendChild(tx);
+  }
+  var dpath="",apath="";
+  data.forEach(function(p,ix){var x=X(ix),y=Y(p.v);dpath+=(ix?"L":"M")+x+" "+y;});
+  apath=dpath+"L"+X(data.length-1)+" "+(T+ih)+"L"+X(0)+" "+(T+ih)+"Z";
+  svg.appendChild(el("path",{d:apath,fill:css("--s1"),"fill-opacity":0.1}));
+  svg.appendChild(el("path",{d:dpath,fill:"none",stroke:css("--s1"),"stroke-width":2,
+    "stroke-linejoin":"round","stroke-linecap":"round"}));
+
+  var lastX=X(data.length-1),lastY=Y(data[data.length-1].v);
+  svg.appendChild(el("circle",{cx:lastX,cy:lastY,r:6,fill:css("--surface")}));
+  svg.appendChild(el("circle",{cx:lastX,cy:lastY,r:4.5,fill:css("--s1")}));
+  var lt=el("text",{x:lastX-6,y:lastY-13,fill:css("--ink"),"font-size":12,"font-weight":600,
+    "text-anchor":"end"}); lt.textContent="EGP "+egp(data[data.length-1].v); svg.appendChild(lt);
+
+  var every=Math.ceil(data.length/7);
+  data.forEach(function(p,ix){
+    if(ix%every && ix!==data.length-1) return;
+    var t=el("text",{x:X(ix),y:H-9,fill:css("--muted"),"font-size":11,"text-anchor":"middle",
+      "font-family":"var(--mono)"});
+    t.textContent=(p.d.getMonth()+1)+"/"+p.d.getDate(); svg.appendChild(t);
+  });
+
+  var cross=el("line",{x1:0,x2:0,y1:T,y2:T+ih,stroke:css("--axis"),"stroke-width":1,opacity:0});
+  var dot=el("circle",{r:4.5,fill:css("--s1"),opacity:0});
+  var ring=el("circle",{r:6,fill:css("--surface"),opacity:0});
+  svg.appendChild(cross);svg.appendChild(ring);svg.appendChild(dot);
+  var hit=el("rect",{x:L,y:T,width:iw,height:ih,fill:"transparent"});
+  hit.style.cursor="crosshair";
+  hit.addEventListener("mousemove",function(ev){
+    var bb=svg.getBoundingClientRect();
+    var rel=(ev.clientX-bb.left)*(W/bb.width);
+    var ix=Math.round((rel-L)/(iw/(data.length-1)));
+    ix=Math.max(0,Math.min(data.length-1,ix));
+    var p=data[ix],x=X(ix),y=Y(p.v);
+    cross.setAttribute("x1",x);cross.setAttribute("x2",x);cross.setAttribute("opacity",1);
+    dot.setAttribute("cx",x);dot.setAttribute("cy",y);dot.setAttribute("opacity",1);
+    ring.setAttribute("cx",x);ring.setAttribute("cy",y);ring.setAttribute("opacity",1);
+    var nm=DAYNM[LANG][p.d.getDay()];
+    showTip('<div class="t">'+nm+" "+p.d.getDate()+"/"+(p.d.getMonth()+1)+"</div>"+
+      row(css("--s1"),LANG==="ar"?"الإيراد":"Revenue","EGP "+egp(p.v)),ev);
+  });
+  hit.addEventListener("mouseleave",function(){
+    hideTip();cross.setAttribute("opacity",0);dot.setAttribute("opacity",0);ring.setAttribute("opacity",0);
+  });
+  svg.appendChild(hit);
+
+  var h=LANG==="ar"?["التاريخ","اليوم","الإيراد (ج.م)"]:["Date","Day","Revenue (EGP)"];
+  var html='<table><thead><tr><th>'+h[0]+'</th><th>'+h[1]+'</th><th class="n">'+h[2]+'</th></tr></thead><tbody>';
+  data.slice().reverse().forEach(function(p){
+    html+='<tr><td class="sku">'+p.d.toISOString().slice(0,10)+'</td><td>'+DAYNM[LANG][p.d.getDay()]+
+      '</td><td class="n">'+egp(p.v)+'</td></tr>';
+  });
+  document.getElementById("tLine").innerHTML=html+"</tbody></table>";
+}
+
+/* ---------------- size curve (stacked) ---------------- */
+function drawColour(){
+  var svg=document.getElementById("cColour"); svg.textContent="";
+  var W=svg.clientWidth||520,H=216,L=46,R=12,T=12,B=40;
+  var iw=W-L-R, ih=H-T-B;
+  var max=Math.max.apply(null,COLPERF.map(function(d){return d.sold+d.on;}));
+  var top=Math.ceil(max/40)*40;
+  svg.setAttribute("viewBox","0 0 "+W+" "+H);
+  var Y=function(v){return T+ih-(v/top)*ih;};
+  var band=iw/COLPERF.length, bw=Math.min(24,band*0.5);
+  for(var i=0;i<=4;i++){
+    var y=Y(top*i/4);
+    svg.appendChild(el("line",{x1:L,x2:W-R,y1:y,y2:y,stroke:css("--grid"),"stroke-width":1}));
+    var t=el("text",{x:L-9,y:y+4,fill:css("--muted"),"font-size":11,"text-anchor":"end",
+      "font-family":"var(--mono)"}); t.textContent=Math.round(top*i/4); svg.appendChild(t);
+  }
+  COLPERF.forEach(function(d,ix){
+    var cx=L+band*(ix+0.5), x=cx-bw/2, tot=d.sold+d.on;
+    var yTop=Y(tot), ySplit=Y(d.sold);
+    // upper segment (on hand) - 4px rounded top, 2px surface gap below
+    var hOn=Math.max(0,ySplit-yTop-2);
+    var r=el("rect",{x:x,y:yTop,width:bw,height:hOn,rx:4,ry:4,fill:css("--s2")});
+    svg.appendChild(r);
+    svg.appendChild(el("rect",{x:x,y:yTop+Math.min(4,hOn),width:bw,height:Math.max(0,hOn-4),fill:css("--s2")}));
+    // lower segment (sold) - square at baseline
+    svg.appendChild(el("rect",{x:x,y:ySplit,width:bw,height:Math.max(0,T+ih-ySplit),fill:css("--s1")}));
+    svg.appendChild(el("circle",{cx:cx,cy:H-22,r:5,fill:d.hex,stroke:css("--axis"),"stroke-width":1}));
+    var lb=el("text",{x:cx,y:H-6,fill:css("--ink-2"),"font-size":10,"text-anchor":"middle"});
+    lb.textContent=LANG==="ar"?d.ar:d.en; svg.appendChild(lb);
+    var hit=el("rect",{x:cx-band/2,y:T,width:band,height:ih,fill:"transparent"});
+    hit.addEventListener("mousemove",function(ev){
+      showTip('<div class="t">'+(LANG==="ar"?"مقاس ":"Size ")+d.s+"</div>"+
+        row(css("--s1"),LANG==="ar"?"مُباع":"Sold",d.sold)+
+        row(css("--s2"),LANG==="ar"?"متبقي":"On hand",d.on)+
+        row(null,LANG==="ar"?"التصريف":"Sell-through",Math.round(d.sold/tot*100)+"%"),ev);
+    });
+    hit.addEventListener("mouseleave",hideTip);
+    svg.appendChild(hit);
+  });
+  var h=LANG==="ar"?["اللون","مُباع","متبقي","التصريف"]:["Colour","Sold","On hand","Sell-through"];
+  var html='<table><thead><tr><th>'+h[0]+'</th><th class="n">'+h[1]+'</th><th class="n">'+h[2]+
+    '</th><th class="n">'+h[3]+'</th></tr></thead><tbody>';
+  COLPERF.forEach(function(d){var t=d.sold+d.on;
+    html+='<tr><td><span style="display:inline-block;vertical-align:-2px;width:10px;height:10px;border-radius:50%;background:'+
+      d.hex+'"></span> '+(LANG==="ar"?d.ar:d.en)+'</td><td class="n">'+d.sold+'</td><td class="n">'+d.on+
+      '</td><td class="n">'+Math.round(d.sold/t*100)+'%</td></tr>';});
+  document.getElementById("tColour").innerHTML=html+"</tbody></table>";
+}
+
+/* ---------------- sell-through (h-bars) ---------------- */
+function drawSell(){
+  var svg=document.getElementById("cSell"); svg.textContent="";
+  var W=svg.clientWidth||420,H=216,L=92,R=46,T=8,B=26;
+  var iw=W-L-R, ih=H-T-B;
+  svg.setAttribute("viewBox","0 0 "+W+" "+H);
+  var band=ih/CATS.length, bh=Math.min(24,band*0.54);
+  var X=function(p){return L+(p/100)*iw;};
+  [0,25,50,75,100].forEach(function(p){
+    var x=X(p);
+    svg.appendChild(el("line",{x1:x,x2:x,y1:T,y2:T+ih,stroke:css("--grid"),"stroke-width":1}));
+    var t=el("text",{x:x,y:H-9,fill:css("--muted"),"font-size":11,"text-anchor":"middle",
+      "font-family":"var(--mono)"}); t.textContent=p+"%"; svg.appendChild(t);
+  });
+  CATS.forEach(function(c,ix){
+    var cy=T+band*(ix+0.5), y=cy-bh/2, w=Math.max(4,X(c.p)-L);
+    svg.appendChild(el("rect",{x:L,y:y,width:w,height:bh,rx:4,ry:4,fill:css("--s1")}));
+    svg.appendChild(el("rect",{x:L,y:y,width:Math.min(4,w),height:bh,fill:css("--s1")}));
+    var nm=el("text",{x:L-10,y:cy+4,fill:css("--ink-2"),"font-size":12,"text-anchor":"end"});
+    nm.textContent=LANG==="ar"?c.ar:c.en; svg.appendChild(nm);
+    var vl=el("text",{x:X(c.p)+8,y:cy+4,fill:css("--ink"),"font-size":12,"font-weight":600,
+      "font-family":"var(--mono)"}); vl.textContent=c.p+"%"; svg.appendChild(vl);
+    var hit=el("rect",{x:L,y:cy-band/2,width:iw,height:band,fill:"transparent"});
+    hit.addEventListener("mousemove",function(ev){
+      showTip('<div class="t">'+(LANG==="ar"?c.ar:c.en)+"</div>"+
+        row(css("--s1"),LANG==="ar"?"التصريف":"Sell-through",c.p+"%")+
+        row(null,LANG==="ar"?"مقابل الهدف":"vs target",(c.p-70>0?"+":"")+(c.p-70)+" pts"),ev);
+    });
+    hit.addEventListener("mouseleave",hideTip); svg.appendChild(hit);
+  });
+  var tx=X(70);
+  svg.appendChild(el("line",{x1:tx,x2:tx,y1:T,y2:T+ih,stroke:css("--ink-2"),"stroke-width":1.5,
+    "stroke-dasharray":"3 3"}));
+  var tl=el("text",{x:tx,y:T-0.5,fill:css("--ink-2"),"font-size":10.5,"text-anchor":"middle"});
+  tl.textContent=LANG==="ar"?"الهدف":"Target"; svg.appendChild(tl);
+
+  var h=LANG==="ar"?["الفئة","التصريف","مقابل الهدف"]:["Category","Sell-through","vs target"];
+  var html='<table><thead><tr><th>'+h[0]+'</th><th class="n">'+h[1]+'</th><th class="n">'+h[2]+
+    '</th></tr></thead><tbody>';
+  CATS.forEach(function(c){html+='<tr><td>'+(LANG==="ar"?c.ar:c.en)+'</td><td class="n">'+c.p+
+    '%</td><td class="n">'+(c.p-70>0?"+":"")+(c.p-70)+'</td></tr>';});
+  document.getElementById("tSell").innerHTML=html+"</tbody></table>";
+}
+
+/* ---------------- heatmap ---------------- */
+function drawHeat(){
+  var svg=document.getElementById("cHeat"); svg.textContent="";
+  var W=svg.clientWidth||520,H=196,L=44,R=8,T=20,B=24;
+  var iw=W-L-R, ih=H-T-B;
+  svg.setAttribute("viewBox","0 0 "+W+" "+H);
+  var cw=iw/12, chh=ih/7;
+  var flat=[];HEAT.forEach(function(r){flat=flat.concat(r);});
+  var mx=Math.max.apply(null,flat);
+  var ramp=["--q1","--q2","--q3","--q4","--q5","--q6","--q7"];
+  HEAT.forEach(function(rowv,r){
+    rowv.forEach(function(v,c){
+      var k=Math.min(6,Math.floor(v/mx*6.999));
+      var rc=el("rect",{x:L+c*cw+1,y:T+r*chh+1,width:Math.max(1,cw-2),height:Math.max(1,chh-2),
+        rx:2,ry:2,fill:css(ramp[k])});
+      rc.addEventListener("mousemove",function(ev){
+        showTip('<div class="t">'+DAYNM[LANG][r]+" · "+HOURS[c]+":00</div>"+
+          row(css(ramp[k]),LANG==="ar"?"معاملات":"Transactions",v),ev);
+      });
+      rc.addEventListener("mouseleave",hideTip);
+      svg.appendChild(rc);
+    });
+    var dl=el("text",{x:L-9,y:T+r*chh+chh/2+4,fill:css("--muted"),"font-size":11,"text-anchor":"end"});
+    dl.textContent=DAYNM[LANG][r]; svg.appendChild(dl);
+  });
+  HOURS.forEach(function(hh,c){
+    if(c%2) return;
+    var t=el("text",{x:L+c*cw+cw/2,y:H-8,fill:css("--muted"),"font-size":10.5,"text-anchor":"middle",
+      "font-family":"var(--mono)"}); t.textContent=hh; svg.appendChild(t);
+  });
+  var lg=el("text",{x:L,y:12,fill:css("--muted"),"font-size":10.5});
+  lg.textContent=LANG==="ar"?"أقل ازدحامًا ← أكثر ازدحامًا":"quieter → busier"; svg.appendChild(lg);
+  for(var i=0;i<7;i++){
+    svg.appendChild(el("rect",{x:W-R-7*11+i*11,y:5,width:9,height:8,rx:2,ry:2,fill:css(ramp[i])}));
+  }
+  var h=LANG==="ar"?["اليوم"]:["Day"];
+  var html='<table><thead><tr><th>'+h[0]+'</th>';
+  HOURS.forEach(function(hh){html+='<th class="n">'+hh+'</th>';});
+  html+='</tr></thead><tbody>';
+  HEAT.forEach(function(rowv,r){
+    html+='<tr><td>'+DAYNM[LANG][r]+'</td>';
+    rowv.forEach(function(v){html+='<td class="n">'+v+'</td>';});
+    html+='</tr>';
+  });
+  document.getElementById("tHeat").innerHTML=html+"</tbody></table>";
+}
+
+/* ---------------- movers table ---------------- */
+function drawMovers(){
+  var h=LANG==="ar"?["الصنف","قطع","إيراد (ج.م)","التصريف"]:["Item","Units","Revenue (EGP)","Sell-through"];
+  var html='<table><thead><tr><th>'+h[0]+'</th><th class="n">'+h[1]+'</th><th class="n">'+h[2]+
+    '</th><th>'+h[3]+'</th></tr></thead><tbody>';
+  MOVERS.forEach(function(m){
+    html+='<tr><td><div>'+(LANG==="ar"?m.ar:m.en)+'</div><div class="sku">'+m.sku+'</div></td>'+
+      '<td class="n">'+m.u+'</td><td class="n">'+egp(m.rev)+'</td>'+
+      '<td><div style="display:flex;align-items:center;gap:8px">'+
+      '<span class="bar-mini" style="flex:1"><i style="width:'+m.st+'%"></i></span>'+
+      '<span class="n" style="font-family:var(--mono);font-size:11.5px">'+m.st+'%</span></div></td></tr>';
+  });
+  document.getElementById("tMove").innerHTML=html+"</tbody></table>";
+}
+
+/* ---------------- KPI tiles + sparklines ---------------- */
+function drawKpis(){
+  var wrap=document.getElementById("kpis"); wrap.innerHTML="";
+  KPI.forEach(function(k){
+    var good = k.good==="down" ? k.d<0 : k.d>0;
+    var c=document.createElement("section"); c.className="card kpi";
+    c.innerHTML='<div class="lab">'+(LANG==="ar"?k.ar:k.en)+'</div>'+
+      '<p class="val">'+k.val+'</p>'+
+      '<div class="delta '+(good?"up":"down")+'">'+(k.d>0?"▲":"▼")+" "+Math.abs(k.d).toFixed(1)+"%"+
+      '</div><svg class="spark" viewBox="0 0 120 26" preserveAspectRatio="none" aria-hidden="true"></svg>';
+    wrap.appendChild(c);
+    var svg=c.querySelector(".spark"), mn=Math.min.apply(null,k.sp), mx=Math.max.apply(null,k.sp);
+    var rng=(mx-mn)||1, d="";
+    k.sp.forEach(function(v,i){
+      var x=i*(120/(k.sp.length-1)), y=24-((v-mn)/rng)*20-2;
+      d+=(i?"L":"M")+x.toFixed(1)+" "+y.toFixed(1);
+    });
+    svg.appendChild(el("path",{d:d,fill:"none",stroke:css("--muted"),"stroke-width":1.5,
+      "stroke-linejoin":"round","stroke-linecap":"round","vector-effect":"non-scaling-stroke"}));
+    var lx=120, ly=24-((k.sp[k.sp.length-1]-mn)/rng)*20-2;
+    svg.appendChild(el("circle",{cx:lx-2,cy:ly,r:2.6,fill:css("--s1")}));
+  });
+}
+
+/* ---------------- render all ---------------- */
+function renderAll(){drawKpis();drawLine();drawColour();drawSell();drawHeat();drawMovers();}
+
+/* ---------------- controls ---------------- */
+function applyLang(){
+  var ar = LANG==="ar";
+  root.setAttribute("dir", ar?"rtl":"ltr");
+  document.querySelectorAll("[data-en]").forEach(function(n){
+    n.textContent = ar ? n.getAttribute("data-ar") : n.getAttribute("data-en");
+  });
+  document.getElementById("lang").textContent = ar ? "English" : "العربية";
+  renderAll();
+}
+document.getElementById("lang").addEventListener("click",function(){
+  LANG = LANG==="en" ? "ar" : "en"; applyLang();
+});
+document.getElementById("theme").addEventListener("click",function(){
+  var dark = document.documentElement.getAttribute("data-theme")==="dark";
+  if(!dark && !document.documentElement.hasAttribute("data-theme")){
+    dark = matchMedia("(prefers-color-scheme: dark)").matches;
+  }
+  document.documentElement.setAttribute("data-theme", dark?"light":"dark");
+  this.textContent = LANG==="ar" ? (dark?"داكن":"فاتح") : (dark?"Dark":"Light");
+  requestAnimationFrame(renderAll);
+});
+document.getElementById("tbl").addEventListener("click",function(){
+  var on = document.body.classList.toggle("tables");
+  this.setAttribute("aria-pressed", on?"true":"false");
+});
+document.getElementById("range").addEventListener("click",function(ev){
+  var b=ev.target.closest("button[data-d]"); if(!b) return;
+  this.querySelectorAll("button").forEach(function(x){x.setAttribute("aria-pressed","false");});
+  b.setAttribute("aria-pressed","true");
+  DAYS=+b.getAttribute("data-d"); drawLine();
+});
+document.getElementById("chan").addEventListener("change",function(){
+  var m=CHAN[this.value];
+  document.getElementById("heroFig").textContent=egp(Math.round(48320*m));
+  drawLine();
+});
+var rt; addEventListener("resize",function(){clearTimeout(rt);rt=setTimeout(renderAll,140);});
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",function(){
+  if(!document.documentElement.hasAttribute("data-theme")) requestAnimationFrame(renderAll);
+});
+renderAll();
+})();
+</script>

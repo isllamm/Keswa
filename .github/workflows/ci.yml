@@ -1,0 +1,48 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: gradle/actions/setup-gradle@v4
+
+      # KD-002 — the local database is the source of truth; destructive migration is data loss.
+      - name: No destructive migration
+        run: |
+          if grep -rn "fallbackToDestructiveMigration" --include="*.kt" core composeApp; then
+            echo "::error::fallbackToDestructiveMigration is a blocker — see KD-002"; exit 1
+          fi
+
+      # ADR-029 — all logging goes through IPlatformProvider.
+      # DesktopPlatformProvider is the one sink and is allowed to write to the console.
+      - name: No println outside the logger
+        run: |
+          if grep -rn "println(" --include="*.kt" core composeApp \
+               | grep -v "DesktopPlatformProvider.kt"; then
+            echo "::error::use IPlatformProvider.log() — see ADR-029"; exit 1
+          fi
+
+      # KD-004 — commonMain must compile for Android too, from Phase 6 onward.
+      - name: No java.* or android.* in commonMain
+        run: |
+          if grep -rn "^import \(java\|android\)\." --include="*.kt" \
+               core/src/commonMain composeApp/src/commonMain; then
+            echo "::error::commonMain must not depend on java.* or android.* — see KD-004"; exit 1
+          fi
+
+      - name: Compile
+        run: ./gradlew :composeApp:compileKotlinDesktop
+
+      - name: Test
+        run: ./gradlew allTests
