@@ -1,0 +1,12 @@
+.gradle/
+build/
+local.properties
+.idea/
+*.iml
+.DS_Store
+.kotlin/
+# Worktree copies pollute grep results — see phase-0 plan, "adjacent smell"
+.claude/worktrees/
+
+# Local machine settings (shared .claude/settings.json is tracked; .local is not)
+.claude/settings.local.json
