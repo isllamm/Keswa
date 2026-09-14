@@ -15,6 +15,7 @@ kotlin {
     sourceSets {
         commonMain.dependencies {
             implementation(project(":core"))
+            implementation(project(":features:catalog"))
             implementation(libs.koin.compose)
             implementation(libs.lifecycle.runtime.compose)
         }

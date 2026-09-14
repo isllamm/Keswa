@@ -1,6 +1,7 @@
 package com.alsoug.keswa.di
 
 import com.alsoug.keswa.core.di.coreModule
+import com.alsoug.keswa.features.catalog.di.catalogModule
 import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
 import org.koin.dsl.KoinAppDeclaration
@@ -14,5 +15,6 @@ fun initKoin(declaration: KoinAppDeclaration? = null): KoinApplication =
         modules(
             coreModule,
             platformModule,
+            catalogModule,
         )
     }

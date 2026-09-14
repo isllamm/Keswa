@@ -37,6 +37,9 @@ abstract class StockLedgerDao {
     @Query("SELECT COALESCE(SUM(quantity), 0) FROM stock_movement WHERE variantId = :variantId AND locationId = :locationId")
     abstract suspend fun sumQuantity(variantId: String, locationId: String): Int
 
+    @Query("SELECT COALESCE(SUM(quantity), 0) FROM stock_movement WHERE variantId = :variantId")
+    abstract suspend fun sumQuantityEverywhere(variantId: String): Int
+
     @Query("SELECT COUNT(*) FROM stock_movement")
     abstract suspend fun movementCount(): Int
 

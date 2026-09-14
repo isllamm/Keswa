@@ -12,6 +12,7 @@ import com.alsoug.keswa.core.database.entities.LocationEntity
 import com.alsoug.keswa.core.database.entities.ProductEntity
 import com.alsoug.keswa.core.database.entities.VariantBarcodeEntity
 import com.alsoug.keswa.core.database.entities.VariantEntity
+import com.alsoug.keswa.core.domain.model.BarcodeSource
 import kotlinx.coroutines.flow.Flow
 
 @Dao
@@ -134,6 +135,9 @@ interface VariantBarcodeDao {
 
     @Query("SELECT * FROM variant_barcode WHERE barcode = :barcode")
     suspend fun getByBarcode(barcode: String): VariantBarcodeEntity?
+
+    @Query("SELECT COUNT(*) FROM variant_barcode WHERE source = :source")
+    suspend fun countBySource(source: BarcodeSource): Int
 
     @Query("SELECT * FROM variant_barcode WHERE variantId = :variantId ORDER BY isPrimary DESC")
     suspend fun getForVariant(variantId: String): List<VariantBarcodeEntity>
