@@ -87,6 +87,52 @@ Desktop and Android share ~90% of the code, so tablet tills later are nearly fre
 
 **No iOS.** MFi blocks wired and Bluetooth-Classic peripherals, and PKCS#11 signing has no path.
 
+### D1a — "Can we do web as well?" — yes, but not as the same app
+
+Asked 14 Sep, after Phase 2. Recorded here because the answer is not obvious and the reasoning is
+worth keeping.
+
+**Verified blocker.** `androidx.room:room-runtime` publishes for `android`, `iosArm64`,
+`iosSimulatorArm64`, `iosX64`, `jvm`, `linuxArm64`, `linuxX64`, `macosArm64`, `macosX64` — checked
+against the resolved Gradle module metadata. **There is no `wasmJs` or `js` target.** A browser
+cannot use this database at all, so a web build has no local persistence and must talk to a server.
+
+What *does* cross to the web unchanged, if a web build is ever made:
+
+| Layer | Web? | Why |
+|---|---|---|
+| `core/domain` — `Money`, models, repository **interfaces** | ✅ | Pure Kotlin; the ADR-005 gate keeps it that way |
+| `features/*/domain/usecase` — every rule | ✅ | Depends on interfaces, not Room |
+| Compose UI, ViewModels | ✅ | Compose Multiplatform targets Wasm |
+| `core/database` — Room, entities, DAOs | ❌ | No web target, verified above |
+| Printers, cash drawer, scanner, PKCS#11 | ❌ | §2 — unchanged |
+
+So the repository interfaces are the seam: desktop implements them against Room, a web build would
+implement them against HTTP. That is a Phase 9 concern, because it needs the server to exist.
+
+### Why not web first, then desktop
+
+Tempting — no installer, no per-machine setup, easier to sell to other shops. Rejected:
+
+1. **Web-first is server-first.** With no local database in the browser, the backend, hosting,
+   server-side auth and KD-007 all move to the front — months of infrastructure before the shop can
+   sell a single garment.
+2. **The till is the product.** Scan, charge, print, hand over. A browser can do none of the
+   printing half (§2), so web-first means building everything *except* what the shop opens the app to do.
+3. **A web till dies with the internet.** In a shop, that is not hypothetical.
+4. **It discards the reason Phase 1 is shaped as it is.** The append-only ledger exists so offline
+   tills merge without conflict resolution. Server-as-truth is a different system, not a staged
+   version of this one.
+
+**The split is not desktop vs. web. It is till vs. back office** — and the plan already has both:
+desktop for the till, web for the back office in Phase 9 (reports, catalogue, multi-branch, the
+owner checking takings from home). Neither of those touches hardware or needs to work offline.
+
+**No action needed now.** `core/domain` is already pure and the CI gate keeps it pure, so promoting
+it to its own module when a web build arrives is mechanical rather than a refactor. Splitting it
+today would be speculative generality for a consumer that does not exist yet.
+
+
 ---
 
 ## 3. Domain model — the part that decides success
