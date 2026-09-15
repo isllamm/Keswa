@@ -21,6 +21,31 @@ val MIGRATION_1_2: Migration = object : Migration(1, 2) {
 }
 
 /**
+ * 2 → 3: adds `app_user`.
+ *
+ * Additive again, and deliberately so — the shop's trading history predates its user accounts, and
+ * an upgrade must never put that at risk to introduce a login. DDL copied verbatim from Room's
+ * exported `3.json`, index included: Room validates the schema's identity hash on open, so a
+ * hand-written approximation fails at startup rather than at review.
+ */
+val MIGRATION_2_3: Migration = object : Migration(2, 3) {
+    override fun migrate(connection: SQLiteConnection) {
+        connection.execSQL(
+            "CREATE TABLE IF NOT EXISTS `app_user` (" +
+                "`id` TEXT NOT NULL, `username` TEXT NOT NULL, `displayName` TEXT NOT NULL, " +
+                "`displayNameAr` TEXT NOT NULL, `role` TEXT NOT NULL, `secretHash` TEXT NOT NULL, " +
+                "`secretSalt` TEXT NOT NULL, `secretKind` TEXT NOT NULL, `isActive` INTEGER NOT NULL, " +
+                "`mustChangeSecret` INTEGER NOT NULL, `failedAttempts` INTEGER NOT NULL, " +
+                "`lockedUntil` INTEGER, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT NULL, " +
+                "PRIMARY KEY(`id`))",
+        )
+        connection.execSQL(
+            "CREATE UNIQUE INDEX IF NOT EXISTS `index_app_user_username` ON `app_user` (`username`)",
+        )
+    }
+}
+
+/**
  * Every migration this database has ever shipped, in order.
  *
  * KD-002: the local database is the source of truth until sync arrives, so
@@ -29,4 +54,5 @@ val MIGRATION_1_2: Migration = object : Migration(1, 2) {
  */
 val ALL_MIGRATIONS: Array<Migration> = arrayOf(
     MIGRATION_1_2,
+    MIGRATION_2_3,
 )

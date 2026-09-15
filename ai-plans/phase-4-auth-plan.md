@@ -1,6 +1,9 @@
 # Phase 4 Plan — Users, Roles & Login
 
-> **Status: 📝 DRAFT — awaiting review**
+> **Status: ✅ BUILT — Q5 answered provisionally**
+> Q5 (offline admin recovery) is implemented as **a recovery code shown once at setup**, the
+> recommended option. Still open to change: it touches only `BootstrapFirstAdminUseCase` and
+> `RecoverWithCodeUseCase`.
 > Depends on: Phase 1 (schema), Phase 0 (DI, dispatchers)
 > **New phase, inserted 14 Sep 2026.** Phases 4–9 shifted to 5–10.
 > Estimated: 5–7 days

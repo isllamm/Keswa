@@ -67,6 +67,13 @@ if require_paths "no runBlocking" "$PROD"; then
        "use a suspend function or an injected CoroutineScope"
 fi
 
+# A credential in a log survives backups, support bundles and screenshares.
+if require_paths "no credential logging" "$PROD"; then
+  gate "no credential reaches the logger" \
+       "$(code_grep 'log(.*\(secret\|password\|pin\|Pin\|Secret\|Password\)' $PROD)" \
+       "never log a credential, at any level, masked or not (ADR-029, KD-auth)"
+fi
+
 if require_paths "domain purity (ADR-005)" "$DOMAIN"; then
   gate "domain has zero framework imports (ADR-005)" \
        "$(code_grep '^import' $DOMAIN | grep -E 'androidx\.|compose|ktor|koin' || true)" \
