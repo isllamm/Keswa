@@ -9,6 +9,24 @@ package com.alsoug.keswa.core.domain.model
 
 enum class LocationType { SHOP, WAREHOUSE }
 
+/**
+ * Two roles, because the shop has two kinds of person at the till.
+ *
+ * Not a permissions engine: two fixed roles do not need one, and an engine nobody configures is
+ * just a slower `when`. Custom roles, if ever wanted, are an additive migration.
+ */
+enum class UserRole { ADMIN, SELLER }
+
+/**
+ * What a user signs in with.
+ *
+ * A seller signs in dozens of times a shift, so they get a PIN on a keypad; an admin signs in
+ * rarely and holds real power, so they get a password. Making a cashier type a strong password
+ * forty times a day guarantees it ends up on a sticky note under the drawer — the auth model
+ * itself would have created the vulnerability.
+ */
+enum class SecretKind { PIN, PASSWORD }
+
 enum class BarcodeSource { OWN, SUPPLIER }
 
 enum class PriceListType { RETAIL, WHOLESALE }

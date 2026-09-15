@@ -17,6 +17,7 @@ kotlin {
             implementation(project(":core"))
             implementation(project(":features:catalog"))
             implementation(project(":features:settings"))
+            implementation(project(":features:auth"))
             implementation(libs.koin.compose)
             implementation(libs.lifecycle.runtime.compose)
         }
@@ -24,6 +25,7 @@ kotlin {
         val desktopMain by getting {
             dependencies {
                 implementation(compose.desktop.currentOs)
+                implementation(libs.kotlinx.coroutines.swing)
             }
         }
 
