@@ -9,9 +9,11 @@ import com.alsoug.keswa.core.database.dao.ColourDao
 import com.alsoug.keswa.core.database.dao.LocationDao
 import com.alsoug.keswa.core.database.dao.PriceDao
 import com.alsoug.keswa.core.database.dao.ProductDao
+import com.alsoug.keswa.core.database.dao.SettingDao
 import com.alsoug.keswa.core.database.dao.StockLedgerDao
 import com.alsoug.keswa.core.database.dao.VariantBarcodeDao
 import com.alsoug.keswa.core.database.dao.VariantDao
+import com.alsoug.keswa.core.database.entities.AppSettingEntity
 import com.alsoug.keswa.core.database.entities.CategoryEntity
 import com.alsoug.keswa.core.database.entities.ColourEntity
 import com.alsoug.keswa.core.database.entities.LocationEntity
@@ -41,8 +43,10 @@ import com.alsoug.keswa.core.database.entities.VariantEntity
         StockOnHandEntity::class,
         PriceListEntity::class,
         PriceEntity::class,
+        AppSettingEntity::class,
     ],
-    version = 1, // 1: initial schema — category tree, catalogue, stock ledger, pricing
+    version = 2, // 2: added app_setting (printer and scanner configuration)
+    // 1: initial schema — category tree, catalogue, stock ledger, pricing
     exportSchema = true,
 )
 @ConstructedBy(KeswaDatabaseConstructor::class)
@@ -55,6 +59,7 @@ abstract class KeswaDatabase : RoomDatabase() {
     abstract fun variantBarcodeDao(): VariantBarcodeDao
     abstract fun stockLedgerDao(): StockLedgerDao
     abstract fun priceDao(): PriceDao
+    abstract fun settingDao(): SettingDao
 }
 
 /**

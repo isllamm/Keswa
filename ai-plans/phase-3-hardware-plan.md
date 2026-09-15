@@ -1,6 +1,8 @@
 # Phase 3 Plan — Hardware Layer (Printers & Scanner)
 
-> **Status: 📝 DRAFT — awaiting review**
+> **Status: 🔨 SOFTWARE COMPLETE — hardware checks outstanding**
+> Q3 answered 15 Sep: **network printers**. That makes `TcpTransport` the entire transport layer,
+> with no platform-specific code anywhere — the best case in D8.
 > Depends on: Phase 1. **Does not depend on Phase 2** — can run in parallel.
 > Blocked by: **Q3** (which printers) for the on-hardware checks only. All software work can start now.
 > Estimated: 5–8 days
@@ -82,8 +84,17 @@ object EscPos {
 **The single most important piece of this phase.** Thermal firmware mangles Arabic — CP864/CP1256
 confusion, no letter shaping, no ligatures, no RTL. Do not send Arabic as text.
 
-Render the document to a bitmap using Compose's own graphics APIs, which are common across all CMP
-targets, then ship it as a raster image:
+**Changed during build.** The plan assumed Compose's graphics APIs would serve and were "common
+across all CMP targets". They are not, quite: `TextMeasurer` needs a `FontFamily.Resolver`, which is
+itself platform-supplied — so rendering is a platform bridge either way. `DesktopReceiptRenderer`
+therefore uses **AWT** (`BufferedImage` + `TextLayout`), which shapes Arabic and resolves
+bidirectional runs correctly and is far better-trodden. Android gets its own implementation on
+`android.graphics.Canvas` in Phase 6, behind the same `IReceiptRenderer`.
+
+The document model and the raster encoding either side of it stay pure and testable; only glyph
+rasterisation is platform-specific.
+
+The original sketch, for reference:
 
 ```kotlin
 fun renderReceipt(receipt: Receipt, widthDots: Int = 576): MonoBitmap {
@@ -145,6 +156,12 @@ human by **inter-keystroke timing** — a scanner emits characters far faster th
 the scanner flow, consumed explicitly by the screen that wants it.
 
 ### 7. [NEW] `features/settings` — printer configuration
+
+**Settings live in the database, as schema v2.** That made `app_setting` the project's **first real
+migration** — which in turn closed the gap left at the end of Phase 1, where the migration harness
+was built but never exercised on an actual version bump. `SchemaFixture` now builds a database at
+any previously-exported schema version from Room's own JSON, so every future migration is testable
+against the schema a real shop is actually carrying.
 
 The minimum to make the above usable: printer IP/port, paper width, label dimensions, a **Test
 Print** button, and scanner timing thresholds. Follows the standard feature layout and MVI rules —

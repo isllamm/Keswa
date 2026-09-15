@@ -5,6 +5,7 @@ import com.alsoug.keswa.core.coroutines.DispatcherProvider
 import com.alsoug.keswa.core.data.repository.CategoryRepositoryImpl
 import com.alsoug.keswa.core.data.repository.ColourRepositoryImpl
 import com.alsoug.keswa.core.data.repository.ProductRepositoryImpl
+import com.alsoug.keswa.core.data.repository.SettingsRepositoryImpl
 import com.alsoug.keswa.core.data.repository.VariantRepositoryImpl
 import com.alsoug.keswa.core.database.KeswaDatabase
 import com.alsoug.keswa.core.domain.IdGenerator
@@ -12,6 +13,7 @@ import com.alsoug.keswa.core.domain.UuidIdGenerator
 import com.alsoug.keswa.core.domain.repository.ICategoryRepository
 import com.alsoug.keswa.core.domain.repository.IColourRepository
 import com.alsoug.keswa.core.domain.repository.IProductRepository
+import com.alsoug.keswa.core.domain.repository.ISettingsRepository
 import com.alsoug.keswa.core.domain.repository.IVariantRepository
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
@@ -38,6 +40,7 @@ val coreModule = module {
         ) { now() }
     }
     single<IColourRepository> { ColourRepositoryImpl(get<KeswaDatabase>().colourDao()) }
+    single<ISettingsRepository> { SettingsRepositoryImpl(get<KeswaDatabase>().settingDao()) }
     single<IVariantRepository> {
         VariantRepositoryImpl(
             get<KeswaDatabase>().variantDao(),

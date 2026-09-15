@@ -18,3 +18,4 @@ rootProject.name = "keswa"
 include(":composeApp")
 include(":core")
 include(":features:catalog")
+include(":features:settings")

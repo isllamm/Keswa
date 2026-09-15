@@ -32,8 +32,19 @@ kotlin {
             api(libs.kotlinx.datetime)
             api(libs.koin.core)
 
+            // Phase 3 — drives network printers over raw TCP :9100
+            api(libs.ktor.network)
+
             api(libs.androidx.room.runtime)
             api(libs.androidx.sqlite.bundled)
+        }
+
+        val desktopMain by getting {
+            dependencies {
+                // QR for the receipt's return-lookup code. JVM-only, which is fine: rendering is
+                // a platform concern anyway (see IReceiptRenderer).
+                implementation(libs.zxing.core)
+            }
         }
 
         commonTest.dependencies {
