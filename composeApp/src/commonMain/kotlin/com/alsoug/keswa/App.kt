@@ -1,6 +1,8 @@
 package com.alsoug.keswa
 
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -14,6 +16,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.ui.Modifier
 import com.alsoug.keswa.features.catalog.presentation.screens.catalogbrowser.CatalogBrowserScreen
 import com.alsoug.keswa.features.catalog.presentation.screens.producteditor.ProductEditorScreen
+import com.alsoug.keswa.features.settings.presentation.screens.settings.SettingsScreen
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
@@ -26,6 +29,7 @@ import org.koin.compose.koinInject
 private sealed interface Route {
     data object Catalogue : Route
     data class ProductEditor(val productId: String) : Route
+    data object Settings : Route
 }
 
 @Composable
@@ -36,7 +40,18 @@ fun App() {
     val notify: (String) -> Unit = { message -> scope.launch { snackbars.showSnackbar(message) } }
 
     MaterialTheme {
-        Scaffold(snackbarHost = { SnackbarHost(snackbars) }) { padding ->
+        Scaffold(
+            snackbarHost = { SnackbarHost(snackbars) },
+            floatingActionButton = {
+                if (route is Route.Catalogue) {
+                    ExtendedFloatingActionButton(
+                        onClick = { route = Route.Settings },
+                        text = { Text("Printers") },
+                        icon = {},
+                    )
+                }
+            },
+        ) { padding ->
             when (val current = route) {
                 is Route.Catalogue -> CatalogBrowserScreen(
                     viewModel = koinInject(),
@@ -47,6 +62,13 @@ fun App() {
 
                 is Route.ProductEditor -> ProductEditorScreen(
                     productId = current.productId,
+                    viewModel = koinInject(),
+                    onBack = { route = Route.Catalogue },
+                    onMessage = notify,
+                    modifier = Modifier.padding(padding),
+                )
+
+                is Route.Settings -> SettingsScreen(
                     viewModel = koinInject(),
                     onBack = { route = Route.Catalogue },
                     onMessage = notify,

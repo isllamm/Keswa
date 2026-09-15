@@ -7,6 +7,8 @@ import com.alsoug.keswa.core.database.appDataDirectory
 import com.alsoug.keswa.core.database.getDatabaseBuilder
 import com.alsoug.keswa.core.database.getKeswaDatabase
 import com.alsoug.keswa.core.platform.IPlatformProvider
+import com.alsoug.keswa.core.platform.IReceiptRenderer
+import com.alsoug.keswa.core.printing.DesktopReceiptRenderer
 import com.alsoug.keswa.core.platform.LogLevel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
@@ -17,6 +19,7 @@ import org.koin.dsl.module
 actual val platformModule: Module = module {
     // Platform
     single<IPlatformProvider> { DesktopPlatformProvider() }
+    single<IReceiptRenderer> { DesktopReceiptRenderer() }
 
     // Application-lifetime scope. Injected rather than GlobalScope, per the forbidden-patterns
     // table in CODE_GUIDELINES; SupervisorJob so one failed startup task cannot cancel the rest.

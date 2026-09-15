@@ -115,7 +115,7 @@ class RemoveColourFromProductUseCaseTest {
         assertEquals(RemoveColourResult.Removed, result)
         val variant = variants.getById("v1").getOrThrow()
         assertTrue(variant != null, "the variant row must outlive the decision to stop selling it")
-        assertTrue(!variant!!.isActive)
+        assertTrue(!variant.isActive)
     }
 
     @Test
