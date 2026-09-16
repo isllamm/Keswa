@@ -5,13 +5,25 @@ import com.alsoug.keswa.core.coroutines.DispatcherProvider
 import com.alsoug.keswa.core.data.repository.CategoryRepositoryImpl
 import com.alsoug.keswa.core.data.repository.ColourRepositoryImpl
 import com.alsoug.keswa.core.data.repository.ProductRepositoryImpl
+import com.alsoug.keswa.core.data.repository.HeldSaleRepositoryImpl
+import com.alsoug.keswa.core.data.repository.LocationRepositoryImpl
+import com.alsoug.keswa.core.data.repository.PriceRepositoryImpl
+import com.alsoug.keswa.core.data.repository.SaleRepositoryImpl
+import com.alsoug.keswa.core.data.repository.SellableRepositoryImpl
 import com.alsoug.keswa.core.data.repository.SettingsRepositoryImpl
+import com.alsoug.keswa.core.data.repository.ShiftRepositoryImpl
 import com.alsoug.keswa.core.data.repository.UserRepositoryImpl
 import com.alsoug.keswa.core.data.repository.VariantRepositoryImpl
 import com.alsoug.keswa.core.database.KeswaDatabase
 import com.alsoug.keswa.core.domain.IdGenerator
 import com.alsoug.keswa.core.domain.UuidIdGenerator
 import com.alsoug.keswa.core.domain.repository.ICategoryRepository
+import com.alsoug.keswa.core.domain.repository.IHeldSaleRepository
+import com.alsoug.keswa.core.domain.repository.ILocationRepository
+import com.alsoug.keswa.core.domain.repository.IPriceRepository
+import com.alsoug.keswa.core.domain.repository.ISaleRepository
+import com.alsoug.keswa.core.domain.repository.ISellableRepository
+import com.alsoug.keswa.core.domain.repository.IShiftRepository
 import com.alsoug.keswa.core.domain.repository.IColourRepository
 import com.alsoug.keswa.core.domain.repository.IProductRepository
 import com.alsoug.keswa.core.domain.repository.ISettingsRepository
@@ -19,6 +31,8 @@ import com.alsoug.keswa.core.domain.repository.IUserRepository
 import com.alsoug.keswa.core.session.ISessionManager
 import com.alsoug.keswa.core.session.InMemorySessionManager
 import com.alsoug.keswa.core.domain.repository.IVariantRepository
+import com.alsoug.keswa.core.platform.TransportFactory
+import com.alsoug.keswa.core.printing.transport.TcpTransport
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 import org.koin.dsl.module
@@ -33,6 +47,9 @@ val coreModule = module {
     single<DispatcherProvider> { DefaultDispatcherProvider() }
     single<IdGenerator> { UuidIdGenerator() }
 
+    // Network printers, so one shared implementation covers every platform and every feature
+    single<TransportFactory> { TransportFactory { host, port -> TcpTransport(host, port, get()) } }
+
     // Data Layer — repositories
     single<ICategoryRepository> {
         CategoryRepositoryImpl(get<KeswaDatabase>().categoryDao()) { now() }
@@ -43,6 +60,7 @@ val coreModule = module {
             get<KeswaDatabase>().categoryDao(),
         ) { now() }
     }
+    single<ILocationRepository> { LocationRepositoryImpl(get<KeswaDatabase>().locationDao()) }
     single<IColourRepository> { ColourRepositoryImpl(get<KeswaDatabase>().colourDao()) }
     single<ISettingsRepository> { SettingsRepositoryImpl(get<KeswaDatabase>().settingDao()) }
     single<IUserRepository> { UserRepositoryImpl(get<KeswaDatabase>().userDao()) { now() } }
@@ -56,6 +74,25 @@ val coreModule = module {
             get<KeswaDatabase>().stockLedgerDao(),
         ) { now() }
     }
+
+    // Selling — the sale repository takes the database itself because a sale spans DAOs and has to
+    // commit as one transaction
+    single<ISaleRepository> {
+        SaleRepositoryImpl(
+            get(),
+            get<KeswaDatabase>().saleDao(),
+            get<KeswaDatabase>().stockLedgerDao(),
+            get(),
+        )
+    }
+    single<IShiftRepository> {
+        ShiftRepositoryImpl(get<KeswaDatabase>().shiftDao(), get<KeswaDatabase>().saleDao())
+    }
+    single<IHeldSaleRepository> {
+        HeldSaleRepositoryImpl(get(), get<KeswaDatabase>().heldSaleDao())
+    }
+    single<IPriceRepository> { PriceRepositoryImpl(get<KeswaDatabase>().priceDao()) }
+    single<ISellableRepository> { SellableRepositoryImpl(get<KeswaDatabase>().sellableDao()) }
 }
 
 @OptIn(ExperimentalTime::class)

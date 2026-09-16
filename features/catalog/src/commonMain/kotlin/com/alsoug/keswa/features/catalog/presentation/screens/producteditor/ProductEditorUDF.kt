@@ -24,6 +24,7 @@ sealed interface ProductEditorUiEvent {
     data class RemoveColour(val variantId: String) : ProductEditorUiEvent
     data class AssignSupplierBarcode(val variantId: String, val barcode: String) :
         ProductEditorUiEvent
+    data class SetPrice(val variantId: String, val amount: String) : ProductEditorUiEvent
     data object Back : ProductEditorUiEvent
 }
 

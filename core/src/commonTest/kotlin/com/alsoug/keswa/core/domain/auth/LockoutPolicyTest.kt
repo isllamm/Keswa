@@ -1,4 +1,4 @@
-package com.alsoug.keswa.features.auth.domain
+package com.alsoug.keswa.core.domain.auth
 
 import kotlin.test.Test
 import kotlin.test.assertEquals

@@ -1,4 +1,4 @@
-package com.alsoug.keswa.features.auth.domain
+package com.alsoug.keswa.core.domain.auth
 
 /**
  * How long an account is locked after repeated failures.
@@ -8,6 +8,9 @@ package com.alsoug.keswa.features.auth.domain
  * escalation is what stops a slow, spread-out attack.
  *
  * Pure and separate so the policy can be reasoned about and changed without touching sign-in.
+ *
+ * Lives in `:core` because two features enforce it: sign-in, and the re-authentication a till
+ * asks for before a discount or a void. Two copies of a threshold is one copy that drifts.
  */
 object LockoutPolicy {
 

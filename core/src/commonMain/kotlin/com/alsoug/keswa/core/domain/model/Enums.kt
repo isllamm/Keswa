@@ -45,3 +45,19 @@ enum class MovementReason {
     COUNT,
     DAMAGE,
 }
+
+/**
+ * Whether a sale still stands.
+ *
+ * There is no `HELD`: a parked cart has not happened, and lives in its own table so that every
+ * revenue query is a plain read with no status filter to forget.
+ */
+enum class SaleStatus { COMPLETED, VOIDED }
+
+/**
+ * How a customer paid.
+ *
+ * `CARD` records that a card was used; it drives no terminal. Whether this app ever talks to one is
+ * Q2, and until that is answered a record is what the shop needs and all it needs.
+ */
+enum class TenderMethod { CASH, CARD }

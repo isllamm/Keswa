@@ -6,10 +6,14 @@ import androidx.room.RoomDatabase
 import androidx.room.RoomDatabaseConstructor
 import com.alsoug.keswa.core.database.dao.CategoryDao
 import com.alsoug.keswa.core.database.dao.ColourDao
+import com.alsoug.keswa.core.database.dao.HeldSaleDao
 import com.alsoug.keswa.core.database.dao.LocationDao
 import com.alsoug.keswa.core.database.dao.PriceDao
 import com.alsoug.keswa.core.database.dao.ProductDao
+import com.alsoug.keswa.core.database.dao.SaleDao
+import com.alsoug.keswa.core.database.dao.SellableDao
 import com.alsoug.keswa.core.database.dao.SettingDao
+import com.alsoug.keswa.core.database.dao.ShiftDao
 import com.alsoug.keswa.core.database.dao.UserDao
 import com.alsoug.keswa.core.database.dao.StockLedgerDao
 import com.alsoug.keswa.core.database.dao.VariantBarcodeDao
@@ -18,10 +22,16 @@ import com.alsoug.keswa.core.database.entities.AppSettingEntity
 import com.alsoug.keswa.core.database.entities.AppUserEntity
 import com.alsoug.keswa.core.database.entities.CategoryEntity
 import com.alsoug.keswa.core.database.entities.ColourEntity
+import com.alsoug.keswa.core.database.entities.HeldSaleEntity
+import com.alsoug.keswa.core.database.entities.HeldSaleLineEntity
 import com.alsoug.keswa.core.database.entities.LocationEntity
+import com.alsoug.keswa.core.database.entities.PaymentEntity
 import com.alsoug.keswa.core.database.entities.PriceEntity
 import com.alsoug.keswa.core.database.entities.PriceListEntity
 import com.alsoug.keswa.core.database.entities.ProductEntity
+import com.alsoug.keswa.core.database.entities.SaleEntity
+import com.alsoug.keswa.core.database.entities.SaleLineEntity
+import com.alsoug.keswa.core.database.entities.ShiftEntity
 import com.alsoug.keswa.core.database.entities.StockMovementEntity
 import com.alsoug.keswa.core.database.entities.StockOnHandEntity
 import com.alsoug.keswa.core.database.entities.VariantBarcodeEntity
@@ -47,8 +57,15 @@ import com.alsoug.keswa.core.database.entities.VariantEntity
         PriceEntity::class,
         AppSettingEntity::class,
         AppUserEntity::class,
+        SaleEntity::class,
+        SaleLineEntity::class,
+        PaymentEntity::class,
+        ShiftEntity::class,
+        HeldSaleEntity::class,
+        HeldSaleLineEntity::class,
     ],
-    version = 3, // 3: added app_user (sign-in, roles, lockout)
+    version = 4, // 4: added sale, sale_line, payment, shift, held_sale, held_sale_line
+    // 3: added app_user (sign-in, roles, lockout)
     // 2: added app_setting (printer and scanner configuration)
     // 1: initial schema — category tree, catalogue, stock ledger, pricing
     exportSchema = true,
@@ -65,6 +82,10 @@ abstract class KeswaDatabase : RoomDatabase() {
     abstract fun priceDao(): PriceDao
     abstract fun settingDao(): SettingDao
     abstract fun userDao(): UserDao
+    abstract fun saleDao(): SaleDao
+    abstract fun shiftDao(): ShiftDao
+    abstract fun heldSaleDao(): HeldSaleDao
+    abstract fun sellableDao(): SellableDao
 }
 
 /**
