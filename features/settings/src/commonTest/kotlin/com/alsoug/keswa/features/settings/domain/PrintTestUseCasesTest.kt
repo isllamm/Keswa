@@ -10,7 +10,7 @@ import com.alsoug.keswa.features.settings.domain.usecase.PrintResult
 import com.alsoug.keswa.features.settings.domain.usecase.PrintTestLabelUseCase
 import com.alsoug.keswa.features.settings.domain.usecase.PrintTestPageUseCase
 import com.alsoug.keswa.features.settings.domain.usecase.SaveSettingsUseCase
-import com.alsoug.keswa.features.settings.domain.usecase.TransportFactory
+import com.alsoug.keswa.core.platform.TransportFactory
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs

@@ -13,7 +13,7 @@
 | 2 | Catalogue | `phase-2-catalog-plan.md` |
 | 3 | Hardware | `phase-3-hardware-plan.md` |
 | **4** | **Users, roles & login** | `phase-4-auth-plan.md` ← **new** |
-| 5 | Sell flow | outlined below |
+| 5 | Sell flow | `phase-5-sell-plan.md` ✅ built |
 | 6 | Receiving, labels, counts + Android | outlined below |
 | 7 | Wholesale ⚠️ Q1 | outlined below |
 | 8 | Returns, exchanges & analytics | `phase-8-analytics-plan.md` + below |
@@ -24,19 +24,23 @@
 is append-only by design. Ship selling before login and every sale in the shop's permanent history is
 attributed to a placeholder that cannot be corrected afterwards.
 
-## Why 5–10 are outlines
+## Why 6–10 are outlines
 
-Phases 0–4 are detailed because they are ready to execute and their decisions are irreversible.
+Phases 0–5 are detailed because they are ready to execute and their decisions are irreversible.
 These are not:
 
 1. **Phases 7 and 10 are gated** on Q1 and Q2. Detailing them now means writing two plans and
    discarding one.
-2. **Phase 3 will teach us things** about printer behaviour that change Phase 5's receipt flow.
+2. **Each phase teaches the next one things.** Phase 5 alone turned up three gaps Phases 1–4 had
+   left open, none of which a plan written in advance would have named.
 3. Detailed plans written six phases early read as rigour and function as fiction.
 
 ---
 
-## Phase 5 — Sell flow
+## Phase 5 — Sell flow ✅
+
+**Built. Full plan: `phase-5-sell-plan.md`,** which supersedes the sketch below. Kept for the
+record, since the outline is where these decisions were first framed.
 
 **Goal:** scan → cart → tender → print → stock movement. The first genuinely usable till.
 
@@ -51,9 +55,17 @@ These are not:
 **Consumes from Phase 4:** the `SELL` permission, the signed-in `userId` on every movement, and
 re-authentication for price overrides and voids.
 
+**Left behind for Phase 6:** `LockoutPolicy`, the salt codec and `TransportFactory` now live in
+`:core`, because two features each need them.
+
 **Risks:** scanning an unknown barcode mid-sale (fast "create on the fly" path, or refuse?);
 negative stock (in practice **allow with a warning** — the stock figure is more often wrong than the
 customer's hands).
+
+> **Both were settled in the build:** an unknown barcode is refused with a search fallback (5h), and
+> negative stock completes with a warning returned from the use case (5i). Building it also turned
+> up three gaps Phases 1–4 had left open — no selling price, no seeded location, no shop on the
+> receipt — all closed in Phase 5.
 
 ---
 

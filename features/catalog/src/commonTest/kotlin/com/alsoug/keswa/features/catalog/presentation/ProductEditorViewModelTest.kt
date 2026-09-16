@@ -5,11 +5,15 @@ import com.alsoug.keswa.core.domain.money.Money
 import com.alsoug.keswa.features.catalog.domain.usecase.AddColourToProductUseCase
 import com.alsoug.keswa.features.catalog.domain.usecase.AssignSupplierBarcodeUseCase
 import com.alsoug.keswa.features.catalog.domain.usecase.FakeColourRepository
+import com.alsoug.keswa.features.catalog.domain.usecase.FakePriceRepository
 import com.alsoug.keswa.features.catalog.domain.usecase.FakeProductRepository
 import com.alsoug.keswa.features.catalog.domain.usecase.FakeVariantRepository
 import com.alsoug.keswa.features.catalog.domain.usecase.GenerateInternalBarcodeUseCase
+import com.alsoug.keswa.features.catalog.domain.usecase.GetRetailPriceUseCase
 import com.alsoug.keswa.features.catalog.domain.usecase.RemoveColourFromProductUseCase
 import com.alsoug.keswa.features.catalog.domain.usecase.SequentialIds
+import com.alsoug.keswa.features.catalog.domain.usecase.SetRetailPriceUseCase
+import com.alsoug.keswa.features.catalog.domain.usecase.adminSession
 import com.alsoug.keswa.features.catalog.domain.usecase.colour
 import com.alsoug.keswa.features.catalog.domain.usecase.product
 import com.alsoug.keswa.features.catalog.presentation.screens.producteditor.ProductEditorUiEffect
@@ -55,6 +59,7 @@ class ProductEditorViewModelTest {
         .given(colour("c1", "Navy"))
         .given(colour("c2", "Red"))
     private val variants = FakeVariantRepository()
+    private val prices = FakePriceRepository()
 
     private fun viewModel() = ProductEditorViewModel(
         products = products,
@@ -65,6 +70,8 @@ class ProductEditorViewModelTest {
         ),
         removeColour = RemoveColourFromProductUseCase(variants),
         assignBarcode = AssignSupplierBarcodeUseCase(variants),
+        setPrice = SetRetailPriceUseCase(prices, adminSession(), SequentialIds("price")) { 0 },
+        getPrice = GetRetailPriceUseCase(prices) { 0 },
         dispatchers = dispatchers,
     )
 

@@ -4,9 +4,14 @@ import androidx.room.Room
 import com.alsoug.keswa.core.coroutines.DispatcherProvider
 import com.alsoug.keswa.core.database.entities.ColourEntity
 import com.alsoug.keswa.core.database.entities.LocationEntity
+import com.alsoug.keswa.core.database.entities.PriceEntity
+import com.alsoug.keswa.core.database.entities.PriceListEntity
 import com.alsoug.keswa.core.database.entities.ProductEntity
+import com.alsoug.keswa.core.database.entities.StockMovementEntity
 import com.alsoug.keswa.core.database.entities.VariantEntity
 import com.alsoug.keswa.core.domain.model.LocationType
+import com.alsoug.keswa.core.domain.model.MovementReason
+import com.alsoug.keswa.core.domain.model.PriceListType
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 
@@ -32,6 +37,7 @@ const val CAT_TSHIRTS = "cat-tshirts"
 const val COLOUR_NAVY = "col-navy"
 const val PRODUCT_TEE = "prod-tee"
 const val VARIANT_TEE_NAVY = "var-tee-navy"
+const val PRICE_LIST_ID = "pricelist-retail"
 
 /** Seeds the minimum a stock movement needs to exist: location, category, colour, product, variant. */
 suspend fun KeswaDatabase.seedBaseData() {
@@ -60,3 +66,26 @@ suspend fun KeswaDatabase.seedBaseData() {
         VariantEntity(VARIANT_TEE_NAVY, PRODUCT_TEE, COLOUR_NAVY, "KSW-TSH-022-NV", 12_000, true, 0, 0),
     )
 }
+
+/** A retail list with the t-shirt priced, which is the minimum the till needs to ring anything up. */
+suspend fun KeswaDatabase.seedPriceList(pricePiastres: Long = 18_000) {
+    priceDao().upsertList(
+        PriceListEntity(PRICE_LIST_ID, "Retail", "التجزئة", PriceListType.RETAIL, isDefault = true, isActive = true),
+    )
+    priceDao().upsertPrice(
+        PriceEntity("price-1", PRICE_LIST_ID, VARIANT_TEE_NAVY, pricePiastres, validFrom = 0, validTo = null),
+    )
+}
+
+/** Opening stock, so a sale has something to take away from. */
+fun receipt(quantity: Int, at: Long = 1_756_000_000_000) = StockMovementEntity(
+    id = "movement-opening",
+    variantId = VARIANT_TEE_NAVY,
+    locationId = SHOP_ID,
+    quantity = quantity,
+    reason = MovementReason.RECEIPT,
+    refType = null,
+    refId = null,
+    occurredAt = at,
+    userId = "user-1",
+)
