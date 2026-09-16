@@ -2,11 +2,13 @@ package com.alsoug.keswa.core.data.mapper
 
 import com.alsoug.keswa.core.database.entities.CategoryEntity
 import com.alsoug.keswa.core.database.entities.ColourEntity
+import com.alsoug.keswa.core.database.entities.LocationEntity
 import com.alsoug.keswa.core.database.entities.ProductEntity
 import com.alsoug.keswa.core.database.entities.StockMovementEntity
 import com.alsoug.keswa.core.database.entities.VariantEntity
 import com.alsoug.keswa.core.domain.model.Category
 import com.alsoug.keswa.core.domain.model.Colour
+import com.alsoug.keswa.core.domain.model.Location
 import com.alsoug.keswa.core.domain.model.Product
 import com.alsoug.keswa.core.domain.model.StockMovement
 import com.alsoug.keswa.core.domain.model.Variant
@@ -69,3 +71,6 @@ fun StockMovement.toEntity(): StockMovementEntity = StockMovementEntity(
     occurredAt = occurredAt,
     userId = userId,
 )
+
+fun LocationEntity.toDomain(): Location =
+    Location(id = id, name = name, nameAr = nameAr, type = type, isDefault = isDefault, isActive = isActive)

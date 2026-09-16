@@ -1,7 +1,6 @@
 package com.alsoug.keswa
 
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -23,6 +22,8 @@ import com.alsoug.keswa.core.session.ISessionManager
 import com.alsoug.keswa.features.auth.presentation.screens.signin.SignInScreen
 import com.alsoug.keswa.features.catalog.presentation.screens.catalogbrowser.CatalogBrowserScreen
 import com.alsoug.keswa.features.catalog.presentation.screens.producteditor.ProductEditorScreen
+import com.alsoug.keswa.features.sell.presentation.screens.shift.ShiftScreen
+import com.alsoug.keswa.features.sell.presentation.screens.till.TillScreen
 import com.alsoug.keswa.features.settings.presentation.screens.settings.SettingsScreen
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -34,9 +35,11 @@ import org.koin.compose.koinInject
  * mapping, which is what keeps `features:A` from ever importing `features:B`.
  */
 private sealed interface Route {
+    data object Till : Route
     data object Catalogue : Route
     data class ProductEditor(val productId: String) : Route
     data object Settings : Route
+    data object ShiftClose : Route
 }
 
 @Composable
@@ -79,7 +82,9 @@ private fun SignedInApp(
     notify: (String) -> Unit,
     onSignOut: () -> Unit,
 ) {
-    var route: Route by remember { mutableStateOf<Route>(Route.Catalogue) }
+    // The till is where a shop spends its day, so it is what opens — the catalogue is the
+    // back-office errand, not the other way round.
+    var route: Route by remember { mutableStateOf<Route>(Route.Till) }
 
     Scaffold(
         topBar = {
@@ -88,27 +93,35 @@ private fun SignedInApp(
             TopAppBar(
                 title = { Text("Keswa") },
                 actions = {
+                    TextButton(onClick = { route = Route.Till }) { Text("Till") }
+                    TextButton(onClick = { route = Route.Catalogue }) { Text("Catalogue") }
+                    TextButton(onClick = { route = Route.ShiftClose }) { Text("Shift") }
+                    TextButton(onClick = { route = Route.Settings }) { Text("Printers") }
                     Text(
                         "$operator · $role",
                         style = MaterialTheme.typography.labelMedium,
-                        modifier = Modifier.padding(end = 8.dp),
+                        modifier = Modifier.padding(start = 12.dp, end = 8.dp),
                     )
                     TextButton(onClick = onSignOut) { Text("Sign out") }
                 },
             )
         },
         snackbarHost = { SnackbarHost(snackbars) },
-        floatingActionButton = {
-            if (route is Route.Catalogue) {
-                ExtendedFloatingActionButton(
-                    onClick = { route = Route.Settings },
-                    text = { Text("Printers") },
-                    icon = {},
-                )
-            }
-        },
     ) { padding ->
         when (val current = route) {
+            is Route.Till -> TillScreen(
+                viewModel = koinInject(),
+                onMessage = notify,
+                modifier = Modifier.padding(padding),
+            )
+
+            is Route.ShiftClose -> ShiftScreen(
+                viewModel = koinInject(),
+                onBack = { route = Route.Till },
+                onMessage = notify,
+                modifier = Modifier.padding(padding),
+            )
+
             is Route.Catalogue -> CatalogBrowserScreen(
                 viewModel = koinInject(),
                 onOpenProduct = { route = Route.ProductEditor(it) },

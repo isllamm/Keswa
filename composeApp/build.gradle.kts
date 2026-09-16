@@ -18,6 +18,7 @@ kotlin {
             implementation(project(":features:catalog"))
             implementation(project(":features:settings"))
             implementation(project(":features:auth"))
+            implementation(project(":features:sell"))
             implementation(libs.koin.compose)
             implementation(libs.lifecycle.runtime.compose)
         }

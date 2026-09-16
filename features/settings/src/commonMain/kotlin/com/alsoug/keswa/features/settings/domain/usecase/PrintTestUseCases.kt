@@ -2,8 +2,8 @@ package com.alsoug.keswa.features.settings.domain.usecase
 
 import com.alsoug.keswa.core.domain.model.ShopSettings
 import com.alsoug.keswa.core.domain.repository.ISettingsRepository
-import com.alsoug.keswa.core.platform.IPrinterTransport
 import com.alsoug.keswa.core.platform.IReceiptRenderer
+import com.alsoug.keswa.core.platform.TransportFactory
 import com.alsoug.keswa.core.printing.escpos.EscPos
 import com.alsoug.keswa.core.printing.tspl.LabelSpec
 import com.alsoug.keswa.core.printing.tspl.Tspl
@@ -13,11 +13,6 @@ sealed interface PrintResult {
     data object Printed : PrintResult
     data object NotConfigured : PrintResult
     data class Unreachable(val detail: String) : PrintResult
-}
-
-/** Builds a transport for a given address, so host and port can come from settings at call time. */
-fun interface TransportFactory {
-    fun create(host: String, port: Int): IPrinterTransport
 }
 
 /**

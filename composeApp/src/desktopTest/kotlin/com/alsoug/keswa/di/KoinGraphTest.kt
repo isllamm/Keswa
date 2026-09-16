@@ -1,28 +1,72 @@
 package com.alsoug.keswa.di
 
+import androidx.room.Room
 import com.alsoug.keswa.core.coroutines.DispatcherProvider
+import com.alsoug.keswa.core.database.KeswaDatabase
+import com.alsoug.keswa.core.database.getKeswaDatabase
 import com.alsoug.keswa.core.platform.IPlatformProvider
+import com.alsoug.keswa.features.auth.presentation.screens.signin.SignInViewModel
+import com.alsoug.keswa.features.catalog.presentation.screens.catalogbrowser.CatalogBrowserViewModel
+import com.alsoug.keswa.features.catalog.presentation.screens.producteditor.ProductEditorViewModel
+import com.alsoug.keswa.features.sell.presentation.screens.shift.ShiftViewModel
+import com.alsoug.keswa.features.sell.presentation.screens.till.TillViewModel
+import com.alsoug.keswa.features.settings.presentation.screens.settings.SettingsViewModel
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertNotNull
 import org.koin.core.context.stopKoin
+import org.koin.dsl.module
 
 class KoinGraphTest {
 
     @AfterTest
     fun tearDown() = stopKoin()
 
+    /**
+     * Swaps the real database for an in-memory one.
+     *
+     * Loaded after startup, which is when Koin lets a definition replace an earlier one — the
+     * alternative would have this test create a file in the developer's home directory.
+     */
+    private fun startWithInMemoryDatabase() = initKoin().koin.also { koin ->
+        koin.loadModules(
+            listOf(
+                module {
+                    single<KeswaDatabase> {
+                        getKeswaDatabase(
+                            Room.inMemoryDatabaseBuilder<KeswaDatabase>(),
+                            get<DispatcherProvider>(),
+                        )
+                    }
+                },
+            ),
+        )
+    }
+
     @Test
     fun `composition root resolves every registered dependency`() {
-        // Given the real composition root
         val koin = initKoin().koin
 
-        // When the graph is resolved
-        val dispatchers = koin.get<DispatcherProvider>()
-        val platform = koin.get<IPlatformProvider>()
+        assertNotNull(koin.get<DispatcherProvider>())
+        assertNotNull(koin.get<IPlatformProvider>())
+    }
 
-        // Then nothing is missing
-        assertNotNull(dispatchers)
-        assertNotNull(platform)
+    /**
+     * Every screen in the app, constructed for real.
+     *
+     * A ViewModel with fifteen constructor arguments fails at the click that opens it, not at
+     * build time — so resolving each one here is what turns a missing `get()` in a feature module
+     * into a red test rather than a blank screen in a shop.
+     */
+    @Test
+    fun `every screen's ViewModel can be constructed`() {
+        val koin = startWithInMemoryDatabase()
+
+        assertNotNull(koin.get<SignInViewModel>())
+        assertNotNull(koin.get<CatalogBrowserViewModel>())
+        assertNotNull(koin.get<ProductEditorViewModel>())
+        assertNotNull(koin.get<SettingsViewModel>())
+        assertNotNull(koin.get<TillViewModel>())
+        assertNotNull(koin.get<ShiftViewModel>())
     }
 }

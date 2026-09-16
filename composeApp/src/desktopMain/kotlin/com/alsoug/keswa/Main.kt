@@ -5,7 +5,7 @@ import com.alsoug.keswa.core.platform.IPlatformProvider
 import com.alsoug.keswa.core.platform.LogLevel
 import com.alsoug.keswa.di.APPLICATION_SCOPE
 import com.alsoug.keswa.di.initKoin
-import com.alsoug.keswa.features.catalog.domain.usecase.SeedCatalogUseCase
+import com.alsoug.keswa.features.catalog.domain.usecase.SeedShopUseCase
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import kotlinx.coroutines.CoroutineScope
@@ -47,15 +47,15 @@ fun main() {
  */
 private fun warmUpDatabase(
     database: KeswaDatabase,
-    seed: SeedCatalogUseCase,
+    seed: SeedShopUseCase,
     scope: CoroutineScope,
     platform: IPlatformProvider,
 ) {
     scope.launch {
         runCatching {
             database.locationDao().getDefault()
-            // Idempotent: a fresh install has no colours, and a colour is the only variant axis,
-            // so without this the catalogue cannot create a single SKU.
+            // Idempotent, and the first sale depends on it: a fresh install has no colours, no
+            // location and no price list, and none of those can be created from a screen.
             seed().getOrThrow()
         }
             .onSuccess { platform.log(LogLevel.INFO, TAG, "database ready") }
