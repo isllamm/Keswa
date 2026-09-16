@@ -10,8 +10,11 @@ import com.alsoug.keswa.features.catalog.domain.usecase.AddColourResult
 import com.alsoug.keswa.features.catalog.domain.usecase.AddColourToProductUseCase
 import com.alsoug.keswa.features.catalog.domain.usecase.AssignBarcodeResult
 import com.alsoug.keswa.features.catalog.domain.usecase.AssignSupplierBarcodeUseCase
+import com.alsoug.keswa.features.catalog.domain.usecase.GetRetailPriceUseCase
 import com.alsoug.keswa.features.catalog.domain.usecase.RemoveColourFromProductUseCase
 import com.alsoug.keswa.features.catalog.domain.usecase.RemoveColourResult
+import com.alsoug.keswa.features.catalog.domain.usecase.SetPriceResult
+import com.alsoug.keswa.features.catalog.domain.usecase.SetRetailPriceUseCase
 import com.alsoug.keswa.features.catalog.presentation.model.toUiModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,6 +31,8 @@ class ProductEditorViewModel(
     private val addColour: AddColourToProductUseCase,
     private val removeColour: RemoveColourFromProductUseCase,
     private val assignBarcode: AssignSupplierBarcodeUseCase,
+    private val setPrice: SetRetailPriceUseCase,
+    private val getPrice: GetRetailPriceUseCase,
     private val dispatchers: DispatcherProvider,
     private val arabic: Boolean = false,
 ) : ViewModel() {
@@ -56,6 +61,7 @@ class ProductEditorViewModel(
             is ProductEditorUiEvent.RemoveColour -> remove(event.variantId)
             is ProductEditorUiEvent.AssignSupplierBarcode ->
                 assign(event.variantId, event.barcode)
+            is ProductEditorUiEvent.SetPrice -> price(event.variantId, event.amount)
             is ProductEditorUiEvent.Back ->
                 viewModelScope.launch { _navigation.emit(ProductEditorNavigation.Back) }
         }
@@ -80,6 +86,7 @@ class ProductEditorViewModel(
                             barcode = variants.barcodesFor(variant.id).getOrThrow()
                                 .firstOrNull { it.isPrimary }?.barcode,
                             onHand = variants.onHand(variant.id).getOrThrow(),
+                            price = getPrice(variant.id).getOrThrow(),
                         )
                     }
                 Triple(if (arabic) product.nameAr else product.name, rows, palette)
@@ -161,6 +168,27 @@ class ProductEditorViewModel(
                             _effect.emit(ProductEditorUiEffect.ShowError("Not a valid EAN-13"))
                         AssignBarcodeResult.VariantNotFound ->
                             _effect.emit(ProductEditorUiEffect.ShowError("Colour not found"))
+                    }
+                },
+                onFailure = { fail(it) },
+            )
+        }
+    }
+
+    private fun price(variantId: String, amount: String) {
+        val id = productId ?: return
+        viewModelScope.launch(dispatchers.io) {
+            setPrice(variantId, amount).fold(
+                onSuccess = { result ->
+                    when (result) {
+                        SetPriceResult.Saved -> {
+                            _effect.emit(ProductEditorUiEffect.ShowMessage("Price set"))
+                            load(id)
+                        }
+                        SetPriceResult.NotAnAmount ->
+                            _effect.emit(ProductEditorUiEffect.ShowError("That is not an amount"))
+                        SetPriceResult.NoPriceList ->
+                            _effect.emit(ProductEditorUiEffect.ShowError("No retail price list"))
                     }
                 },
                 onFailure = { fail(it) },

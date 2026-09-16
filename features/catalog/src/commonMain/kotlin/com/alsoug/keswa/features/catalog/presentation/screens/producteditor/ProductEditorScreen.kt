@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
@@ -24,9 +26,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alsoug.keswa.core.domain.model.Colour
+import com.alsoug.keswa.core.domain.money.Money
 import com.alsoug.keswa.features.catalog.presentation.components.ColourList
 import com.alsoug.keswa.features.catalog.presentation.components.ColourSwatch
 import com.alsoug.keswa.features.catalog.presentation.model.ColourRowUiModel
@@ -89,6 +93,7 @@ internal fun ProductEditorContent(
         ColourList(rows = state.colours) { row ->
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("${row.onHand}", style = MaterialTheme.typography.labelMedium)
+                PriceField(row, onEvent)
                 TextButton(onClick = { onEvent(ProductEditorUiEvent.RemoveColour(row.variantId)) }) {
                     Text("Retire")
                 }
@@ -124,6 +129,33 @@ internal fun ProductEditorContent(
             onEvent = onEvent,
         )
     }
+}
+
+/**
+ * What this colour sells for.
+ *
+ * Empty until somebody sets it, and shown as such rather than as a zero: the till refuses to ring
+ * up an unpriced SKU, so "no price yet" is a state worth seeing here.
+ */
+@Composable
+private fun PriceField(row: ColourRowUiModel, onEvent: (ProductEditorUiEvent) -> Unit) {
+    var entry by remember(row.variantId, row.price) { mutableStateOf(row.price?.format() ?: "") }
+
+    OutlinedTextField(
+        value = entry,
+        onValueChange = { entry = it },
+        label = { Text(if (row.price == null) "No price" else "Price") },
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+        keyboardActions = KeyboardActions(
+            onDone = { onEvent(ProductEditorUiEvent.SetPrice(row.variantId, entry)) },
+        ),
+        modifier = Modifier.widthIn(max = 140.dp),
+    )
+    TextButton(
+        onClick = { onEvent(ProductEditorUiEvent.SetPrice(row.variantId, entry)) },
+        enabled = entry.isNotBlank(),
+    ) { Text("Save") }
 }
 
 @Composable
@@ -166,8 +198,8 @@ private fun SupplierBarcodeRow(
 }
 
 private val previewRows = listOf(
-    ColourRowUiModel("v1", "c1", "Navy", "#20304f", "OXF-NAV", "2000000000015", 12),
-    ColourRowUiModel("v2", "c2", "White", "#f2f2ef", "OXF-WHI", "2000000000022", 0),
+    ColourRowUiModel("v1", "c1", "Navy", "#20304f", "OXF-NAV", "2000000000015", 12, Money.ofPounds(380)),
+    ColourRowUiModel("v2", "c2", "White", "#f2f2ef", "OXF-WHI", "2000000000022", 0, null),
 )
 
 @Preview
