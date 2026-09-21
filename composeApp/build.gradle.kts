@@ -22,6 +22,7 @@ kotlin {
             implementation(project(":features:sell"))
             implementation(project(":features:inventory"))
             implementation(project(":features:returns"))
+            implementation(project(":features:analytics"))
             implementation(libs.koin.compose)
             implementation(libs.lifecycle.runtime.compose)
         }

@@ -24,6 +24,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alsoug.keswa.core.session.ISessionManager
+import com.alsoug.keswa.features.analytics.presentation.screens.dashboard.DashboardScreen
 import com.alsoug.keswa.features.auth.presentation.screens.signin.SignInScreen
 import com.alsoug.keswa.features.catalog.presentation.screens.catalogbrowser.CatalogBrowserScreen
 import com.alsoug.keswa.features.catalog.presentation.screens.producteditor.ProductEditorScreen
@@ -56,6 +57,7 @@ private sealed interface Route {
     data object Adjust : Route
     data object Import : Route
     data object Returns : Route
+    data object Dashboard : Route
 }
 
 @Composable
@@ -116,6 +118,7 @@ private fun SignedInApp(
                     TextButton(onClick = { route = Route.Stockroom }) { Text("Stockroom") }
                     TextButton(onClick = { route = Route.Catalogue }) { Text("Catalogue") }
                     TextButton(onClick = { route = Route.ShiftClose }) { Text("Shift") }
+                    TextButton(onClick = { route = Route.Dashboard }) { Text("Numbers") }
                     Text(
                         "$operator · $role",
                         style = MaterialTheme.typography.labelMedium,
@@ -135,6 +138,13 @@ private fun SignedInApp(
             )
 
             is Route.ShiftClose -> ShiftScreen(
+                viewModel = koinInject(),
+                onBack = { route = Route.Till },
+                onMessage = notify,
+                modifier = Modifier.padding(padding),
+            )
+
+            is Route.Dashboard -> DashboardScreen(
                 viewModel = koinInject(),
                 onBack = { route = Route.Till },
                 onMessage = notify,
