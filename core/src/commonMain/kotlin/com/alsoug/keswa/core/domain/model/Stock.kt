@@ -1,5 +1,7 @@
 package com.alsoug.keswa.core.domain.model
 
+import com.alsoug.keswa.core.domain.money.Money
+
 /**
  * One immutable change in stock.
  *
@@ -16,6 +18,10 @@ data class StockMovement(
     val refId: String?,
     val occurredAt: Long,
     val userId: String,
+    /** The cost basis when this happened (KD-008). Null for movements written before Phase 6. */
+    val unitCost: Money? = null,
+    /** The reason in words, where the enum only gives the category. */
+    val note: String? = null,
 )
 
 /** The cached sum for one variant at one location. Always rebuildable from the ledger. */

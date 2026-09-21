@@ -46,9 +46,9 @@ class ShiftViewModel(
             _state.update { it.copy(isLoading = true) }
             resolveContext().fold(
                 onSuccess = { till ->
-                    _state.update {
-                        it.copy(isLoading = false, shift = currentShift(till).getOrNull())
-                    }
+                    // Read before updating: `update` re-runs its block on contention.
+                    val shift = currentShift(till).getOrNull()
+                    _state.update { it.copy(isLoading = false, shift = shift) }
                 },
                 onFailure = { fail(it) },
             )

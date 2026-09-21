@@ -14,7 +14,7 @@
 | 3 | Hardware | `phase-3-hardware-plan.md` |
 | **4** | **Users, roles & login** | `phase-4-auth-plan.md` ← **new** |
 | 5 | Sell flow | `phase-5-sell-plan.md` ✅ built |
-| 6 | Receiving, labels, counts + Android | outlined below |
+| 6 | Receiving, labels, counts + Android | `phase-6-receiving-plan.md` ✅ built |
 | 7 | Wholesale ⚠️ Q1 | outlined below |
 | 8 | Returns, exchanges & analytics | `phase-8-analytics-plan.md` + below |
 | 9 | Backend, sync, web back office | outlined below |
@@ -24,9 +24,9 @@
 is append-only by design. Ship selling before login and every sale in the shop's permanent history is
 attributed to a placeholder that cannot be corrected afterwards.
 
-## Why 6–10 are outlines
+## Why 7–10 are outlines
 
-Phases 0–5 are detailed because they are ready to execute and their decisions are irreversible.
+Phases 0–6 are detailed because they are ready to execute and their decisions are irreversible.
 These are not:
 
 1. **Phases 7 and 10 are gated** on Q1 and Q2. Detailing them now means writing two plans and
@@ -69,7 +69,11 @@ customer's hands).
 
 ---
 
-## Phase 6 — Receiving, labels, stock counts + Android target
+## Phase 6 — Receiving, labels, stock counts + Android target ✅
+
+**Built. Full plan: `phase-6-receiving-plan.md`,** which supersedes the sketch below and records
+two deviations from it: goods receipts in place of purchase orders, and a pasted-text import in
+place of a file dialog.
 
 **Goal:** close the inventory loop. Stock comes in, not just out.
 
@@ -78,13 +82,17 @@ hang-tag printing from Phase 3's `Tspl`, blind cycle and full counts, adjustment
 
 | # | Decision |
 |---|---|
-| 6a | **Cost model.** Moving-average or FIFO. Decides whether margin reporting means anything. Needs its own ADR — it cannot be changed retroactively without recomputing history. |
+| 6a | **Cost model.** Settled as moving weighted average — ADR **KD-008**, with a cost snapshot on every movement so the ledger describes its own basis. |
 | 6b | **Count workflow.** Blind (counter cannot see expected) — the only kind that finds real discrepancies. |
 | 6c | **`androidTarget()` is added here** (KD-004), for handheld counting on the shop floor. First time `commonMain` gets a second consumer — expect to find desktop assumptions. |
 | 6d | Spreadsheet import for initial catalogue load, reusing validated receiving paths. |
 
 **Risk:** adding Android late will surface `java.*` leakage in `commonMain`. KD-004 forbids it from
 day one to keep this cheap; a CI grep gate from Phase 0 would make it cheaper still.
+
+> **The gate paid for itself.** Six phases of `commonMain` compiled for Android with no source
+> changes at all — the whole cost was build configuration. The only thing the second target
+> actually moved was the *test* fixtures, because `Room.inMemoryDatabaseBuilder` needs a `Context`.
 
 ---
 

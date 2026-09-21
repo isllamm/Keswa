@@ -20,8 +20,13 @@ jobs:
       - name: Architectural gates
         run: ./scripts/check-gates.sh
 
-      - name: Compile
+      - name: Compile (desktop)
         run: ./gradlew :composeApp:compileKotlinDesktop
+
+      # The real test of the java.* gate: commonMain has a second consumer from Phase 6, and a
+      # desktop assumption that slipped past the grep fails here instead of on a shop floor.
+      - name: Compile (Android)
+        run: ./gradlew :composeApp:assembleDebug
 
       - name: Test
         run: ./gradlew allTests

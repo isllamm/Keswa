@@ -1,6 +1,6 @@
 package com.alsoug.keswa.core.platform
 
-import com.alsoug.keswa.core.database.RealDispatchers
+import com.alsoug.keswa.core.coroutines.RealDispatchers
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse
@@ -8,10 +8,10 @@ import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 import kotlinx.coroutines.runBlocking
 
-class DesktopPasswordHasherTest {
+class JvmPasswordHasherTest {
 
     // A low cost keeps the suite fast; the shipped cost is asserted separately below.
-    private val hasher = DesktopPasswordHasher(RealDispatchers, iterations = 1_000)
+    private val hasher = JvmPasswordHasher(RealDispatchers, iterations = 1_000)
 
     @Test
     fun `the same secret and salt always derive the same verifier`() = runBlocking {
@@ -64,13 +64,31 @@ class DesktopPasswordHasherTest {
     fun `the shipped work factor is not quietly lowered`() = runBlocking {
         // The iteration count is the entire defence for a four-digit PIN, so a change to it should
         // have to break this test deliberately rather than slip through in a refactor.
-        val shipped = DesktopPasswordHasher(RealDispatchers)
+        val shipped = JvmPasswordHasher(RealDispatchers)
         val salt = shipped.newSalt()
         val hash = shipped.hash("1234".toCharArray(), salt)
 
         assertTrue(shipped.verify("1234".toCharArray(), salt, hash))
         // A cheap hasher cannot reproduce a costly one's output.
-        val cheap = DesktopPasswordHasher(RealDispatchers, iterations = 1_000)
+        val cheap = JvmPasswordHasher(RealDispatchers, iterations = 1_000)
         assertNotEquals(hash, cheap.hash("1234".toCharArray(), salt))
+    }
+
+    @Test
+    fun `a known secret and salt derive a known verifier`() = runBlocking {
+        // The golden value, computed independently against PBKDF2-HMAC-SHA256 with 210,000
+        // iterations and a 256-bit key.
+        //
+        // This is what makes the till and the handheld interchangeable (Phase 6): a user created
+        // at one signs in at the other, so the algorithm, cost, key length and encoding must all
+        // stay exactly as they are. Changing any of them locks every existing account out, and
+        // this test is what makes that a deliberate act rather than an accident.
+        val shipped = JvmPasswordHasher(RealDispatchers)
+        val salt = ByteArray(16) { it.toByte() }
+
+        assertEquals(
+            "lC7thYbwSqjMSxRTfrArtgG2cXSbb5XAei0iYfg+dac=",
+            shipped.hash("1234".toCharArray(), salt),
+        )
     }
 }
