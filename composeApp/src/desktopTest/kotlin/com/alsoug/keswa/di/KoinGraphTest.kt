@@ -5,6 +5,7 @@ import com.alsoug.keswa.core.coroutines.DispatcherProvider
 import com.alsoug.keswa.core.database.KeswaDatabase
 import com.alsoug.keswa.core.database.getKeswaDatabase
 import com.alsoug.keswa.core.platform.IPlatformProvider
+import com.alsoug.keswa.features.analytics.presentation.screens.dashboard.DashboardViewModel
 import com.alsoug.keswa.features.auth.presentation.screens.signin.SignInViewModel
 import com.alsoug.keswa.features.catalog.presentation.screens.catalogbrowser.CatalogBrowserViewModel
 import com.alsoug.keswa.features.catalog.presentation.screens.producteditor.ProductEditorViewModel
@@ -78,5 +79,6 @@ class KoinGraphTest {
         assertNotNull(koin.get<AdjustViewModel>())
         assertNotNull(koin.get<ImportViewModel>())
         assertNotNull(koin.get<ReturnsViewModel>())
+        assertNotNull(koin.get<DashboardViewModel>())
     }
 }

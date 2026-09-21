@@ -4,6 +4,7 @@ import androidx.room.ConstructedBy
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.RoomDatabaseConstructor
+import com.alsoug.keswa.core.database.dao.AnalyticsDao
 import com.alsoug.keswa.core.database.dao.CategoryDao
 import com.alsoug.keswa.core.database.dao.ColourDao
 import com.alsoug.keswa.core.database.dao.HeldSaleDao
@@ -106,6 +107,7 @@ abstract class KeswaDatabase : RoomDatabase() {
     abstract fun stockReceiptDao(): StockReceiptDao
     abstract fun stockCountDao(): StockCountDao
     abstract fun saleReturnDao(): SaleReturnDao
+    abstract fun analyticsDao(): AnalyticsDao
 }
 
 /**

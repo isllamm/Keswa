@@ -1,6 +1,6 @@
 # Phase 8 Plan — Sales Analytics for the Admin
 
-> **Status: 📝 DRAFT — awaiting review**
+> **Status: ✅ BUILT — with one deviation, measured rather than argued (§1)**
 > Depends on: Phase 5 (sales exist), Phase 6 (receipts + cost model)
 > Prototype: **Keswa Sales Console** — published, bilingual, themed
 > Estimated: 6–9 days
@@ -37,13 +37,30 @@ a generic dashboard. They are the questions a clothing buyer actually asks.
 
 ## Deliverables
 
-### 1. Rollup projections — the real engineering work
+### 1. Rollup projections — ⚠️ **not built, and the measurement is why**
 
-Computing a year of analytics by scanning `stock_movement` on every dashboard open does not survive
-contact with a real shop's data volume.
+The plan proposed projections maintained inside every sale, receipt and return transaction, and
+made its own check 4 the arbiter: *"the one that decides whether the rollups were necessary."*
 
-Same pattern as Phase 1's `stock_on_hand`: **a projection written in the same transaction as the
-source event, and fully rebuildable from the ledger.**
+**It was run.** `AnalyticsTest` seeds two years of trading — 6,000 sales, 12,000 lines, 40,000
+units of stock across two colours and a three-deep category tree — and times all six panels
+together:
+
+```
+all six panels, 90-day window, off the raw ledger:  18 ms
+budget:                                            300 ms
+```
+
+Sixteen times inside the budget, on the ledger's existing indices. So the rollups were not built.
+What they would have cost is not hypothetical: a projection written inside three separate write
+transactions (`SaleRepositoryImpl`, `SaleReturnRepositoryImpl`, `StockReceiptRepositoryImpl`), a
+rebuild path to maintain, and a class of drift bug that only shows up as numbers quietly
+disagreeing.
+
+The performance test stays in the suite. If a shop's data ever pushes it past the budget, it fails
+and the projection gets built then — against a real number rather than a guess.
+
+**What the original design would have been**, kept for when that day comes:
 
 ```kotlin
 @Entity(tableName = "daily_sales_summary", primaryKeys = ["date","locationId","channel"])
@@ -60,12 +77,13 @@ data class DailyVariantMovementEntity(
 )
 ```
 
-`RebuildAnalyticsProjectionsUseCase` ships alongside, with a test asserting a rebuild from the ledger
-reproduces the projections exactly — the same safety net Phase 1 established. If they ever drift,
-they are recoverable rather than corrupt.
+`RebuildAnalyticsProjectionsUseCase` would ship alongside, with a test asserting a rebuild from the
+ledger reproduces the projections exactly.
 
-> This is the payoff of the append-only ledger. Because every sale, receipt and return is already an
-> immutable row with a reason code, **sell-through is a query, not a new subsystem.**
+> This is the payoff of the append-only ledger, and it turned out to be a larger payoff than the
+> plan assumed. Because every sale, receipt and return is already an immutable row with a reason
+> code and a timestamp, **sell-through is a query, not a subsystem** — and at this data volume it
+> is a fast one.
 
 ### 2. Metric use cases — `:features:analytics`
 
@@ -186,10 +204,27 @@ be skipped and most likely to be seen — every new install hits it first.
 
 ## Definition of Done
 
-- [ ] All seven panels render from real local data
-- [ ] Rebuild-from-ledger parity test green
-- [ ] Dashboard opens in < 300 ms against 2 years of data
-- [ ] Works fully offline
-- [ ] Arabic and English both correct
-- [ ] Margin panels either correct or explicitly disabled pending Phase 6a
-- [ ] Role gating enforced in the use case layer, not only hidden in UI
+- [x] All seven panels render from real local data
+- [x] ~~Rebuild-from-ledger parity test~~ — **n/a: no projections to rebuild** (§1)
+- [x] Dashboard opens in **18 ms** against 2 years of data, against a 300 ms budget
+- [x] Works fully offline — there is no network in this phase at all
+- [x] Margin correct: **Phase 6a landed as KD-008**, so cost is real rather than disabled
+- [x] Role gating enforced in the use case layer, and cost is *not fetched* without the permission
+- [x] Every panel has a stated empty state; no NaN, no broken axis
+- [ ] **Arabic strings** — the chrome mirrors and the plot interiors stay LTR, but the panel copy
+      is English-only. Every other screen in the app is the same; a single localisation pass
+      belongs with the back office in Phase 9 rather than one feature at a time.
+
+## What changed while building it
+
+**No rollup tables.** §1 above, with the measurement. The plan named its own check 4 as the
+arbiter and the check said no.
+
+**`niceCeiling` snaps to 1/2/5/10 × magnitude**, so the halfway tick is round too — the axis shows
+ceiling, ceiling/2 and zero. Checked across five thousand magnitudes rather than a handful of
+examples, because the first implementation passed the examples and was still wrong.
+
+**Cost is absent, not hidden.** The plan said margin panels should be "built but left dark". With
+KD-008 landed the figures are real, so the rule became sharper: without `VIEW_COST_AND_MARGIN` the
+cost is never fetched at all. A number that reaches a ViewModel is a number that can reach a
+screen.
