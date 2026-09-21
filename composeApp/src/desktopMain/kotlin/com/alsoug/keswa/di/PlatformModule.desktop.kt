@@ -9,7 +9,7 @@ import com.alsoug.keswa.core.database.getKeswaDatabase
 import com.alsoug.keswa.core.platform.IPlatformProvider
 import com.alsoug.keswa.core.platform.IPasswordHasher
 import com.alsoug.keswa.core.platform.IReceiptRenderer
-import com.alsoug.keswa.core.platform.DesktopPasswordHasher
+import com.alsoug.keswa.core.platform.JvmPasswordHasher
 import com.alsoug.keswa.core.printing.DesktopReceiptRenderer
 import com.alsoug.keswa.core.platform.LogLevel
 import kotlinx.coroutines.CoroutineScope
@@ -22,7 +22,7 @@ actual val platformModule: Module = module {
     // Platform
     single<IPlatformProvider> { DesktopPlatformProvider() }
     single<IReceiptRenderer> { DesktopReceiptRenderer() }
-    single<IPasswordHasher> { DesktopPasswordHasher(get<DispatcherProvider>()) }
+    single<IPasswordHasher> { JvmPasswordHasher(get<DispatcherProvider>()) }
 
     // Application-lifetime scope. Injected rather than GlobalScope, per the forbidden-patterns
     // table in CODE_GUIDELINES; SupervisorJob so one failed startup task cannot cancel the rest.
@@ -40,6 +40,5 @@ actual val platformModule: Module = module {
     }
 }
 
-const val APPLICATION_SCOPE = "applicationScope"
 
 private const val TAG = "Startup"

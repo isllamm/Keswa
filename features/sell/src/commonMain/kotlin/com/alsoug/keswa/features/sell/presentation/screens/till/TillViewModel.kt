@@ -117,12 +117,16 @@ class TillViewModel(
             resolveContext().fold(
                 onSuccess = { resolved ->
                     till = resolved
+                    // Every read happens before the update: `update` re-runs its block on
+                    // contention, and these are all database calls.
                     val shop = settings.get().getOrNull()
+                    val shift = currentShift(resolved).getOrNull()
+                    val held = listHeld(resolved).getOrElse { emptyList() }
                     _state.update {
                         it.copy(
                             isLoading = false,
-                            shift = currentShift(resolved).getOrNull(),
-                            heldSales = listHeld(resolved).getOrElse { emptyList() },
+                            shift = shift,
+                            heldSales = held,
                             vatBasisPoints = shop?.vatBasisPoints ?: 0,
                         )
                     }
@@ -357,11 +361,12 @@ class TillViewModel(
         viewModelScope.launch(dispatchers.io) {
             holdSale(basket, label, context).fold(
                 onSuccess = {
+                    val held = listHeld(context).getOrNull()
                     _state.update { current ->
                         current.copy(
                             basket = Basket(),
                             totals = BasketTotals.EMPTY,
-                            heldSales = listHeld(context).getOrElse { current.heldSales },
+                            heldSales = held ?: current.heldSales,
                         )
                     }
                     _effect.emit(TillUiEffect.ShowMessage("Held"))
@@ -376,10 +381,11 @@ class TillViewModel(
         viewModelScope.launch(dispatchers.io) {
             resumeHeld(heldSaleId, context).fold(
                 onSuccess = { resumed ->
+                    val held = listHeld(context).getOrNull()
                     _state.update { current ->
                         current.copy(
                             basket = resumed.basket,
-                            heldSales = listHeld(context).getOrElse { current.heldSales },
+                            heldSales = held ?: current.heldSales,
                         )
                     }
                     recalculate()
@@ -399,9 +405,8 @@ class TillViewModel(
         viewModelScope.launch(dispatchers.io) {
             discardHeld(heldSaleId).fold(
                 onSuccess = {
-                    _state.update { current ->
-                        current.copy(heldSales = listHeld(context).getOrElse { current.heldSales })
-                    }
+                    val held = listHeld(context).getOrNull()
+                    _state.update { current -> current.copy(heldSales = held ?: current.heldSales) }
                 },
                 onFailure = { fail(it) },
             )

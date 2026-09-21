@@ -1,7 +1,7 @@
 package com.alsoug.keswa.core.database
 
 import androidx.room.Room
-import com.alsoug.keswa.core.coroutines.DispatcherProvider
+import com.alsoug.keswa.core.coroutines.RealDispatchers
 import com.alsoug.keswa.core.database.entities.ColourEntity
 import com.alsoug.keswa.core.database.entities.LocationEntity
 import com.alsoug.keswa.core.database.entities.PriceEntity
@@ -12,18 +12,6 @@ import com.alsoug.keswa.core.database.entities.VariantEntity
 import com.alsoug.keswa.core.domain.model.LocationType
 import com.alsoug.keswa.core.domain.model.MovementReason
 import com.alsoug.keswa.core.domain.model.PriceListType
-import kotlinx.coroutines.CoroutineDispatcher
-import kotlinx.coroutines.Dispatchers
-
-/**
- * Room needs a dispatcher that actually runs work, so these tests use a real one rather than
- * [com.alsoug.keswa.core.coroutines.TestDispatcherProvider] — virtual time would stall the driver.
- */
-internal object RealDispatchers : DispatcherProvider {
-    override val io: CoroutineDispatcher = Dispatchers.Default
-    override val main: CoroutineDispatcher = Dispatchers.Default
-    override val default: CoroutineDispatcher = Dispatchers.Default
-}
 
 /**
  * An in-memory database built through the production factory, so these tests exercise the real

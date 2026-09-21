@@ -20,6 +20,14 @@ import com.alsoug.keswa.core.domain.model.MovementReason
  * non-idempotent id creating duplicates on double submit.
  *
  * [quantity] is signed: -2 sold, +10 received.
+ *
+ * [unitCostPiastres] is the cost basis at the moment of the movement (KD-008), so the ledger
+ * describes its own costing rather than depending on `variant.costPiastres`, which only ever means
+ * "the cost right now". Null for everything written before Phase 6, which is honest: those
+ * movements genuinely had no cost recorded.
+ *
+ * [note] is the reason in words. `ADJUSTMENT` says the category; "three shirts water-damaged in the
+ * stockroom" is the fact, and it is the difference between an audit trail and a list of numbers.
  */
 @Entity(
     tableName = "stock_movement",
@@ -54,4 +62,6 @@ data class StockMovementEntity(
     val refId: String?,
     val occurredAt: Long,
     val userId: String,
+    val unitCostPiastres: Long? = null,
+    val note: String? = null,
 )

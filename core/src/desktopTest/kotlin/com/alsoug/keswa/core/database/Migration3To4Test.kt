@@ -1,6 +1,7 @@
 package com.alsoug.keswa.core.database
 
 import androidx.room.Room
+import com.alsoug.keswa.core.coroutines.RealDispatchers
 import java.io.File
 import java.nio.file.Files
 import kotlin.test.AfterTest

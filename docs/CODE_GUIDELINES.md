@@ -23,6 +23,7 @@ drift, this points at the originals and lists only what differs.
 | KD-004 | Targets are `jvm("desktop")` then `androidTarget()`. No iOS |
 | KD-005 | Printers/scanners are `:core` interfaces bound through Koin; protocols are pure `commonMain` |
 | KD-006 | Desktop secure storage is unsolved — decided in Phase 9 |
+| KD-008 | Cost is a moving weighted average, snapshotted onto every movement |
 
 ## Declared not applicable
 
@@ -34,5 +35,7 @@ a specific backend. Listed so their absence reads as a decision.
 
 ```bash
 ./gradlew :composeApp:compileKotlinDesktop
+./gradlew :composeApp:assembleDebug   # the Android target, from Phase 6
 ./gradlew allTests
+./scripts/check-gates.sh
 ```

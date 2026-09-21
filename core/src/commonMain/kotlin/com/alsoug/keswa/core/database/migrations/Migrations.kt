@@ -156,6 +156,101 @@ val MIGRATION_3_4: Migration = object : Migration(3, 4) {
 }
 
 /**
+ * 4 → 5: adds receiving and counting, and gives the ledger a cost basis.
+ *
+ * The first migration that touches an existing table. `ALTER TABLE ... ADD COLUMN` with no default
+ * is the one alteration SQLite does cheaply and safely: existing rows get `NULL`, which is the
+ * honest answer — movements written before Phase 6 genuinely had no cost recorded and no reason in
+ * words. Nothing is rewritten, so a shop with a year of trading pays nothing for the upgrade.
+ *
+ * DDL copied verbatim from Room's exported `5.json`.
+ */
+val MIGRATION_4_5: Migration = object : Migration(4, 5) {
+    override fun migrate(connection: SQLiteConnection) {
+        connection.execSQL(
+            "ALTER TABLE `stock_movement` ADD COLUMN `unitCostPiastres` INTEGER",
+        )
+        connection.execSQL(
+            "ALTER TABLE `stock_movement` ADD COLUMN `note` TEXT",
+        )
+        connection.execSQL(
+            "CREATE TABLE IF NOT EXISTS `stock_receipt` (`id` TEXT NOT NULL, `reference` TEXT NOT " +
+                "NULL, `supplierName` TEXT NOT NULL, `locationId` TEXT NOT NULL, `status` TEXT NOT " +
+                "NULL, `note` TEXT, `createdAt` INTEGER NOT NULL, `createdByUserId` TEXT NOT NULL, " +
+                "`postedAt` INTEGER, `postedByUserId` TEXT, `totalCostPiastres` INTEGER NOT NULL, " +
+                "PRIMARY KEY(`id`), FOREIGN KEY(`locationId`) REFERENCES `location`(`id`) ON UPDATE " +
+                "NO ACTION ON DELETE RESTRICT )",
+        )
+        connection.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_stock_receipt_locationId` ON `stock_receipt` " +
+                "(`locationId`)",
+        )
+        connection.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_stock_receipt_createdAt` ON `stock_receipt` " +
+                "(`createdAt`)",
+        )
+        connection.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_stock_receipt_status` ON `stock_receipt` " +
+                "(`status`)",
+        )
+        connection.execSQL(
+            "CREATE TABLE IF NOT EXISTS `stock_receipt_line` (`id` TEXT NOT NULL, `receiptId` " +
+                "TEXT NOT NULL, `lineNumber` INTEGER NOT NULL, `variantId` TEXT NOT NULL, `quantity` " +
+                "INTEGER NOT NULL, `unitCostPiastres` INTEGER NOT NULL, `lineTotalPiastres` INTEGER " +
+                "NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`receiptId`) REFERENCES " +
+                "`stock_receipt`(`id`) ON UPDATE NO ACTION ON DELETE CASCADE , FOREIGN " +
+                "KEY(`variantId`) REFERENCES `variant`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
+        )
+        connection.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_stock_receipt_line_receiptId` ON " +
+                "`stock_receipt_line` (`receiptId`)",
+        )
+        connection.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_stock_receipt_line_variantId` ON " +
+                "`stock_receipt_line` (`variantId`)",
+        )
+        connection.execSQL(
+            "CREATE TABLE IF NOT EXISTS `stock_count` (`id` TEXT NOT NULL, `locationId` TEXT NOT " +
+                "NULL, `status` TEXT NOT NULL, `note` TEXT, `startedAt` INTEGER NOT NULL, " +
+                "`startedByUserId` TEXT NOT NULL, `postedAt` INTEGER, `postedByUserId` TEXT, PRIMARY " +
+                "KEY(`id`), FOREIGN KEY(`locationId`) REFERENCES `location`(`id`) ON UPDATE NO ACTION " +
+                "ON DELETE RESTRICT )",
+        )
+        connection.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_stock_count_locationId` ON `stock_count` " +
+                "(`locationId`)",
+        )
+        connection.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_stock_count_startedAt` ON `stock_count` " +
+                "(`startedAt`)",
+        )
+        connection.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_stock_count_status` ON `stock_count` (`status`)",
+        )
+        connection.execSQL(
+            "CREATE TABLE IF NOT EXISTS `stock_count_line` (`id` TEXT NOT NULL, `countId` TEXT " +
+                "NOT NULL, `lineNumber` INTEGER NOT NULL, `variantId` TEXT NOT NULL, " +
+                "`countedQuantity` INTEGER NOT NULL, `expectedQuantity` INTEGER, `varianceQuantity` " +
+                "INTEGER, PRIMARY KEY(`id`), FOREIGN KEY(`countId`) REFERENCES `stock_count`(`id`) ON " +
+                "UPDATE NO ACTION ON DELETE CASCADE , FOREIGN KEY(`variantId`) REFERENCES " +
+                "`variant`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
+        )
+        connection.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_stock_count_line_countId` ON `stock_count_line` " +
+                "(`countId`)",
+        )
+        connection.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_stock_count_line_variantId` ON `stock_count_line` " +
+                "(`variantId`)",
+        )
+        connection.execSQL(
+            "CREATE UNIQUE INDEX IF NOT EXISTS `index_stock_count_line_countId_variantId` ON " +
+                "`stock_count_line` (`countId`, `variantId`)",
+        )
+    }
+}
+
+/**
  * Every migration this database has ever shipped, in order.
  *
  * KD-002: the local database is the source of truth until sync arrives, so
@@ -166,4 +261,5 @@ val ALL_MIGRATIONS: Array<Migration> = arrayOf(
     MIGRATION_1_2,
     MIGRATION_2_3,
     MIGRATION_3_4,
+    MIGRATION_4_5,
 )

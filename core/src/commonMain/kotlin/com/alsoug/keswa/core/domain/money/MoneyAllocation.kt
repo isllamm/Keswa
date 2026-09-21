@@ -6,7 +6,7 @@ package com.alsoug.keswa.core.domain.money
  * HALF_EVEN matches the semantics `kmp_cashimobile` already established for money formatting, and
  * avoids the upward bias that half-up accumulates across many lines.
  */
-private fun divideHalfEven(numerator: Long, denominator: Long): Long {
+internal fun divideHalfEven(numerator: Long, denominator: Long): Long {
     require(denominator > 0) { "denominator must be positive" }
 
     val quotient = numerator / denominator

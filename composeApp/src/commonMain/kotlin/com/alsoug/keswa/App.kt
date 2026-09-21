@@ -1,6 +1,11 @@
 package com.alsoug.keswa
 
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material3.Card
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -22,6 +27,10 @@ import com.alsoug.keswa.core.session.ISessionManager
 import com.alsoug.keswa.features.auth.presentation.screens.signin.SignInScreen
 import com.alsoug.keswa.features.catalog.presentation.screens.catalogbrowser.CatalogBrowserScreen
 import com.alsoug.keswa.features.catalog.presentation.screens.producteditor.ProductEditorScreen
+import com.alsoug.keswa.features.inventory.presentation.screens.adjust.AdjustScreen
+import com.alsoug.keswa.features.inventory.presentation.screens.count.CountScreen
+import com.alsoug.keswa.features.inventory.presentation.screens.importer.ImportScreen
+import com.alsoug.keswa.features.inventory.presentation.screens.receiving.ReceivingScreen
 import com.alsoug.keswa.features.sell.presentation.screens.shift.ShiftScreen
 import com.alsoug.keswa.features.sell.presentation.screens.till.TillScreen
 import com.alsoug.keswa.features.settings.presentation.screens.settings.SettingsScreen
@@ -40,6 +49,11 @@ private sealed interface Route {
     data class ProductEditor(val productId: String) : Route
     data object Settings : Route
     data object ShiftClose : Route
+    data object Stockroom : Route
+    data object Receiving : Route
+    data object StockCount : Route
+    data object Adjust : Route
+    data object Import : Route
 }
 
 @Composable
@@ -93,10 +107,12 @@ private fun SignedInApp(
             TopAppBar(
                 title = { Text("Keswa") },
                 actions = {
+                    // Four destinations, not eight: the stockroom's own jobs sit behind one
+                    // entry, which is the only way this bar still fits on a handheld.
                     TextButton(onClick = { route = Route.Till }) { Text("Till") }
+                    TextButton(onClick = { route = Route.Stockroom }) { Text("Stockroom") }
                     TextButton(onClick = { route = Route.Catalogue }) { Text("Catalogue") }
                     TextButton(onClick = { route = Route.ShiftClose }) { Text("Shift") }
-                    TextButton(onClick = { route = Route.Settings }) { Text("Printers") }
                     Text(
                         "$operator · $role",
                         style = MaterialTheme.typography.labelMedium,
@@ -122,6 +138,40 @@ private fun SignedInApp(
                 modifier = Modifier.padding(padding),
             )
 
+            is Route.Stockroom -> StockroomHub(
+                onOpen = { route = it },
+                onSettings = { route = Route.Settings },
+                modifier = Modifier.padding(padding),
+            )
+
+            is Route.Receiving -> ReceivingScreen(
+                viewModel = koinInject(),
+                onBack = { route = Route.Stockroom },
+                onMessage = notify,
+                modifier = Modifier.padding(padding),
+            )
+
+            is Route.StockCount -> CountScreen(
+                viewModel = koinInject(),
+                onBack = { route = Route.Stockroom },
+                onMessage = notify,
+                modifier = Modifier.padding(padding),
+            )
+
+            is Route.Adjust -> AdjustScreen(
+                viewModel = koinInject(),
+                onBack = { route = Route.Stockroom },
+                onMessage = notify,
+                modifier = Modifier.padding(padding),
+            )
+
+            is Route.Import -> ImportScreen(
+                viewModel = koinInject(),
+                onBack = { route = Route.Stockroom },
+                onMessage = notify,
+                modifier = Modifier.padding(padding),
+            )
+
             is Route.Catalogue -> CatalogBrowserScreen(
                 viewModel = koinInject(),
                 onOpenProduct = { route = Route.ProductEditor(it) },
@@ -139,10 +189,54 @@ private fun SignedInApp(
 
             is Route.Settings -> SettingsScreen(
                 viewModel = koinInject(),
-                onBack = { route = Route.Catalogue },
+                onBack = { route = Route.Stockroom },
                 onMessage = notify,
                 modifier = Modifier.padding(padding),
             )
+        }
+    }
+}
+
+/**
+ * The four things somebody does in a stockroom.
+ *
+ * A hub rather than four more entries in the top bar. It also keeps the feature modules ignorant
+ * of one another: each screen reports that it is finished, and the shell decides where that leads.
+ */
+@Composable
+private fun StockroomHub(
+    onOpen: (Route) -> Unit,
+    onSettings: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val entries = listOf(
+        Triple(Route.Receiving, "Receiving", "Book in a delivery, and let it set the cost"),
+        Triple(Route.StockCount, "Stock count", "Blind — the expected figure comes after"),
+        Triple(Route.Adjust, "Adjust", "Damage, loss, anything a document cannot explain"),
+        Triple(Route.Import, "Import catalogue", "A supplier's spreadsheet, validated as a whole"),
+    )
+
+    Column(modifier = modifier.fillMaxSize().padding(16.dp)) {
+        Text("Stockroom", style = MaterialTheme.typography.titleLarge)
+
+        entries.forEach { (route, title, subtitle) ->
+            Card(
+                onClick = { onOpen(route) },
+                modifier = Modifier.fillMaxWidth().widthIn(max = 520.dp).padding(top = 12.dp),
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(title, style = MaterialTheme.typography.titleSmall)
+                    Text(
+                        subtitle,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+            }
+        }
+
+        TextButton(onClick = onSettings, modifier = Modifier.padding(top = 16.dp)) {
+            Text("Printers and scanner")
         }
     }
 }

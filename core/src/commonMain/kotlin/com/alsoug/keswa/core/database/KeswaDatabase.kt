@@ -13,6 +13,8 @@ import com.alsoug.keswa.core.database.dao.ProductDao
 import com.alsoug.keswa.core.database.dao.SaleDao
 import com.alsoug.keswa.core.database.dao.SellableDao
 import com.alsoug.keswa.core.database.dao.SettingDao
+import com.alsoug.keswa.core.database.dao.StockCountDao
+import com.alsoug.keswa.core.database.dao.StockReceiptDao
 import com.alsoug.keswa.core.database.dao.ShiftDao
 import com.alsoug.keswa.core.database.dao.UserDao
 import com.alsoug.keswa.core.database.dao.StockLedgerDao
@@ -32,7 +34,11 @@ import com.alsoug.keswa.core.database.entities.ProductEntity
 import com.alsoug.keswa.core.database.entities.SaleEntity
 import com.alsoug.keswa.core.database.entities.SaleLineEntity
 import com.alsoug.keswa.core.database.entities.ShiftEntity
+import com.alsoug.keswa.core.database.entities.StockCountEntity
+import com.alsoug.keswa.core.database.entities.StockCountLineEntity
 import com.alsoug.keswa.core.database.entities.StockMovementEntity
+import com.alsoug.keswa.core.database.entities.StockReceiptEntity
+import com.alsoug.keswa.core.database.entities.StockReceiptLineEntity
 import com.alsoug.keswa.core.database.entities.StockOnHandEntity
 import com.alsoug.keswa.core.database.entities.VariantBarcodeEntity
 import com.alsoug.keswa.core.database.entities.VariantEntity
@@ -63,8 +69,13 @@ import com.alsoug.keswa.core.database.entities.VariantEntity
         ShiftEntity::class,
         HeldSaleEntity::class,
         HeldSaleLineEntity::class,
+        StockReceiptEntity::class,
+        StockReceiptLineEntity::class,
+        StockCountEntity::class,
+        StockCountLineEntity::class,
     ],
-    version = 4, // 4: added sale, sale_line, payment, shift, held_sale, held_sale_line
+    version = 5, // 5: added stock_receipt/_line, stock_count/_line; stock_movement gained cost and note
+    // 4: added sale, sale_line, payment, shift, held_sale, held_sale_line
     // 3: added app_user (sign-in, roles, lockout)
     // 2: added app_setting (printer and scanner configuration)
     // 1: initial schema — category tree, catalogue, stock ledger, pricing
@@ -86,6 +97,8 @@ abstract class KeswaDatabase : RoomDatabase() {
     abstract fun shiftDao(): ShiftDao
     abstract fun heldSaleDao(): HeldSaleDao
     abstract fun sellableDao(): SellableDao
+    abstract fun stockReceiptDao(): StockReceiptDao
+    abstract fun stockCountDao(): StockCountDao
 }
 
 /**

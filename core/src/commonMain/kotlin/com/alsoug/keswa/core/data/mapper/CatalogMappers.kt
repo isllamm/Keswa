@@ -58,6 +58,8 @@ fun StockMovementEntity.toDomain(): StockMovement = StockMovement(
     refId = refId,
     occurredAt = occurredAt,
     userId = userId,
+    unitCost = unitCostPiastres?.let { Money.ofPiastres(it) },
+    note = note,
 )
 
 fun StockMovement.toEntity(): StockMovementEntity = StockMovementEntity(
@@ -70,6 +72,8 @@ fun StockMovement.toEntity(): StockMovementEntity = StockMovementEntity(
     refId = refId,
     occurredAt = occurredAt,
     userId = userId,
+    unitCostPiastres = unitCost?.piastres,
+    note = note,
 )
 
 fun LocationEntity.toDomain(): Location =

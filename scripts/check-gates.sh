@@ -16,7 +16,7 @@ FAILED=0
 MODULES="core composeApp features"
 SRC=$(find $MODULES -maxdepth 3 -type d -name src 2>/dev/null | tr '\n' ' ')
 COMMON=$(find $MODULES -maxdepth 4 -type d -name commonMain 2>/dev/null | tr '\n' ' ')
-PROD=$(find $MODULES -maxdepth 4 -type d \( -name commonMain -o -name desktopMain \) 2>/dev/null | tr '\n' ' ')
+PROD=$(find $MODULES -maxdepth 4 -type d \( -name commonMain -o -name desktopMain -o -name androidMain -o -name jvmCommonMain \) 2>/dev/null | tr '\n' ' ')
 DOMAIN=$(find $MODULES -type d -path "*commonMain*/domain" 2>/dev/null | tr '\n' ' ')
 
 require_paths() {
@@ -52,6 +52,11 @@ if require_paths "destructive migration (KD-002)" "$SRC"; then
 
   gate "no println outside the logger (ADR-029)" \
        "$(code_grep 'println(' $SRC | grep -v 'DesktopPlatformProvider.kt' || true)" \
+       "use IPlatformProvider.log()"
+
+  # Android's equivalent, gated from the day the target landed rather than after the first leak.
+  gate "no android.util.Log outside the logger (ADR-029)" \
+       "$(code_grep 'Log\.\(d\|i\|w\|e\|v\)(' $SRC | grep -v 'AndroidPlatformProvider.kt' || true)" \
        "use IPlatformProvider.log()"
 fi
 
