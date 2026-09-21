@@ -5,12 +5,14 @@ plugins {
     alias(libs.plugins.kotlinxSerialization)
     alias(libs.plugins.ksp)
     alias(libs.plugins.androidx.room)
+    alias(libs.plugins.androidLibrary)
 }
 
 kotlin {
     jvm("desktop")
-    // androidTarget() added in Phase 6 — see KD-004.
-    // commonMain must therefore avoid java.* as well as android.*.
+    // Added in Phase 6 (KD-004). `commonMain` has been forbidden `java.*` since Phase 0 precisely
+    // so that this is a build-configuration exercise rather than an archaeology one.
+    androidTarget()
 
     jvmToolchain(17)
 
@@ -20,7 +22,15 @@ kotlin {
         freeCompilerArgs.add("-Xexpect-actual-classes")
     }
 
+    // Both targets are JVM by KD-004, and a handful of platform bridges are genuinely identical
+    // on each — the credential hasher above all. One implementation, so it cannot drift: a raised
+    // iteration count on one target and not the other means nobody can sign in on the handheld.
+    applyDefaultHierarchyTemplate()
+
     sourceSets {
+        val jvmCommonMain by creating { dependsOn(commonMain.get()) }
+        val jvmCommonTest by creating { dependsOn(commonTest.get()) }
+
         commonMain.dependencies {
             api(compose.runtime)
             api(compose.foundation)
@@ -40,12 +50,22 @@ kotlin {
         }
 
         val desktopMain by getting {
+            dependsOn(jvmCommonMain)
             dependencies {
                 // QR for the receipt's return-lookup code. JVM-only, which is fine: rendering is
                 // a platform concern anyway (see IReceiptRenderer).
                 implementation(libs.zxing.core)
             }
         }
+
+        val androidMain by getting {
+            dependsOn(jvmCommonMain)
+            dependencies {
+                implementation(libs.zxing.core)
+            }
+        }
+
+        val desktopTest by getting { dependsOn(jvmCommonTest) }
 
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -54,11 +74,25 @@ kotlin {
     }
 }
 
+android {
+    namespace = "com.alsoug.keswa.core"
+    compileSdk = libs.versions.android.compileSdk.get().toInt()
+
+    defaultConfig {
+        minSdk = libs.versions.android.minSdk.get().toInt()
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+}
+
 dependencies {
     // Per-target KSP, matching kmp_cashimobile. The configuration name follows the *target*
     // name, so jvm("desktop") gives kspDesktop — not kspJvm.
     add("kspDesktop", libs.androidx.room.compiler)
-    // add("kspAndroid", libs.androidx.room.compiler)  // Phase 6
+    add("kspAndroid", libs.androidx.room.compiler)
 }
 
 room {

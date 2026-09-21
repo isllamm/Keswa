@@ -11,3 +11,12 @@ import org.koin.core.module.Module
  * that cannot be injected, which is exactly when `expect`/`actual` is warranted.
  */
 expect val platformModule: Module
+
+/**
+ * Qualifier for the application-lifetime [kotlinx.coroutines.CoroutineScope].
+ *
+ * In `commonMain` because both platforms bind one and both entry points resolve it — it moved here
+ * in Phase 6 when Android became the second consumer.
+ */
+const val APPLICATION_SCOPE = "applicationScope"
+

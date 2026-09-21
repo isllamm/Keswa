@@ -8,6 +8,10 @@ import com.alsoug.keswa.core.database.entities.PriceListEntity
 import com.alsoug.keswa.core.database.entities.SaleEntity
 import com.alsoug.keswa.core.database.entities.SaleLineEntity
 import com.alsoug.keswa.core.database.entities.ShiftEntity
+import com.alsoug.keswa.core.database.entities.StockCountEntity
+import com.alsoug.keswa.core.database.entities.StockCountLineEntity
+import com.alsoug.keswa.core.database.entities.StockReceiptEntity
+import com.alsoug.keswa.core.database.entities.StockReceiptLineEntity
 import com.alsoug.keswa.core.domain.model.HeldSale
 import com.alsoug.keswa.core.domain.model.HeldSaleLine
 import com.alsoug.keswa.core.domain.model.Payment
@@ -16,6 +20,10 @@ import com.alsoug.keswa.core.domain.model.Sale
 import com.alsoug.keswa.core.domain.model.SaleLine
 import com.alsoug.keswa.core.domain.model.SellableItem
 import com.alsoug.keswa.core.domain.model.Shift
+import com.alsoug.keswa.core.domain.model.StockCount
+import com.alsoug.keswa.core.domain.model.StockCountLine
+import com.alsoug.keswa.core.domain.model.StockReceipt
+import com.alsoug.keswa.core.domain.model.StockReceiptLine
 import com.alsoug.keswa.core.domain.money.Money
 
 fun SaleEntity.toDomain(
@@ -155,4 +163,52 @@ fun SellableRow.toDomain(): SellableItem = SellableItem(
     cost = Money.ofPiastres(costPiastres),
     price = pricePiastres?.let { Money.ofPiastres(it) },
     onHand = onHand,
+)
+
+fun StockReceiptEntity.toDomain(lines: List<StockReceiptLine> = emptyList()): StockReceipt =
+    StockReceipt(
+        id = id,
+        reference = reference,
+        supplierName = supplierName,
+        locationId = locationId,
+        status = status,
+        note = note,
+        createdAt = createdAt,
+        createdByUserId = createdByUserId,
+        postedAt = postedAt,
+        postedByUserId = postedByUserId,
+        totalCost = Money.ofPiastres(totalCostPiastres),
+        lines = lines,
+    )
+
+fun StockReceiptLineEntity.toDomain(): StockReceiptLine = StockReceiptLine(
+    id = id,
+    receiptId = receiptId,
+    lineNumber = lineNumber,
+    variantId = variantId,
+    quantity = quantity,
+    unitCost = Money.ofPiastres(unitCostPiastres),
+    lineTotal = Money.ofPiastres(lineTotalPiastres),
+)
+
+fun StockCountEntity.toDomain(lines: List<StockCountLine> = emptyList()): StockCount = StockCount(
+    id = id,
+    locationId = locationId,
+    status = status,
+    note = note,
+    startedAt = startedAt,
+    startedByUserId = startedByUserId,
+    postedAt = postedAt,
+    postedByUserId = postedByUserId,
+    lines = lines,
+)
+
+fun StockCountLineEntity.toDomain(): StockCountLine = StockCountLine(
+    id = id,
+    countId = countId,
+    lineNumber = lineNumber,
+    variantId = variantId,
+    counted = countedQuantity,
+    expected = expectedQuantity,
+    variance = varianceQuantity,
 )
