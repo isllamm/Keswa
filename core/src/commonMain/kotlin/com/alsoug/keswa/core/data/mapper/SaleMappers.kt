@@ -7,6 +7,8 @@ import com.alsoug.keswa.core.database.entities.PaymentEntity
 import com.alsoug.keswa.core.database.entities.PriceListEntity
 import com.alsoug.keswa.core.database.entities.SaleEntity
 import com.alsoug.keswa.core.database.entities.SaleLineEntity
+import com.alsoug.keswa.core.database.entities.SaleReturnEntity
+import com.alsoug.keswa.core.database.entities.SaleReturnLineEntity
 import com.alsoug.keswa.core.database.entities.ShiftEntity
 import com.alsoug.keswa.core.database.entities.StockCountEntity
 import com.alsoug.keswa.core.database.entities.StockCountLineEntity
@@ -18,6 +20,8 @@ import com.alsoug.keswa.core.domain.model.Payment
 import com.alsoug.keswa.core.domain.model.PriceList
 import com.alsoug.keswa.core.domain.model.Sale
 import com.alsoug.keswa.core.domain.model.SaleLine
+import com.alsoug.keswa.core.domain.model.SaleReturn
+import com.alsoug.keswa.core.domain.model.SaleReturnLine
 import com.alsoug.keswa.core.domain.model.SellableItem
 import com.alsoug.keswa.core.domain.model.Shift
 import com.alsoug.keswa.core.domain.model.StockCount
@@ -211,4 +215,54 @@ fun StockCountLineEntity.toDomain(): StockCountLine = StockCountLine(
     counted = countedQuantity,
     expected = expectedQuantity,
     variance = varianceQuantity,
+)
+
+fun SaleReturnEntity.toDomain(lines: List<SaleReturnLine> = emptyList()): SaleReturn = SaleReturn(
+    id = id,
+    returnNumber = returnNumber,
+    originalSaleId = originalSaleId,
+    locationId = locationId,
+    userId = userId,
+    shiftId = shiftId,
+    status = status,
+    reason = reason,
+    refundMethod = refundMethod,
+    refundAmount = Money.ofPiastres(refundAmountPiastres),
+    subtotal = Money.ofPiastres(subtotalPiastres),
+    tax = Money.ofPiastres(taxPiastres),
+    occurredAt = occurredAt,
+    exchangeSaleId = exchangeSaleId,
+    authorisedByUserId = authorisedByUserId,
+    voidedAt = voidedAt,
+    voidedByUserId = voidedByUserId,
+    voidReason = voidReason,
+    lines = lines,
+)
+
+fun SaleReturnLineEntity.toDomain(): SaleReturnLine = SaleReturnLine(
+    id = id,
+    returnId = returnId,
+    lineNumber = lineNumber,
+    saleLineId = saleLineId,
+    variantId = variantId,
+    description = description,
+    quantity = quantity,
+    unitRefund = Money.ofPiastres(unitRefundPiastres),
+    lineRefund = Money.ofPiastres(lineRefundPiastres),
+    condition = condition,
+    unitCost = Money.ofPiastres(unitCostPiastres),
+)
+
+fun SaleReturnLine.toEntity(): SaleReturnLineEntity = SaleReturnLineEntity(
+    id = id,
+    returnId = returnId,
+    lineNumber = lineNumber,
+    saleLineId = saleLineId,
+    variantId = variantId,
+    description = description,
+    quantity = quantity,
+    unitRefundPiastres = unitRefund.piastres,
+    lineRefundPiastres = lineRefund.piastres,
+    condition = condition,
+    unitCostPiastres = unitCost.piastres,
 )

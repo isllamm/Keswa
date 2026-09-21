@@ -69,3 +69,11 @@ enum class TenderMethod { CASH, CARD }
  * terminal — a mistake is corrected with an adjustment, never by reopening.
  */
 enum class DocumentStatus { DRAFT, POSTED }
+
+/**
+ * What state a returned garment came back in.
+ *
+ * The only thing that decides whether it goes back on the rail — and a `DAMAGED` return still
+ * writes a `RETURN` movement before its `DAMAGE` one, because the shop did take it back.
+ */
+enum class ReturnCondition { SELLABLE, DAMAGED }

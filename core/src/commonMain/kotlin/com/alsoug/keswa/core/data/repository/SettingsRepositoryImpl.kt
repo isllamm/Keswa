@@ -24,6 +24,9 @@ class SettingsRepositoryImpl(
             shopNameAr = stored[SHOP_NAME_AR] ?: defaults.shopNameAr,
             addressLine = stored[SHOP_ADDRESS] ?: defaults.addressLine,
             vatBasisPoints = stored[VAT_BASIS_POINTS]?.toIntOrNull() ?: defaults.vatBasisPoints,
+            returnWindowDays = stored[RETURN_WINDOW]?.toIntOrNull() ?: defaults.returnWindowDays,
+            allowNoReceiptReturns = stored[NO_RECEIPT_RETURNS]?.toBooleanStrictOrNull()
+                ?: defaults.allowNoReceiptReturns,
             receiptHost = stored[RECEIPT_HOST] ?: defaults.receiptHost,
             receiptPort = stored[RECEIPT_PORT]?.toIntOrNull() ?: defaults.receiptPort,
             paperWidthDots = stored[PAPER_WIDTH]?.toIntOrNull() ?: defaults.paperWidthDots,
@@ -43,6 +46,8 @@ class SettingsRepositoryImpl(
                 AppSettingEntity(SHOP_NAME_AR, settings.shopNameAr),
                 AppSettingEntity(SHOP_ADDRESS, settings.addressLine),
                 AppSettingEntity(VAT_BASIS_POINTS, settings.vatBasisPoints.toString()),
+                AppSettingEntity(RETURN_WINDOW, settings.returnWindowDays.toString()),
+                AppSettingEntity(NO_RECEIPT_RETURNS, settings.allowNoReceiptReturns.toString()),
                 AppSettingEntity(RECEIPT_HOST, settings.receiptHost),
                 AppSettingEntity(RECEIPT_PORT, settings.receiptPort.toString()),
                 AppSettingEntity(PAPER_WIDTH, settings.paperWidthDots.toString()),
@@ -61,6 +66,8 @@ class SettingsRepositoryImpl(
         const val SHOP_NAME_AR = "shop.nameAr"
         const val SHOP_ADDRESS = "shop.address"
         const val VAT_BASIS_POINTS = "shop.vatBasisPoints"
+        const val RETURN_WINDOW = "shop.returnWindowDays"
+        const val NO_RECEIPT_RETURNS = "shop.allowNoReceiptReturns"
         const val RECEIPT_HOST = "printer.receipt.host"
         const val RECEIPT_PORT = "printer.receipt.port"
         const val PAPER_WIDTH = "printer.receipt.widthDots"
