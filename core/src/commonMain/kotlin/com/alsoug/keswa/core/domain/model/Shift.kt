@@ -44,6 +44,10 @@ data class ZReport(
     val cashTaken: Money,
     val cardTaken: Money,
     val changeGiven: Money,
+    val returnCount: Int,
+    /** Cash paid back out of the drawer. Card refunds never touch it. */
+    val cashRefunded: Money,
+    val cardRefunded: Money,
     val expectedCash: Money,
     val countedCash: Money?,
     /** Sales rung up outside any shift — worth seeing, because it should usually be none. */

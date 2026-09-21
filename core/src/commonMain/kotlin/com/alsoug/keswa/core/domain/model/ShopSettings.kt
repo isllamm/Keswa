@@ -22,6 +22,15 @@ data class ShopSettings(
      * a legal problem rather than a cosmetic one. 14% is `1_400`.
      */
     val vatBasisPoints: Int = 0,
+    /**
+     * How long after a sale goods may come back on a seller's own authority.
+     *
+     * Beyond it a return still happens — it just needs an admin, in place. The permission *is*
+     * the policy: what a policy must never be is a rule staff route around by not using the till.
+     */
+    val returnWindowDays: Int = 14,
+    /** No-receipt returns refund at the lowest price the variant ever sold for, and need an admin. */
+    val allowNoReceiptReturns: Boolean = false,
     val receiptHost: String = "",
     val receiptPort: Int = TcpTransport.DEFAULT_PORT,
     val paperWidthDots: Int = MonoBitmap.WIDTH_80MM,

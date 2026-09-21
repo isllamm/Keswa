@@ -5,8 +5,8 @@ Three levels, and one rule each.
 ```
 prod                      what is installed in the shop
 └── dev                   integration — everything that has landed and is green
-    ├── feature/phase-6-receiving
-    ├── feature/phase-7-wholesale
+    ├── feature/phase-8-returns
+    ├── feature/phase-8-analytics
     └── fix/<short-name>
 ```
 
@@ -21,8 +21,11 @@ prod                      what is installed in the shop
 ```bash
 git checkout dev
 git pull
-git checkout -b feature/phase-5-sell
+git checkout -b feature/phase-8-analytics
 ```
+
+> **Phases are not always in order.** Phase 7 is gated on Q1, so Phase 8 was taken first — the
+> outline sanctions the swap. Tags record what landed, and in what order it actually landed.
 
 ## Finishing one
 
@@ -37,8 +40,8 @@ Then merge to `dev` and tag the phase:
 
 ```bash
 git checkout dev
-git merge --no-ff feature/phase-5-sell
-git tag -a phase-5 -m "Phase 5 — sell flow"
+git merge --no-ff feature/phase-8-analytics
+git tag -a phase-8-analytics -m "Phase 8 — analytics"
 ```
 
 `--no-ff` keeps the phase visible as a unit in the history rather than flattening it into a run of
@@ -64,7 +67,7 @@ is the better marker for something finished, because it does not move.
 
 ## Current state
 
-`dev` sits at the end of Phase 6; `prod` is still at Phase 4. Nothing has been installed in a shop
+`dev` sits at the end of Phase 8's returns half; `prod` is still at Phase 4. Nothing has been installed in a shop
 yet, so `prod` means "last known-good, ready to install" rather than "running somewhere" — it will
 start meaning the latter the day the first till is set up.
 
@@ -72,7 +75,7 @@ start meaning the latter the day the first till is set up.
 shop's real trading history, and KD-002's migration tests stop being a discipline and start being
 the only thing standing between an upgrade and a permanent loss.
 
-Historical phase branches (`feature/phase-0-scaffold` … `feature/phase-6-receiving`) point at the commit
+Historical phase branches (`feature/phase-0-scaffold` … `feature/phase-8-returns`) point at the commit
 where each phase landed. They are kept for reference and are safe to delete once you are happy the
 tags are enough.
 
