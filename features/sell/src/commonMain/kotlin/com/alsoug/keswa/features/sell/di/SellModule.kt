@@ -29,7 +29,7 @@ val sellModule = module {
     factory { FindSellableUseCase(get()) { now() } }
     factory { CompleteSaleUseCase(get(), get(), get(), get(), get()) { now() } }
     factory { PrintReceiptUseCase(get(), get(), get(), get()) }
-    factory { ReauthenticateUseCase(get(), get()) { now() } }
+    factory { ReauthenticateUseCase(get()) }
     factory { VoidSaleUseCase(get()) { now() } }
     factory { HoldSaleUseCase(get(), get(), get()) { now() } }
     factory { ResumeHeldSaleUseCase(get(), get()) { now() } }

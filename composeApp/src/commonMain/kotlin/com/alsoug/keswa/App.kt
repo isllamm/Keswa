@@ -31,6 +31,7 @@ import com.alsoug.keswa.features.inventory.presentation.screens.adjust.AdjustScr
 import com.alsoug.keswa.features.inventory.presentation.screens.count.CountScreen
 import com.alsoug.keswa.features.inventory.presentation.screens.importer.ImportScreen
 import com.alsoug.keswa.features.inventory.presentation.screens.receiving.ReceivingScreen
+import com.alsoug.keswa.features.returns.presentation.screens.returns.ReturnsScreen
 import com.alsoug.keswa.features.sell.presentation.screens.shift.ShiftScreen
 import com.alsoug.keswa.features.sell.presentation.screens.till.TillScreen
 import com.alsoug.keswa.features.settings.presentation.screens.settings.SettingsScreen
@@ -54,6 +55,7 @@ private sealed interface Route {
     data object StockCount : Route
     data object Adjust : Route
     data object Import : Route
+    data object Returns : Route
 }
 
 @Composable
@@ -110,6 +112,7 @@ private fun SignedInApp(
                     // Four destinations, not eight: the stockroom's own jobs sit behind one
                     // entry, which is the only way this bar still fits on a handheld.
                     TextButton(onClick = { route = Route.Till }) { Text("Till") }
+                    TextButton(onClick = { route = Route.Returns }) { Text("Returns") }
                     TextButton(onClick = { route = Route.Stockroom }) { Text("Stockroom") }
                     TextButton(onClick = { route = Route.Catalogue }) { Text("Catalogue") }
                     TextButton(onClick = { route = Route.ShiftClose }) { Text("Shift") }
@@ -132,6 +135,13 @@ private fun SignedInApp(
             )
 
             is Route.ShiftClose -> ShiftScreen(
+                viewModel = koinInject(),
+                onBack = { route = Route.Till },
+                onMessage = notify,
+                modifier = Modifier.padding(padding),
+            )
+
+            is Route.Returns -> ReturnsScreen(
                 viewModel = koinInject(),
                 onBack = { route = Route.Till },
                 onMessage = notify,

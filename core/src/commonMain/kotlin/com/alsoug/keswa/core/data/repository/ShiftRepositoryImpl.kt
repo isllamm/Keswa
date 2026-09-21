@@ -3,6 +3,7 @@ package com.alsoug.keswa.core.data.repository
 import com.alsoug.keswa.core.coroutines.runCatchingCancellable
 import com.alsoug.keswa.core.data.mapper.toDomain
 import com.alsoug.keswa.core.database.dao.SaleDao
+import com.alsoug.keswa.core.database.dao.SaleReturnDao
 import com.alsoug.keswa.core.database.dao.ShiftDao
 import com.alsoug.keswa.core.database.entities.ShiftEntity
 import com.alsoug.keswa.core.domain.model.Shift
@@ -16,6 +17,7 @@ import kotlinx.coroutines.flow.map
 class ShiftRepositoryImpl(
     private val dao: ShiftDao,
     private val sales: SaleDao,
+    private val returns: SaleReturnDao,
 ) : IShiftRepository {
 
     override suspend fun open(
@@ -81,14 +83,19 @@ class ShiftRepositoryImpl(
         dao.observeOpen(locationId).map { it?.toDomain() }
 
     /**
-     * What should be in the drawer: the float plus what cash actually settled.
+     * What should be in the drawer: the float, plus what cash settled, minus what cash went back
+     * out as refunds.
      *
-     * `amountPiastres` is the settled portion of each tender, so change is already netted off —
-     * subtracting it again is the classic way to make every till look short.
+     * Two traps here, both of which make a till look wrong in opposite directions.
+     * `amountPiastres` is the settled portion of each tender, so change is *already* netted off
+     * and subtracting it again makes every till short. Cash refunds, on the other hand, genuinely
+     * leave the drawer and must come off — a shop that refunds and reads over is a shop that
+     * stops trusting the report.
      */
     private suspend fun expectedCash(shift: ShiftEntity): Money =
         Money.ofPiastres(shift.openingFloatPiastres) +
-            Money.ofPiastres(sales.sumTakenInShift(shift.id, TenderMethod.CASH))
+            Money.ofPiastres(sales.sumTakenInShift(shift.id, TenderMethod.CASH)) -
+            Money.ofPiastres(returns.sumRefundedInShift(shift.id, TenderMethod.CASH))
 
     private suspend fun buildReport(shift: ShiftEntity): ZReport {
         val closedAt = shift.closedAt ?: Long.MAX_VALUE
@@ -103,6 +110,9 @@ class ShiftRepositoryImpl(
             cashTaken = Money.ofPiastres(sales.sumTakenInShift(shift.id, TenderMethod.CASH)),
             cardTaken = Money.ofPiastres(sales.sumTakenInShift(shift.id, TenderMethod.CARD)),
             changeGiven = Money.ofPiastres(sales.sumChangeInShift(shift.id)),
+            returnCount = returns.countInShift(shift.id),
+            cashRefunded = Money.ofPiastres(returns.sumRefundedInShift(shift.id, TenderMethod.CASH)),
+            cardRefunded = Money.ofPiastres(returns.sumRefundedInShift(shift.id, TenderMethod.CARD)),
             // Frozen at close, so reopening the report next month reads the same as it did tonight.
             expectedCash = shift.expectedCashPiastres
                 ?.let { Money.ofPiastres(it) }

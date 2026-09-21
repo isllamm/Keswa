@@ -251,6 +251,69 @@ val MIGRATION_4_5: Migration = object : Migration(4, 5) {
 }
 
 /**
+ * 5 → 6: adds `sale_return` and `sale_return_line`.
+ *
+ * Additive, and it has to be: by the time a shop upgrades to this it has a till's worth of real
+ * sales, and returns reference them. DDL copied verbatim from Room's exported `6.json`.
+ */
+val MIGRATION_5_6: Migration = object : Migration(5, 6) {
+    override fun migrate(connection: SQLiteConnection) {
+        connection.execSQL(
+            "CREATE TABLE IF NOT EXISTS `sale_return` (`id` TEXT NOT NULL, `returnNumber` INTEGER " +
+                "NOT NULL, `originalSaleId` TEXT, `locationId` TEXT NOT NULL, `userId` TEXT NOT NULL, " +
+                "`shiftId` TEXT, `status` TEXT NOT NULL, `reason` TEXT NOT NULL, `refundMethod` TEXT " +
+                "NOT NULL, `refundAmountPiastres` INTEGER NOT NULL, `subtotalPiastres` INTEGER NOT " +
+                "NULL, `taxPiastres` INTEGER NOT NULL, `occurredAt` INTEGER NOT NULL, " +
+                "`exchangeSaleId` TEXT, `authorisedByUserId` TEXT, `voidedAt` INTEGER, " +
+                "`voidedByUserId` TEXT, `voidReason` TEXT, PRIMARY KEY(`id`), FOREIGN " +
+                "KEY(`locationId`) REFERENCES `location`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT " +
+                ", FOREIGN KEY(`originalSaleId`) REFERENCES `sale`(`id`) ON UPDATE NO ACTION ON " +
+                "DELETE RESTRICT )",
+        )
+        connection.execSQL(
+            "CREATE UNIQUE INDEX IF NOT EXISTS `index_sale_return_returnNumber` ON `sale_return` " +
+                "(`returnNumber`)",
+        )
+        connection.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_sale_return_originalSaleId` ON `sale_return` " +
+                "(`originalSaleId`)",
+        )
+        connection.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_sale_return_occurredAt` ON `sale_return` " +
+                "(`occurredAt`)",
+        )
+        connection.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_sale_return_locationId` ON `sale_return` " +
+                "(`locationId`)",
+        )
+        connection.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_sale_return_shiftId` ON `sale_return` (`shiftId`)",
+        )
+        connection.execSQL(
+            "CREATE TABLE IF NOT EXISTS `sale_return_line` (`id` TEXT NOT NULL, `returnId` TEXT " +
+                "NOT NULL, `lineNumber` INTEGER NOT NULL, `saleLineId` TEXT, `variantId` TEXT NOT " +
+                "NULL, `description` TEXT NOT NULL, `quantity` INTEGER NOT NULL, `unitRefundPiastres` " +
+                "INTEGER NOT NULL, `lineRefundPiastres` INTEGER NOT NULL, `condition` TEXT NOT NULL, " +
+                "`unitCostPiastres` INTEGER NOT NULL, PRIMARY KEY(`id`), FOREIGN KEY(`returnId`) " +
+                "REFERENCES `sale_return`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT , FOREIGN " +
+                "KEY(`variantId`) REFERENCES `variant`(`id`) ON UPDATE NO ACTION ON DELETE RESTRICT )",
+        )
+        connection.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_sale_return_line_returnId` ON `sale_return_line` " +
+                "(`returnId`)",
+        )
+        connection.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_sale_return_line_variantId` ON `sale_return_line` " +
+                "(`variantId`)",
+        )
+        connection.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_sale_return_line_saleLineId` ON `sale_return_line` " +
+                "(`saleLineId`)",
+        )
+    }
+}
+
+/**
  * Every migration this database has ever shipped, in order.
  *
  * KD-002: the local database is the source of truth until sync arrives, so
@@ -262,4 +325,5 @@ val ALL_MIGRATIONS: Array<Migration> = arrayOf(
     MIGRATION_2_3,
     MIGRATION_3_4,
     MIGRATION_4_5,
+    MIGRATION_5_6,
 )
