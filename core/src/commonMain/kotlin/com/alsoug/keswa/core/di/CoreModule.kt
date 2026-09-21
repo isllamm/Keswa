@@ -2,6 +2,7 @@ package com.alsoug.keswa.core.di
 
 import com.alsoug.keswa.core.coroutines.DefaultDispatcherProvider
 import com.alsoug.keswa.core.coroutines.DispatcherProvider
+import com.alsoug.keswa.core.data.repository.AnalyticsRepositoryImpl
 import com.alsoug.keswa.core.data.repository.CategoryRepositoryImpl
 import com.alsoug.keswa.core.data.repository.ColourRepositoryImpl
 import com.alsoug.keswa.core.data.repository.ProductRepositoryImpl
@@ -21,6 +22,7 @@ import com.alsoug.keswa.core.data.repository.VariantRepositoryImpl
 import com.alsoug.keswa.core.database.KeswaDatabase
 import com.alsoug.keswa.core.domain.IdGenerator
 import com.alsoug.keswa.core.domain.UuidIdGenerator
+import com.alsoug.keswa.core.domain.repository.IAnalyticsRepository
 import com.alsoug.keswa.core.domain.repository.ICategoryRepository
 import com.alsoug.keswa.core.domain.repository.IHeldSaleRepository
 import com.alsoug.keswa.core.domain.repository.ILocationRepository
@@ -99,6 +101,7 @@ val coreModule = module {
             get(),
         )
     }
+    single<IAnalyticsRepository> { AnalyticsRepositoryImpl(get<KeswaDatabase>().analyticsDao()) }
     single<ISaleReturnRepository> {
         SaleReturnRepositoryImpl(
             get(),

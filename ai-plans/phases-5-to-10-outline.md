@@ -16,7 +16,7 @@
 | 5 | Sell flow | `phase-5-sell-plan.md` ✅ built |
 | 6 | Receiving, labels, counts + Android | `phase-6-receiving-plan.md` ✅ built |
 | 7 | Wholesale ⚠️ Q1 | outlined below — **skipped for now, still gated** |
-| 8 | Returns, exchanges & analytics | `phase-8-returns-plan.md` ✅ built · `phase-8-analytics-plan.md` 📝 next |
+| 8 | Returns, exchanges & analytics | `phase-8-returns-plan.md` ✅ · `phase-8-analytics-plan.md` ✅ |
 | 9 | Backend, sync, web back office | outlined below |
 | 10 | ETA fiscal ⚠️ Q2 | outlined below |
 
@@ -110,11 +110,11 @@ is never edited — credit note instead; Bluetooth transport for handheld use la
 
 ---
 
-## Phase 8 — Returns, exchanges & analytics
+## Phase 8 — Returns, exchanges & analytics ✅
 
-**Two halves, two plans.** Returns is built — `phase-8-returns-plan.md`. Analytics is next and
-already planned — `phase-8-analytics-plan.md`. Returns came first because the dashboard's
-return-rate KPI and `returnedUnits` rollup have nothing to count until returns exist.
+**Two halves, two plans, both built.** `phase-8-returns-plan.md` and
+`phase-8-analytics-plan.md`. Returns came first because the dashboard's return-rate KPI has
+nothing to count until returns exist.
 
 **Taken out of order, deliberately.** Phase 7 is gated on Q1 and Phase 8 is gated on nothing, so
 the sequencing note below was followed rather than waiting. Q1 is still needed before Phase 7 or
