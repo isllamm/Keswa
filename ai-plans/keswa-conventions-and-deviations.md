@@ -158,6 +158,24 @@ and ETA signing needs PKCS#11).
 - Ktor engine: `ktor-client-java` or CIO in place of okhttp/darwin.
 - Previews use the JetBrains `org.jetbrains.compose.ui.tooling.preview.Preview`.
 
+> **Amended in Phase 6, when `androidTarget()` actually landed.** A `jvmCommonMain` source set now
+> exists, shared by `desktopMain` and `androidMain`, holding platform bridges whose implementation
+> is genuinely identical on both — currently just `JvmPasswordHasher`.
+>
+> This is not the `jvmCommonMain` rejected under KD-001. That one would have put *money* in shared
+> JVM code and foreclosed a non-JVM target permanently. A platform bridge is per-platform by
+> definition, so a third platform would simply get a third implementation; nothing is foreclosed.
+>
+> The reason it is worth having at all: a user created at the till must sign in on the handheld,
+> so the algorithm, iteration count, key length and salt length have to match exactly. Two copies
+> of a work factor is one copy that gets raised and one that does not — and then nobody can sign
+> in. A golden-hash test pins all four.
+>
+> The rest of the target cost nothing in source: six phases of `commonMain` compiled for Android
+> unchanged, which is the `java.*` gate from Phase 0 paying for itself. The only thing that had to
+> move was the *test* fixtures — `Room.inMemoryDatabaseBuilder` needs a `Context` on Android, so
+> database-backed tests live in `desktopTest` and `commonTest` keeps the pure ones.
+
 ### KD-005 — `IReceiptPrinter` / `IBarcodeScanner` follow ADR-018 — interface + DI, not `expect`/`actual`
 
 **Correction to an earlier draft of this document.** Cashi's dominant platform mechanism is an

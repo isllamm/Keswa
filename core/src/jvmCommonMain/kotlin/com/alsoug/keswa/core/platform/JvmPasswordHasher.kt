@@ -13,8 +13,12 @@ import kotlinx.coroutines.withContext
  * Deliberately slow. That cost is the point: it is what stands between a stolen database file and
  * every PIN in it. Runs off the main thread because at this iteration count it is measured in
  * hundreds of milliseconds, which is exactly as it should be.
+ *
+ * Shared by desktop and Android rather than written twice (Phase 6). A user created at the till
+ * signs in on the handheld, so the algorithm, iteration count and salt length have to match
+ * exactly — and two copies of a work factor is one copy that gets raised and one that does not.
  */
-class DesktopPasswordHasher(
+class JvmPasswordHasher(
     private val dispatchers: DispatcherProvider,
     private val iterations: Int = DEFAULT_ITERATIONS,
 ) : IPasswordHasher {

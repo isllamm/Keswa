@@ -11,6 +11,9 @@ import com.alsoug.keswa.core.data.repository.PriceRepositoryImpl
 import com.alsoug.keswa.core.data.repository.SaleRepositoryImpl
 import com.alsoug.keswa.core.data.repository.SellableRepositoryImpl
 import com.alsoug.keswa.core.data.repository.SettingsRepositoryImpl
+import com.alsoug.keswa.core.data.repository.StockAdjustmentRepositoryImpl
+import com.alsoug.keswa.core.data.repository.StockCountRepositoryImpl
+import com.alsoug.keswa.core.data.repository.StockReceiptRepositoryImpl
 import com.alsoug.keswa.core.data.repository.ShiftRepositoryImpl
 import com.alsoug.keswa.core.data.repository.UserRepositoryImpl
 import com.alsoug.keswa.core.data.repository.VariantRepositoryImpl
@@ -23,6 +26,9 @@ import com.alsoug.keswa.core.domain.repository.ILocationRepository
 import com.alsoug.keswa.core.domain.repository.IPriceRepository
 import com.alsoug.keswa.core.domain.repository.ISaleRepository
 import com.alsoug.keswa.core.domain.repository.ISellableRepository
+import com.alsoug.keswa.core.domain.repository.IStockAdjustmentRepository
+import com.alsoug.keswa.core.domain.repository.IStockCountRepository
+import com.alsoug.keswa.core.domain.repository.IStockReceiptRepository
 import com.alsoug.keswa.core.domain.repository.IShiftRepository
 import com.alsoug.keswa.core.domain.repository.IColourRepository
 import com.alsoug.keswa.core.domain.repository.IProductRepository
@@ -93,6 +99,32 @@ val coreModule = module {
     }
     single<IPriceRepository> { PriceRepositoryImpl(get<KeswaDatabase>().priceDao()) }
     single<ISellableRepository> { SellableRepositoryImpl(get<KeswaDatabase>().sellableDao()) }
+
+    // Receiving and counting — posting spans DAOs, so these take the database too
+    single<IStockReceiptRepository> {
+        StockReceiptRepositoryImpl(
+            get(),
+            get<KeswaDatabase>().stockReceiptDao(),
+            get<KeswaDatabase>().variantDao(),
+            get<KeswaDatabase>().stockLedgerDao(),
+            get(),
+        ) { now() }
+    }
+    single<IStockCountRepository> {
+        StockCountRepositoryImpl(
+            get(),
+            get<KeswaDatabase>().stockCountDao(),
+            get<KeswaDatabase>().variantDao(),
+            get<KeswaDatabase>().stockLedgerDao(),
+            get(),
+        )
+    }
+    single<IStockAdjustmentRepository> {
+        StockAdjustmentRepositoryImpl(
+            get<KeswaDatabase>().stockLedgerDao(),
+            get<KeswaDatabase>().variantDao(),
+        )
+    }
 }
 
 @OptIn(ExperimentalTime::class)

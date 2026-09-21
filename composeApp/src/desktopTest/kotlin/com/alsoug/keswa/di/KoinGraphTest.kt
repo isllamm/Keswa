@@ -8,6 +8,10 @@ import com.alsoug.keswa.core.platform.IPlatformProvider
 import com.alsoug.keswa.features.auth.presentation.screens.signin.SignInViewModel
 import com.alsoug.keswa.features.catalog.presentation.screens.catalogbrowser.CatalogBrowserViewModel
 import com.alsoug.keswa.features.catalog.presentation.screens.producteditor.ProductEditorViewModel
+import com.alsoug.keswa.features.inventory.presentation.screens.adjust.AdjustViewModel
+import com.alsoug.keswa.features.inventory.presentation.screens.count.CountViewModel
+import com.alsoug.keswa.features.inventory.presentation.screens.importer.ImportViewModel
+import com.alsoug.keswa.features.inventory.presentation.screens.receiving.ReceivingViewModel
 import com.alsoug.keswa.features.sell.presentation.screens.shift.ShiftViewModel
 import com.alsoug.keswa.features.sell.presentation.screens.till.TillViewModel
 import com.alsoug.keswa.features.settings.presentation.screens.settings.SettingsViewModel
@@ -68,5 +72,9 @@ class KoinGraphTest {
         assertNotNull(koin.get<SettingsViewModel>())
         assertNotNull(koin.get<TillViewModel>())
         assertNotNull(koin.get<ShiftViewModel>())
+        assertNotNull(koin.get<ReceivingViewModel>())
+        assertNotNull(koin.get<CountViewModel>())
+        assertNotNull(koin.get<AdjustViewModel>())
+        assertNotNull(koin.get<ImportViewModel>())
     }
 }

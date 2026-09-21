@@ -61,3 +61,11 @@ enum class SaleStatus { COMPLETED, VOIDED }
  * Q2, and until that is answered a record is what the shop needs and all it needs.
  */
 enum class TenderMethod { CASH, CARD }
+
+/**
+ * Where a document that moves stock has got to.
+ *
+ * A `DRAFT` moves nothing, which is what makes unpacking a delivery interruptible. `POSTED` is
+ * terminal — a mistake is corrected with an adjustment, never by reopening.
+ */
+enum class DocumentStatus { DRAFT, POSTED }

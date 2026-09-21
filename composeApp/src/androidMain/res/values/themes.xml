@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--
+        A bare theme with no action bar: Compose draws everything, including the app's own top bar,
+        so a platform one would be a second, redundant header.
+    -->
+    <style name="Theme.Keswa" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>
