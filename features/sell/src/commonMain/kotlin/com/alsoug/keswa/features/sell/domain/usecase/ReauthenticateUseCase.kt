@@ -1,12 +1,9 @@
 package com.alsoug.keswa.features.sell.domain.usecase
 
-import com.alsoug.keswa.core.domain.auth.LockoutPolicy
-import com.alsoug.keswa.core.domain.auth.decodeSalt
 import com.alsoug.keswa.core.domain.model.Permission
 import com.alsoug.keswa.core.domain.model.User
-import com.alsoug.keswa.core.domain.model.permissions
-import com.alsoug.keswa.core.domain.repository.IUserRepository
-import com.alsoug.keswa.core.platform.IPasswordHasher
+import com.alsoug.keswa.core.session.ApprovalResult
+import com.alsoug.keswa.core.session.ICredentialVerifier
 
 sealed interface ReauthResult {
     data class Approved(val user: User) : ReauthResult
@@ -16,64 +13,23 @@ sealed interface ReauthResult {
 }
 
 /**
- * Asks someone with authority to approve one action, without disturbing the session.
+ * The till's word for asking an admin to approve a discount, an overridden price or a void.
  *
- * A seller has `SELL` but not `DISCOUNT_LINE`, `OVERRIDE_PRICE` or `VOID_SALE`. The realistic flow
- * in a shop is that the owner walks over and approves the markdown — not that the seller signs out,
- * the owner signs in, does it, signs out, and hands the till back with a customer waiting.
- *
- * Two things this must get right:
- *
- * - **It feeds the same lockout counter as sign-in.** An approval dialog that never locks is an
- *   unlimited oracle for guessing the admin password, reachable by anyone who can open a cart.
- * - **It never opens a session.** The seller is still the seller; the approval is recorded against
- *   the line, which is what makes "who authorised this discount" answerable later.
+ * The verification itself lives in `:core` as [ICredentialVerifier] — two features need it now, and
+ * one of them is returns. This is the thin layer that gives the till its own vocabulary for it.
  */
-class ReauthenticateUseCase(
-    private val users: IUserRepository,
-    private val hasher: IPasswordHasher,
-    private val now: () -> Long,
-) {
+class ReauthenticateUseCase(private val verifier: ICredentialVerifier) {
 
     suspend operator fun invoke(
         username: String,
         secret: CharArray,
         permission: Permission,
     ): Result<ReauthResult> = runCatching {
-        val timestamp = now()
-        val credential = users.findByUsername(username).getOrThrow()
-
-        // An unknown user still costs a verification, so this cannot be used to discover who works
-        // here — the same reasoning as `SignInUseCase`.
-        if (credential == null) {
-            hasher.verify(secret, DECOY_SALT, DECOY_HASH)
-            return@runCatching ReauthResult.BadCredentials
+        when (val result = verifier.approve(username, secret, permission)) {
+            is ApprovalResult.Approved -> ReauthResult.Approved(result.user)
+            ApprovalResult.BadCredentials -> ReauthResult.BadCredentials
+            ApprovalResult.NotPermitted -> ReauthResult.NotPermitted
+            is ApprovalResult.Locked -> ReauthResult.Locked(result.untilMillis)
         }
-
-        credential.lockedUntil?.let { until ->
-            if (timestamp < until) return@runCatching ReauthResult.Locked(until)
-        }
-
-        val matches = hasher.verify(secret, credential.secretSalt.decodeSalt(), credential.secretHash)
-        if (!matches) {
-            val attempts = credential.failedAttempts + 1
-            val lockUntil = LockoutPolicy.lockUntil(attempts, timestamp)
-            users.recordFailure(credential.user.id, attempts, lockUntil).getOrThrow()
-            return@runCatching lockUntil?.let { ReauthResult.Locked(it) } ?: ReauthResult.BadCredentials
-        }
-
-        users.clearFailures(credential.user.id).getOrThrow()
-
-        // Right credential, wrong person: said separately from a bad password, because this one is
-        // worth the cashier knowing rather than retyping.
-        if (permission !in credential.user.role.permissions) return@runCatching ReauthResult.NotPermitted
-
-        ReauthResult.Approved(credential.user)
-    }
-
-    private companion object {
-        /** Cost-matching material for the unknown-user path. Never a real credential. */
-        val DECOY_SALT = ByteArray(16) { it.toByte() }
-        const val DECOY_HASH = "0000000000000000000000000000000000000000000="
     }
 }

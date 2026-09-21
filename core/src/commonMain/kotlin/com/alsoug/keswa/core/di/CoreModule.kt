@@ -9,6 +9,7 @@ import com.alsoug.keswa.core.data.repository.HeldSaleRepositoryImpl
 import com.alsoug.keswa.core.data.repository.LocationRepositoryImpl
 import com.alsoug.keswa.core.data.repository.PriceRepositoryImpl
 import com.alsoug.keswa.core.data.repository.SaleRepositoryImpl
+import com.alsoug.keswa.core.data.repository.SaleReturnRepositoryImpl
 import com.alsoug.keswa.core.data.repository.SellableRepositoryImpl
 import com.alsoug.keswa.core.data.repository.SettingsRepositoryImpl
 import com.alsoug.keswa.core.data.repository.StockAdjustmentRepositoryImpl
@@ -25,6 +26,7 @@ import com.alsoug.keswa.core.domain.repository.IHeldSaleRepository
 import com.alsoug.keswa.core.domain.repository.ILocationRepository
 import com.alsoug.keswa.core.domain.repository.IPriceRepository
 import com.alsoug.keswa.core.domain.repository.ISaleRepository
+import com.alsoug.keswa.core.domain.repository.ISaleReturnRepository
 import com.alsoug.keswa.core.domain.repository.ISellableRepository
 import com.alsoug.keswa.core.domain.repository.IStockAdjustmentRepository
 import com.alsoug.keswa.core.domain.repository.IStockCountRepository
@@ -34,7 +36,9 @@ import com.alsoug.keswa.core.domain.repository.IColourRepository
 import com.alsoug.keswa.core.domain.repository.IProductRepository
 import com.alsoug.keswa.core.domain.repository.ISettingsRepository
 import com.alsoug.keswa.core.domain.repository.IUserRepository
+import com.alsoug.keswa.core.session.ICredentialVerifier
 import com.alsoug.keswa.core.session.ISessionManager
+import com.alsoug.keswa.core.session.LockoutAwareCredentialVerifier
 import com.alsoug.keswa.core.session.InMemorySessionManager
 import com.alsoug.keswa.core.domain.repository.IVariantRepository
 import com.alsoug.keswa.core.platform.TransportFactory
@@ -73,6 +77,10 @@ val coreModule = module {
 
     // Session — in memory only, so closing the app signs everyone out (correct for a shared till)
     single<ISessionManager> { InMemorySessionManager() }
+
+    // Approving one action without disturbing the session — the till's discounts and voids, and
+    // a return outside the policy window. Feeds the same lockout counter as sign-in.
+    single<ICredentialVerifier> { LockoutAwareCredentialVerifier(get(), get()) { now() } }
     single<IVariantRepository> {
         VariantRepositoryImpl(
             get<KeswaDatabase>().variantDao(),
@@ -91,8 +99,21 @@ val coreModule = module {
             get(),
         )
     }
+    single<ISaleReturnRepository> {
+        SaleReturnRepositoryImpl(
+            get(),
+            get<KeswaDatabase>().saleReturnDao(),
+            get<KeswaDatabase>().saleDao(),
+            get<KeswaDatabase>().stockLedgerDao(),
+            get(),
+        )
+    }
     single<IShiftRepository> {
-        ShiftRepositoryImpl(get<KeswaDatabase>().shiftDao(), get<KeswaDatabase>().saleDao())
+        ShiftRepositoryImpl(
+            get<KeswaDatabase>().shiftDao(),
+            get<KeswaDatabase>().saleDao(),
+            get<KeswaDatabase>().saleReturnDao(),
+        )
     }
     single<IHeldSaleRepository> {
         HeldSaleRepositoryImpl(get(), get<KeswaDatabase>().heldSaleDao())

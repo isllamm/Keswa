@@ -15,8 +15,8 @@
 | **4** | **Users, roles & login** | `phase-4-auth-plan.md` ← **new** |
 | 5 | Sell flow | `phase-5-sell-plan.md` ✅ built |
 | 6 | Receiving, labels, counts + Android | `phase-6-receiving-plan.md` ✅ built |
-| 7 | Wholesale ⚠️ Q1 | outlined below |
-| 8 | Returns, exchanges & analytics | `phase-8-analytics-plan.md` + below |
+| 7 | Wholesale ⚠️ Q1 | outlined below — **skipped for now, still gated** |
+| 8 | Returns, exchanges & analytics | `phase-8-returns-plan.md` ✅ built · `phase-8-analytics-plan.md` 📝 next |
 | 9 | Backend, sync, web back office | outlined below |
 | 10 | ETA fiscal ⚠️ Q2 | outlined below |
 
@@ -112,7 +112,13 @@ is never edited — credit note instead; Bluetooth transport for handheld use la
 
 ## Phase 8 — Returns, exchanges & analytics
 
-**Analytics has its own full plan:** `phase-8-analytics-plan.md`.
+**Two halves, two plans.** Returns is built — `phase-8-returns-plan.md`. Analytics is next and
+already planned — `phase-8-analytics-plan.md`. Returns came first because the dashboard's
+return-rate KPI and `returnedUnits` rollup have nothing to count until returns exist.
+
+**Taken out of order, deliberately.** Phase 7 is gated on Q1 and Phase 8 is gated on nothing, so
+the sequencing note below was followed rather than waiting. Q1 is still needed before Phase 7 or
+Phase 9's tenancy work.
 
 **Goal:** the daily operations that aren't selling, plus the numbers the owner opens the app for.
 
@@ -120,9 +126,10 @@ is never edited — credit note instead; Bluetooth transport for handheld use la
 return + sale settling the difference, and the admin dashboard — colour performance, sell-through by
 the admin's own category tree, busy hours, top movers.
 
-**Hard decisions:** return window and policy enforcement; whether a no-receipt return is permitted
-and at what price; restocking condition (sellable vs. damaged → different movement reasons, already
-in the Phase 1 enum).
+**Hard decisions, all three now settled:** the return window is a setting and exceeding it is a
+permission (8e); a no-receipt return is permitted with an admin, at the lowest price the variant
+ever sold for (8f); and a damaged return writes *both* movements — `RETURN` then `DAMAGE` — because
+the shop took possession and then wrote it off (8b).
 
 **Consumes from Phase 4:** `VIEW_SHOP_ANALYTICS` gates the dashboard, and `VIEW_COST_AND_MARGIN`
 gates cost and margin figures *separately* — a seller may see units and revenue without seeing what

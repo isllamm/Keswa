@@ -133,6 +133,11 @@ private fun ReportCard(report: ZReport) {
             ReportRow("Cash", report.cashTaken.format())
             ReportRow("Card", report.cardTaken.format())
             ReportRow("Change given", report.changeGiven.format())
+            if (report.returnCount > 0) {
+                ReportRow("Returns", "${report.returnCount}")
+                // Cash refunds genuinely leave the drawer; card refunds never touch it.
+                ReportRow("Refunded in cash", report.cashRefunded.format())
+            }
             HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
             ReportRow("Expected in drawer", report.expectedCash.format())
             ReportRow("Counted", report.countedCash?.format() ?: "—")
@@ -201,6 +206,9 @@ private fun ShiftReportPreview() {
                     cashTaken = Money.ofPounds(3_700),
                     cardTaken = Money.ofPounds(200),
                     changeGiven = Money.ofPounds(320),
+                    returnCount = 1,
+                    cashRefunded = Money.ofPounds(180),
+                    cardRefunded = Money.ZERO,
                     expectedCash = Money.ofPounds(4_200),
                     countedCash = Money.ofPounds(4_180),
                     salesOutsideShift = 2,
