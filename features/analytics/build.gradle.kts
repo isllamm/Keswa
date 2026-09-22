@@ -26,6 +26,14 @@ kotlin {
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.test)
         }
+
+        // The dashboard renders to `build/ui-proofs/` on every change, like the till. Skia needs
+        // the platform runtime to draw without a window.
+        val desktopTest by getting {
+            dependencies {
+                implementation(compose.desktop.currentOs)
+            }
+        }
     }
 }
 

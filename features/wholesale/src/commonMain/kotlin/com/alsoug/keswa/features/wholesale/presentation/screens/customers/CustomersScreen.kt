@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alsoug.keswa.core.designsystem.KeswaTheme
 import com.alsoug.keswa.core.domain.model.Ageing
 import com.alsoug.keswa.core.domain.model.Customer
 import com.alsoug.keswa.core.domain.model.LedgerEntry
@@ -69,21 +70,19 @@ fun CustomersScreen(
         }
     }
 
-    CustomersContent(state = state, onEvent = viewModel::onEvent, onBack = onBack, modifier = modifier)
+    CustomersContent(state = state, onEvent = viewModel::onEvent, modifier = modifier)
 }
 
 @Composable
 internal fun CustomersContent(
     state: CustomersUiState,
     onEvent: (CustomersUiEvent) -> Unit,
-    onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxSize()) {
         if (state.isLoading) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
 
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(8.dp)) {
-            TextButton(onClick = onBack) { Text("← Back") }
             Text("Customers", style = MaterialTheme.typography.titleMedium)
         }
 
@@ -375,7 +374,7 @@ private val previewEntries = listOf(
 @Preview
 @Composable
 private fun CustomersSuccessPreview() {
-    MaterialTheme {
+    KeswaTheme {
         CustomersContent(
             state = CustomersUiState(
                 customers = previewRows,
@@ -391,7 +390,6 @@ private fun CustomersSuccessPreview() {
                 entries = previewEntries,
             ),
             onEvent = {},
-            onBack = {},
         )
     }
 }
@@ -399,13 +397,13 @@ private fun CustomersSuccessPreview() {
 @Preview
 @Composable
 private fun CustomersEmptyPreview() {
-    MaterialTheme { CustomersContent(state = CustomersUiState(), onEvent = {}, onBack = {}) }
+    KeswaTheme { CustomersContent(state = CustomersUiState(), onEvent = {}) }
 }
 
 @Preview
 @Composable
 private fun CustomersLoadingPreview() {
-    MaterialTheme {
-        CustomersContent(state = CustomersUiState(isLoading = true), onEvent = {}, onBack = {})
+    KeswaTheme {
+        CustomersContent(state = CustomersUiState(isLoading = true), onEvent = {})
     }
 }

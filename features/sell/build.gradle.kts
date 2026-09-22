@@ -26,6 +26,14 @@ kotlin {
             implementation(libs.kotlin.test)
             implementation(libs.kotlinx.coroutines.test)
         }
+
+        // The till is the screen a shop stands at all day, so it gets rendered to a PNG on every
+        // change (`build/ui-proofs/`). Skia needs the platform runtime to draw without a window.
+        val desktopTest by getting {
+            dependencies {
+                implementation(compose.desktop.currentOs)
+            }
+        }
     }
 }
 

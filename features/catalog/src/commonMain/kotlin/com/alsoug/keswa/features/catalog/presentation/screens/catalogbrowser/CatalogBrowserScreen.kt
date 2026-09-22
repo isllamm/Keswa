@@ -29,6 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alsoug.keswa.core.designsystem.KeswaTheme
 import com.alsoug.keswa.features.catalog.presentation.components.CategoryTree
 import com.alsoug.keswa.features.catalog.presentation.model.CategoryNodeUiModel
 import com.alsoug.keswa.features.catalog.presentation.model.ProductUiModel
@@ -228,7 +229,7 @@ private val previewCategories = listOf(
 @Preview
 @Composable
 private fun CatalogBrowserSuccessPreview() {
-    MaterialTheme {
+    KeswaTheme {
         CatalogBrowserContent(
             state = CatalogBrowserUiState(
                 categories = previewCategories,
@@ -246,7 +247,7 @@ private fun CatalogBrowserSuccessPreview() {
 @Preview
 @Composable
 private fun CatalogBrowserLoadingPreview() {
-    MaterialTheme {
+    KeswaTheme {
         CatalogBrowserContent(state = CatalogBrowserUiState(isLoading = true), onEvent = {})
     }
 }
@@ -254,7 +255,7 @@ private fun CatalogBrowserLoadingPreview() {
 @Preview
 @Composable
 private fun CatalogBrowserEmptyPreview() {
-    MaterialTheme {
+    KeswaTheme {
         CatalogBrowserContent(
             state = CatalogBrowserUiState(
                 categories = previewCategories,
