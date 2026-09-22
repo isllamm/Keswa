@@ -1,13 +1,18 @@
 package com.alsoug.keswa
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.material3.Card
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -20,6 +25,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -241,7 +247,7 @@ private fun Destination(
 /**
  * The four things somebody does in a stockroom.
  *
- * A hub rather than four more entries in the top bar. It also keeps the feature modules ignorant
+ * A hub rather than four more entries in the sidebar. It also keeps the feature modules ignorant
  * of one another: each screen reports that it is finished, and the shell decides where that leads.
  */
 @Composable
@@ -257,27 +263,46 @@ private fun StockroomHub(
         Triple(Route.Import, "Import catalogue", "A supplier's spreadsheet, validated as a whole"),
     )
 
-    Column(modifier = modifier.fillMaxSize().padding(16.dp)) {
-        Text("Stockroom", style = MaterialTheme.typography.titleLarge)
+    Column(modifier = modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 12.dp)) {
+        Text("Stockroom", style = MaterialTheme.typography.headlineSmall)
+        Text(
+            "Everything that is not selling",
+            style = MaterialTheme.typography.bodySmall,
+            color = KeswaTheme.semantics.muted,
+        )
 
         entries.forEach { (route, title, subtitle) ->
-            Card(
-                onClick = { onOpen(route) },
-                modifier = Modifier.fillMaxWidth().widthIn(max = 520.dp).padding(top = 12.dp),
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .widthIn(max = 560.dp)
+                    .padding(top = 10.dp)
+                    .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(7.dp))
+                    .border(1.dp, KeswaTheme.semantics.grid, RoundedCornerShape(7.dp))
+                    .clickable { onOpen(route) }
+                    .padding(14.dp),
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text(title, style = MaterialTheme.typography.titleSmall)
+                Column(Modifier.weight(1f)) {
+                    Text(title, style = MaterialTheme.typography.titleMedium)
                     Text(
                         subtitle,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = KeswaTheme.semantics.muted,
                     )
                 }
+                // A chevron, not a button: the whole row is the target, and two hit areas in one
+                // row is how somebody taps the wrong one.
+                Text("›", style = MaterialTheme.typography.titleLarge, color = KeswaTheme.semantics.axis)
             }
         }
 
-        TextButton(onClick = onSettings, modifier = Modifier.padding(top = 16.dp)) {
-            Text("Printers and scanner")
-        }
+        Spacer(Modifier.height(20.dp))
+        Text(
+            "Printers and scanner",
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.clickable(onClick = onSettings),
+        )
     }
 }
