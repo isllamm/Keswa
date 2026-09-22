@@ -1,14 +1,21 @@
 package com.alsoug.keswa.features.analytics.presentation.screens.dashboard
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.FilterChip
@@ -22,8 +29,11 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alsoug.keswa.core.designsystem.FigureLargeStyle
+import com.alsoug.keswa.core.designsystem.FigureStyle
 import com.alsoug.keswa.core.designsystem.KeswaTheme
 import com.alsoug.keswa.core.domain.model.AnalyticsPeriod
 import com.alsoug.keswa.core.domain.model.BusyHours
@@ -68,22 +78,34 @@ fun DashboardScreen(
         }
     }
 
-    DashboardContent(state = state, onEvent = viewModel::onEvent, onBack = onBack, modifier = modifier)
+    DashboardContent(state = state, onEvent = viewModel::onEvent, modifier = modifier)
 }
 
 @Composable
 internal fun DashboardContent(
     state: DashboardUiState,
     onEvent: (DashboardUiEvent) -> Unit,
-    onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxSize()) {
         if (state.isLoading) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
 
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(8.dp)) {
-            TextButton(onClick = onBack) { Text("← Back") }
-            Text("How the shop is doing", style = MaterialTheme.typography.titleMedium)
+        // No back arrow. The navigation is persistent now, so "back" had no answer — it went to
+        // the till, which is a destination, not a return. The period picker belongs up here
+        // instead, because one filter scopes every panel below it.
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text("Numbers", style = MaterialTheme.typography.headlineSmall)
+                Text(
+                    "How the shop is doing",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = KeswaTheme.semantics.muted,
+                )
+            }
+            if (state.isPermitted) PeriodPicker(state.period, onEvent)
         }
 
         if (!state.isPermitted) {
@@ -100,7 +122,6 @@ internal fun DashboardContent(
         Column(
             modifier = Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(12.dp),
         ) {
-            PeriodPicker(state.period, onEvent)
             state.kpis?.let { Headline(it, state.showsCost) }
 
             Panel("Revenue") { TrendLine(state.trend) }
@@ -146,43 +167,75 @@ private fun AnalyticsPeriod.label(): String = when (this) {
 
 @Composable
 private fun Headline(kpis: HeadlineKpis, showsCost: Boolean) {
-    Column(modifier = Modifier.padding(top = 16.dp)) {
+    Column(modifier = Modifier.fillMaxWidth()) {
         // The one number the owner opens the app for.
         Text(kpis.netRevenue.format(), style = MaterialTheme.typography.displaySmall)
         Text(
             "net of ${kpis.refunded.format()} refunded",
             style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            color = KeswaTheme.semantics.muted,
         )
 
         Row(
-            modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
-            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            modifier = Modifier.fillMaxWidth().padding(top = 14.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Tile("Sales", "${kpis.transactions}", Modifier.weight(1f))
-            Tile("Basket", kpis.averageBasket?.format() ?: "—", Modifier.weight(1f))
-            Tile("Units", "${kpis.units}", Modifier.weight(1f))
+            Tile("Sales", "${kpis.transactions}", modifier = Modifier.weight(1f))
+            Tile("Basket", kpis.averageBasket?.format() ?: "—", modifier = Modifier.weight(1f))
+            Tile("Units", "${kpis.units}", modifier = Modifier.weight(1f))
             // A first-class KPI in clothing, not a footnote: fit is guesswork, so a shop with no
             // returns is a shop nobody is trying things on in.
-            Tile("Returns", kpis.returnRateBasisPoints?.asPercent() ?: "—", Modifier.weight(1f))
+            Tile(
+                label = "Returns",
+                value = kpis.returnRateBasisPoints?.asPercent() ?: "—",
+                accent = KeswaTheme.semantics.warning,
+                modifier = Modifier.weight(1f),
+            )
             if (showsCost) {
-                Tile("Margin", kpis.marginBasisPoints?.asPercent() ?: "—", Modifier.weight(1f))
+                Tile(
+                    label = "Margin",
+                    value = kpis.marginBasisPoints?.asPercent() ?: "—",
+                    accent = KeswaTheme.semantics.good,
+                    modifier = Modifier.weight(1f),
+                )
             }
         }
     }
 }
 
+/**
+ * A figure and what it is.
+ *
+ * The value is tabular so a row of tiles reads as a row rather than as five unrelated numbers,
+ * and the accent is a mark beside the label — never the colour of the figure itself, which fails
+ * contrast at this size and reads as a state the number is in.
+ */
 @Composable
-private fun Tile(label: String, value: String, modifier: Modifier = Modifier) {
-    Card(modifier = modifier) {
-        Column(modifier = Modifier.padding(12.dp)) {
+private fun Tile(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier,
+    accent: Color? = null,
+) {
+    Column(
+        modifier = modifier
+            .background(KeswaTheme.semantics.sunk, RoundedCornerShape(6.dp))
+            .border(1.dp, KeswaTheme.semantics.grid, RoundedCornerShape(6.dp))
+            .padding(12.dp),
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            if (accent != null) {
+                Box(Modifier.size(7.dp).background(accent, RoundedCornerShape(2.dp)))
+                Spacer(Modifier.width(5.dp))
+            }
             Text(
-                label,
+                label.uppercase(),
                 style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                color = KeswaTheme.semantics.muted,
             )
-            Text(value, style = MaterialTheme.typography.titleMedium)
         }
+        Spacer(Modifier.height(4.dp))
+        Text(value, style = FigureLargeStyle)
     }
 }
 
@@ -256,27 +309,39 @@ private fun Movers(movers: List<Mover>, showsCost: Boolean) {
                 )
             }
             Column(horizontalAlignment = Alignment.End) {
-                Text(mover.revenue.format(), style = MaterialTheme.typography.bodyMedium)
+                Text(mover.revenue.format(), style = FigureStyle)
                 if (showsCost) {
                     mover.margin?.let {
                         Text(
                             "margin ${it.format()}",
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            color = KeswaTheme.semantics.muted,
                         )
                     }
                 }
             }
         }
-        HorizontalDivider()
+        HorizontalDivider(color = KeswaTheme.semantics.hair)
     }
 }
 
 @Composable
 private fun Panel(title: String, content: @Composable () -> Unit) {
-    Column(modifier = Modifier.fillMaxWidth().widthIn(max = 720.dp).padding(top = 24.dp)) {
-        Text(title, style = MaterialTheme.typography.titleSmall)
-        Column(modifier = Modifier.padding(top = 8.dp)) { content() }
+    Column(modifier = Modifier.fillMaxWidth().widthIn(max = 820.dp).padding(top = 16.dp)) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(7.dp))
+                .border(1.dp, KeswaTheme.semantics.grid, RoundedCornerShape(7.dp))
+                .padding(16.dp),
+        ) {
+            Text(
+                title.uppercase(),
+                style = MaterialTheme.typography.labelSmall,
+                color = KeswaTheme.semantics.muted,
+            )
+            Column(modifier = Modifier.padding(top = 10.dp)) { content() }
+        }
     }
 }
 
@@ -342,7 +407,6 @@ private fun DashboardSuccessPreview() {
                 showsCost = true,
             ),
             onEvent = {},
-            onBack = {},
         )
     }
 }
@@ -354,7 +418,6 @@ private fun DashboardAsSellerPreview() {
         DashboardContent(
             state = DashboardUiState(isPermitted = false),
             onEvent = {},
-            onBack = {},
         )
     }
 }
@@ -369,7 +432,6 @@ private fun DashboardDayOnePreview() {
                 kpis = HeadlineKpis(Money.ZERO, Money.ZERO, 0, 0, 0, Money.ZERO),
             ),
             onEvent = {},
-            onBack = {},
         )
     }
 }
@@ -378,6 +440,6 @@ private fun DashboardDayOnePreview() {
 @Composable
 private fun DashboardLoadingPreview() {
     KeswaTheme {
-        DashboardContent(state = DashboardUiState(isLoading = true), onEvent = {}, onBack = {})
+        DashboardContent(state = DashboardUiState(isLoading = true), onEvent = {})
     }
 }

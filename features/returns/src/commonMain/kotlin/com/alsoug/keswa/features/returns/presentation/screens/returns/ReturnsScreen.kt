@@ -72,14 +72,13 @@ fun ReturnsScreen(
         }
     }
 
-    ReturnsContent(state = state, onEvent = viewModel::onEvent, onBack = onBack, modifier = modifier)
+    ReturnsContent(state = state, onEvent = viewModel::onEvent, modifier = modifier)
 }
 
 @Composable
 internal fun ReturnsContent(
     state: ReturnsUiState,
     onEvent: (ReturnsUiEvent) -> Unit,
-    onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxSize()) {
@@ -88,7 +87,6 @@ internal fun ReturnsContent(
         }
 
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(8.dp)) {
-            TextButton(onClick = onBack) { Text("← Back") }
             Text("Returns", style = MaterialTheme.typography.titleMedium)
         }
 
@@ -386,7 +384,6 @@ private fun ReturnsInPolicyPreview() {
                 reason = "wrong size",
             ),
             onEvent = {},
-            onBack = {},
         )
     }
 }
@@ -406,7 +403,6 @@ private fun ReturnsOutsidePolicyPreview() {
                 reason = "faulty seam",
             ),
             onEvent = {},
-            onBack = {},
         )
     }
 }
@@ -415,6 +411,6 @@ private fun ReturnsOutsidePolicyPreview() {
 @Composable
 private fun ReturnsEmptyPreview() {
     KeswaTheme {
-        ReturnsContent(state = ReturnsUiState(returnWindowDays = 14), onEvent = {}, onBack = {})
+        ReturnsContent(state = ReturnsUiState(returnWindowDays = 14), onEvent = {})
     }
 }
