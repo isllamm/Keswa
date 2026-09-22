@@ -49,7 +49,14 @@ import com.alsoug.keswa.core.session.ISessionManager
 import com.alsoug.keswa.core.session.LockoutAwareCredentialVerifier
 import com.alsoug.keswa.core.session.InMemorySessionManager
 import com.alsoug.keswa.core.domain.repository.IVariantRepository
+import com.alsoug.keswa.core.platform.ISyncTokenStore
+import com.alsoug.keswa.core.platform.IPlatformProvider
 import com.alsoug.keswa.core.platform.TransportFactory
+import com.alsoug.keswa.core.sync.ISyncApi
+import com.alsoug.keswa.core.sync.KtorSyncApi
+import com.alsoug.keswa.core.sync.LogApplier
+import com.alsoug.keswa.core.sync.SyncEngine
+import com.alsoug.keswa.core.sync.SyncSettings
 import com.alsoug.keswa.core.printing.transport.TcpTransport
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
@@ -107,6 +114,8 @@ val coreModule = module {
             get<KeswaDatabase>().customerLedgerDao(),
             get<KeswaDatabase>().customerDao(),
             get(),
+            // This device's block of receipt numbers, so two tills cannot issue the same one (9i)
+            receiptBlock = { get<SyncSettings>().receiptBlock() },
         )
     }
     single<IAnalyticsRepository> { AnalyticsRepositoryImpl(get<KeswaDatabase>().analyticsDao()) }
@@ -129,6 +138,7 @@ val coreModule = module {
             get<KeswaDatabase>().saleDao(),
             get<KeswaDatabase>().stockLedgerDao(),
             get(),
+            returnBlock = { get<SyncSettings>().receiptBlock() },
         )
     }
     single<IShiftRepository> {
@@ -163,6 +173,22 @@ val coreModule = module {
             get(),
         )
     }
+    // Sync — the engine and its bookkeeping. `ISyncTokenStore` and the `HttpClient` are bound
+    // per platform, because where a secret belongs is a platform question (KD-007).
+    single { SyncSettings(get<KeswaDatabase>().settingDao(), get()) }
+    single { LogApplier(get(), get(), now = { now() }) }
+    single<ISyncApi> { KtorSyncApi(get()) }
+    single {
+        SyncEngine(
+            database = get(),
+            api = get(),
+            applier = get(),
+            settings = get(),
+            tokens = get<ISyncTokenStore>(),
+            platform = get<IPlatformProvider>(),
+        )
+    }
+
     single<IStockAdjustmentRepository> {
         StockAdjustmentRepositoryImpl(
             get<KeswaDatabase>().stockLedgerDao(),

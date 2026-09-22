@@ -41,8 +41,19 @@ interface SaleDao {
      * Read inside the sale's own transaction, so two tills cannot both read the same one — and the
      * unique index means that if they somehow did, the second insert fails loudly.
      */
-    @Query("SELECT COALESCE(MAX(receiptNumber), 0) + 1 FROM sale")
-    suspend fun nextReceiptNumber(): Long
+    /**
+     * The next number in **this device's** block (9i).
+     *
+     * Two tills both allocating `MAX + 1` over the whole table would both reach 413 on a busy
+     * morning, and the unique index would refuse one of them on the first sync. Each device
+     * sells from its own million instead, so the index stays exactly as Phase 5 wrote it and
+     * simply stops being reachable. A shop with one till is ordinal 0 and never notices.
+     */
+    @Query(
+        "SELECT COALESCE(MAX(receiptNumber), :blockStart) + 1 FROM sale " +
+            "WHERE receiptNumber BETWEEN :blockStart AND :blockEnd",
+    )
+    suspend fun nextReceiptNumber(blockStart: Long = 0, blockEnd: Long = Long.MAX_VALUE): Long
 
     @Query("SELECT * FROM sale WHERE id = :id")
     suspend fun getById(id: String): SaleEntity?

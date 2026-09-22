@@ -28,7 +28,14 @@ kotlin {
     applyDefaultHierarchyTemplate()
 
     sourceSets {
-        val jvmCommonMain by creating { dependsOn(commonMain.get()) }
+        val jvmCommonMain by creating {
+            dependsOn(commonMain.get())
+            dependencies {
+                // Both targets are JVM (KD-004), so one engine covers them and there is one set of
+                // timeout behaviour to reason about rather than two.
+                implementation(libs.ktor.client.cio)
+            }
+        }
         val jvmCommonTest by creating { dependsOn(commonTest.get()) }
 
         commonMain.dependencies {
@@ -44,6 +51,11 @@ kotlin {
 
             // Phase 3 — drives network printers over raw TCP :9100
             api(libs.ktor.network)
+
+            // Phase 9 — the sync client
+            api(libs.ktor.client.core)
+            api(libs.ktor.client.content.negotiation)
+            api(libs.ktor.serialization.json)
 
             api(libs.androidx.room.runtime)
             api(libs.androidx.sqlite.bundled)

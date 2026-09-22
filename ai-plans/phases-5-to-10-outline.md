@@ -17,7 +17,7 @@
 | 6 | Receiving, labels, counts + Android | `phase-6-receiving-plan.md` ✅ built |
 | 7 | Wholesale | `phase-7-wholesale-plan.md` ✅ built (Q1 = wholesale + retail) |
 | 8 | Returns, exchanges & analytics | `phase-8-returns-plan.md` ✅ · `phase-8-analytics-plan.md` ✅ |
-| 9 | Backend, sync, web back office | outlined below |
+| 9 | Backend, sync, web back office | `phase-9-sync-plan.md` ✅ · back office outlined below |
 | 10 | ETA fiscal | **all but removed** — Q2 = non-fiscal slips |
 
 **Why auth went in at 4, not later:** Phase 1 stamps `userId` on every stock movement, and the ledger
@@ -141,15 +141,20 @@ the shop paid.
 
 ## Phase 9 — Backend, sync, web back office
 
+**Splits in two, the way Phase 8 did.** The first half — the server and the sync engine — is built:
+`phase-9-sync-plan.md`. The web back office gets its own plan when it is next, because it had
+nothing to render until the server existed.
+
 **Goal:** the "then online" half. Multi-device, multi-branch, owner-at-home reporting.
 
 | # | Decision |
 |---|---|
-| 9a | **Sync is easy by construction** — the Phase 1 append-only ledger is commutative, so movements merge with no conflict resolution. Catalogue pulls with a version cursor; documents upsert idempotently on client-generated UUIDs (`cashi_pax` defect F2). |
-| 9b | **KD-007 — desktop secure storage.** The ADR-038 gap comes due here: sync tokens are Tier 1 and there is no Keystore on desktop. macOS Keychain via JNA / Windows DPAPI / libsecret / documented passphrase key. **Decide before the first token is persisted.** Phase 4 dodged this by keeping sessions in memory; Phase 9 cannot. |
-| 9c | **Re-decide ADR-041 (no HTTP retry).** Cashi banned retries purely for native parity (ADR-036), N/A here. A till on in-store wifi wants bounded retry with backoff on the sync path — but *not* on anything user-facing. |
-| 9d | **Server-side identity.** Phase 4's users are local to one install. Multi-device means deciding whether accounts become server-owned, and how an offline till authenticates a user it has never seen. |
-| 9e | Tenancy lands here if Q1 = SaaS. |
+| 9a | ✅ **Sync is easy by construction** — and it was, though the schema turned out to hold *three* kinds of row rather than two. Events and documents cannot conflict; only the catalogue can, and it converges on the log's own order. KD-010. |
+| 9b | ✅ **KD-007 — desktop secure storage**, and not by any of the four options listed here. The token sits beside a plaintext database, so the filesystem is the trust boundary on desktop and revocation is what does the real work. Android gets the Keystore. |
+| 9c | ✅ **ADR-041 re-decided as KD-009** — bounded jittered retry on the sync path, nothing user-facing. Safe only because every push is idempotent. |
+| 9d | ✅ **Server-side identity did not arise.** The server authenticates *devices*; the shop still authenticates people. `app_user` syncs like any record, and Phase 6's portable password hash — built for an unrelated reason — means a device that has synced can sign in someone it has never seen, offline. |
+| 9e | Tenancy does not land: Q1 settled on wholesale + retail. |
+| 9f | **New, and not foreseen here.** Two tills allocating `MAX(receiptNumber) + 1` both reach 413 on a busy morning. Each device now sells from its own block of a million — no schema change, and the unique index Phase 5 added to make this loud simply stops being reachable. |
 
 ---
 
