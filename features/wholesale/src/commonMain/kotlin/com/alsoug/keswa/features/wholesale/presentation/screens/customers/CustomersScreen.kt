@@ -70,21 +70,19 @@ fun CustomersScreen(
         }
     }
 
-    CustomersContent(state = state, onEvent = viewModel::onEvent, onBack = onBack, modifier = modifier)
+    CustomersContent(state = state, onEvent = viewModel::onEvent, modifier = modifier)
 }
 
 @Composable
 internal fun CustomersContent(
     state: CustomersUiState,
     onEvent: (CustomersUiEvent) -> Unit,
-    onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxSize()) {
         if (state.isLoading) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
 
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(8.dp)) {
-            TextButton(onClick = onBack) { Text("← Back") }
             Text("Customers", style = MaterialTheme.typography.titleMedium)
         }
 
@@ -392,7 +390,6 @@ private fun CustomersSuccessPreview() {
                 entries = previewEntries,
             ),
             onEvent = {},
-            onBack = {},
         )
     }
 }
@@ -400,13 +397,13 @@ private fun CustomersSuccessPreview() {
 @Preview
 @Composable
 private fun CustomersEmptyPreview() {
-    KeswaTheme { CustomersContent(state = CustomersUiState(), onEvent = {}, onBack = {}) }
+    KeswaTheme { CustomersContent(state = CustomersUiState(), onEvent = {}) }
 }
 
 @Preview
 @Composable
 private fun CustomersLoadingPreview() {
     KeswaTheme {
-        CustomersContent(state = CustomersUiState(isLoading = true), onEvent = {}, onBack = {})
+        CustomersContent(state = CustomersUiState(isLoading = true), onEvent = {})
     }
 }
