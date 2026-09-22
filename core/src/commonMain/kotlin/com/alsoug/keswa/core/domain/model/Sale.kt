@@ -15,6 +15,8 @@ data class Sale(
     val priceListId: String,
     val userId: String,
     val shiftId: String?,
+    /** Null for a retail walk-in; set for wholesale, whether on account or paid at once. */
+    val customerId: String? = null,
     val status: SaleStatus,
     val subtotal: Money,
     val discount: Money,
@@ -59,6 +61,8 @@ data class SaleLine(
     val unitCost: Money,
     /** Who approved a discount or an override on this line, if one was needed. */
     val authorisedByUserId: String? = null,
+    /** The assortment pack this line was expanded from, so a receipt can group the carton. */
+    val packId: String? = null,
 )
 
 /**

@@ -17,6 +17,7 @@ import com.alsoug.keswa.features.returns.presentation.screens.returns.ReturnsVie
 import com.alsoug.keswa.features.sell.presentation.screens.shift.ShiftViewModel
 import com.alsoug.keswa.features.sell.presentation.screens.till.TillViewModel
 import com.alsoug.keswa.features.settings.presentation.screens.settings.SettingsViewModel
+import com.alsoug.keswa.features.wholesale.presentation.screens.customers.CustomersViewModel
 import kotlin.test.AfterTest
 import kotlin.test.Test
 import kotlin.test.assertNotNull
@@ -80,5 +81,6 @@ class KoinGraphTest {
         assertNotNull(koin.get<ImportViewModel>())
         assertNotNull(koin.get<ReturnsViewModel>())
         assertNotNull(koin.get<DashboardViewModel>())
+        assertNotNull(koin.get<CustomersViewModel>())
     }
 }

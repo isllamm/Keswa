@@ -36,6 +36,7 @@ import com.alsoug.keswa.features.returns.presentation.screens.returns.ReturnsScr
 import com.alsoug.keswa.features.sell.presentation.screens.shift.ShiftScreen
 import com.alsoug.keswa.features.sell.presentation.screens.till.TillScreen
 import com.alsoug.keswa.features.settings.presentation.screens.settings.SettingsScreen
+import com.alsoug.keswa.features.wholesale.presentation.screens.customers.CustomersScreen
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 
@@ -58,6 +59,7 @@ private sealed interface Route {
     data object Import : Route
     data object Returns : Route
     data object Dashboard : Route
+    data object Customers : Route
 }
 
 @Composable
@@ -118,6 +120,7 @@ private fun SignedInApp(
                     TextButton(onClick = { route = Route.Stockroom }) { Text("Stockroom") }
                     TextButton(onClick = { route = Route.Catalogue }) { Text("Catalogue") }
                     TextButton(onClick = { route = Route.ShiftClose }) { Text("Shift") }
+                    TextButton(onClick = { route = Route.Customers }) { Text("Customers") }
                     TextButton(onClick = { route = Route.Dashboard }) { Text("Numbers") }
                     Text(
                         "$operator · $role",
@@ -138,6 +141,13 @@ private fun SignedInApp(
             )
 
             is Route.ShiftClose -> ShiftScreen(
+                viewModel = koinInject(),
+                onBack = { route = Route.Till },
+                onMessage = notify,
+                modifier = Modifier.padding(padding),
+            )
+
+            is Route.Customers -> CustomersScreen(
                 viewModel = koinInject(),
                 onBack = { route = Route.Till },
                 onMessage = notify,

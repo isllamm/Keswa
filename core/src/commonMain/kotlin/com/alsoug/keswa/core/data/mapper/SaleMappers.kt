@@ -1,6 +1,10 @@
 package com.alsoug.keswa.core.data.mapper
 
 import com.alsoug.keswa.core.database.dao.SellableRow
+import com.alsoug.keswa.core.database.entities.AssortmentPackEntity
+import com.alsoug.keswa.core.database.entities.AssortmentPackLineEntity
+import com.alsoug.keswa.core.database.entities.CustomerEntity
+import com.alsoug.keswa.core.database.entities.CustomerLedgerEntryEntity
 import com.alsoug.keswa.core.database.entities.HeldSaleEntity
 import com.alsoug.keswa.core.database.entities.HeldSaleLineEntity
 import com.alsoug.keswa.core.database.entities.PaymentEntity
@@ -14,7 +18,11 @@ import com.alsoug.keswa.core.database.entities.StockCountEntity
 import com.alsoug.keswa.core.database.entities.StockCountLineEntity
 import com.alsoug.keswa.core.database.entities.StockReceiptEntity
 import com.alsoug.keswa.core.database.entities.StockReceiptLineEntity
+import com.alsoug.keswa.core.domain.model.AssortmentPack
+import com.alsoug.keswa.core.domain.model.AssortmentPackLine
+import com.alsoug.keswa.core.domain.model.Customer
 import com.alsoug.keswa.core.domain.model.HeldSale
+import com.alsoug.keswa.core.domain.model.LedgerEntry
 import com.alsoug.keswa.core.domain.model.HeldSaleLine
 import com.alsoug.keswa.core.domain.model.Payment
 import com.alsoug.keswa.core.domain.model.PriceList
@@ -40,6 +48,7 @@ fun SaleEntity.toDomain(
     priceListId = priceListId,
     userId = userId,
     shiftId = shiftId,
+    customerId = customerId,
     status = status,
     subtotal = Money.ofPiastres(subtotalPiastres),
     discount = Money.ofPiastres(discountPiastres),
@@ -70,6 +79,7 @@ fun SaleLineEntity.toDomain(): SaleLine = SaleLine(
     tax = Money.ofPiastres(taxPiastres),
     unitCost = Money.ofPiastres(unitCostPiastres),
     authorisedByUserId = authorisedByUserId,
+    packId = packId,
 )
 
 fun SaleLine.toEntity(): SaleLineEntity = SaleLineEntity(
@@ -87,6 +97,7 @@ fun SaleLine.toEntity(): SaleLineEntity = SaleLineEntity(
     taxPiastres = tax.piastres,
     unitCostPiastres = unitCost.piastres,
     authorisedByUserId = authorisedByUserId,
+    packId = packId,
 )
 
 fun PaymentEntity.toDomain(): Payment = Payment(
@@ -266,3 +277,42 @@ fun SaleReturnLine.toEntity(): SaleReturnLineEntity = SaleReturnLineEntity(
     condition = condition,
     unitCostPiastres = unitCost.piastres,
 )
+
+fun CustomerEntity.toDomain(): Customer = Customer(
+    id = id,
+    name = name,
+    nameAr = nameAr,
+    phone = phone,
+    taxId = taxId,
+    priceListId = priceListId,
+    creditLimit = Money.ofPiastres(creditLimitPiastres),
+    paymentTermsDays = paymentTermsDays,
+    isActive = isActive,
+)
+
+fun CustomerLedgerEntryEntity.toDomain(): LedgerEntry = LedgerEntry(
+    id = id,
+    customerId = customerId,
+    type = entryType,
+    amount = Money.ofPiastres(amountPiastres),
+    refType = refType,
+    refId = refId,
+    occurredAt = occurredAt,
+    dueAt = dueAt,
+    userId = userId,
+    note = note,
+    authorisedByUserId = authorisedByUserId,
+)
+
+fun AssortmentPackEntity.toDomain(lines: List<AssortmentPackLine> = emptyList()): AssortmentPack =
+    AssortmentPack(
+        id = id,
+        name = name,
+        nameAr = nameAr,
+        price = Money.ofPiastres(pricePiastres),
+        isActive = isActive,
+        lines = lines,
+    )
+
+fun AssortmentPackLineEntity.toDomain(): AssortmentPackLine =
+    AssortmentPackLine(id = id, packId = packId, variantId = variantId, quantity = quantity)
