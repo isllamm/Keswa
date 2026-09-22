@@ -35,15 +35,18 @@ class SaleReturnRepositoryImpl(
     private val sales: SaleDao,
     private val ledger: StockLedgerDao,
     private val ids: IdGenerator,
+    /** This device's block of return numbers — see 9i. */
+    private val returnBlock: suspend () -> LongRange = { 0L..Long.MAX_VALUE },
 ) : ISaleReturnRepository {
 
     override suspend fun record(draft: ReturnDraft): Result<SaleReturn> = runCatchingCancellable {
         require(draft.lines.isNotEmpty()) { "a return must have at least one line" }
 
+        val block = returnBlock()
         database.inTransaction {
             val entity = SaleReturnEntity(
                 id = draft.id,
-                returnNumber = dao.nextReturnNumber(),
+                returnNumber = block.let { dao.nextReturnNumber(it.first, it.last) },
                 originalSaleId = draft.originalSaleId,
                 locationId = draft.locationId,
                 userId = draft.userId,

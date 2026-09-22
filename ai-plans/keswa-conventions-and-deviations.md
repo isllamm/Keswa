@@ -13,7 +13,7 @@ Keswa inherits the Cashi KMP conventions wholesale. This records **only** what d
 
 | Area | Rule |
 |---|---|
-| Module hierarchy | `composeApp → features:* → core → (nothing)`. Forbidden: `core → features`, `features:A → features:B`. Multi-word features are **kebab-case** in Gradle, hyphen dropped in the package (`payment-receipt` → `features.paymentreceipt`) |
+| Module hierarchy | `composeApp → features:* → core → (nothing)`, plus `server → core` from Phase 9 — a second top-level consumer, not a new layer. Forbidden: `core → features`, `features:A → features:B`. Multi-word features are **kebab-case** in Gradle, hyphen dropped in the package (`payment-receipt` → `features.paymentreceipt`) |
 | Feature layout | `data/ · domain/ · presentation/ · di/` + `README.md`. **Golden module: `features/auth/`** — pattern-match against it |
 | Naming | ADR-033 table. Plus two rules `rules.md` still enforces that ADR-033 dropped: `I{Name}` for general interfaces, and `Android{Name}`/`Ios{Name}` for platform impls |
 | Domain purity | ADR-005: zero framework imports in `domain/`. ADR-021: ViewModels hold state and delegate — no business logic, no platform types |
@@ -44,7 +44,7 @@ Listing these explicitly so their absence reads as a decision, not an oversight:
 | ADR-002 Ring Fencing | Strategy for porting an existing native app |
 | ADR-035 Migration Simplicity | Ditto — "keep signatures identical to the native app" |
 | ADR-036 Strict Logic Parity | Ditto. This ADR is what produced Cashi's `Float` money bugs |
-| ADR-041 No HTTP Retry | Justified solely by ADR-036 parity. **Re-decided in Phase 9** — a till on in-store wifi has a different failure profile |
+| ADR-041 No HTTP Retry | Justified solely by ADR-036 parity. **Re-decided in Phase 9 as KD-009**: bounded, jittered retry on the sync path, and nowhere else |
 | ADR-033 API Envelope | Specific to Cashi's `{status, code, message}` soft-200 backend |
 
 > ⚠️ Cashi has **two ADR-033s** (naming conventions and api-envelope). Keswa numbers its ADRs
@@ -197,6 +197,18 @@ ADR-018's scope list explicitly names **`PaymentTerminal`** — direct precedent
 - `TcpTransport` is written once in `commonMain` with `ktor-network`. Platform code is needed only
   for USB and Bluetooth, deferred to Phase 7+.
 
+### KD-009 — Sync is log shipping, and retry is safe *because* of it
+
+Recorded in full as **KD-010** (three kinds of row, one log, one cursor) and **KD-009** (bounded
+jittered retry on the sync path only). Both are Phase 9 decisions and both are consequences of a
+Phase 1 one: every document is append-only with a client-generated UUID, so merging two devices is a
+union rather than a merge, and pushing a batch twice is pushing it once.
+
+The pairing matters more than either half. Retry is normally dangerous because a request may have
+taken effect before the connection dropped; KD-010 engineered that away, which is what makes KD-009
+defensible where ADR-041 would otherwise stand. Anything that made a push non-idempotent would make
+KD-009 wrong, and `SyncMergeTest` is what guards that.
+
 ### KD-006 — Desktop secure storage needs its own decision (ADR-038 has no JVM answer)
 
 **Cashi rule** (ADR-038): Tier 1 data — tokens, balances, account numbers, PII — goes in
@@ -215,6 +227,21 @@ since there is no server and no fiscal integration.
 
 ADR-022 (PCI-DSS) likewise assumes a mobile threat model; a shop-floor till machine is a different
 one and gets re-examined in the same phase.
+
+> ✅ **Discharged in Phase 9 by KD-007**, and not by any of the four options above. Deciding it
+> meant first being honest about what was being protected: the token file would sit beside
+> `keswa.db`, which holds the shop's entire trading history in plaintext. Encrypting one string
+> with an OS keystore next to that protects the least valuable thing in the directory while looking
+> like the problem is solved.
+>
+> So: on desktop the filesystem is the trust boundary (a `0600` file, under the user profile on
+> Windows); on Android the Keystore, because it is there, costs nothing, and the handheld is the
+> device that gets left on a counter. What does the real work on both is that the token is
+> device-scoped and **server-revocable**. If the threat model changes, the answer is encrypting the
+> whole database, not a keystore for one string.
+>
+> **ADR-022 was re-examined and does not apply.** It assumes a consumer phone its owner carries, and
+> Q2 took card data out of scope entirely.
 
 ---
 

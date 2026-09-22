@@ -3,6 +3,7 @@ package com.alsoug.keswa.core.database.migrations
 import androidx.room.migration.Migration
 import androidx.sqlite.SQLiteConnection
 import androidx.sqlite.execSQL
+import com.alsoug.keswa.core.database.SYNC_TRIGGERS
 
 /**
  * 1 → 2: adds `app_setting`.
@@ -398,6 +399,55 @@ val MIGRATION_6_7: Migration = object : Migration(6, 7) {
     }
 }
 
+
+/**
+ * 7 → 8: sync — the outbox, the cursor, the trigger guard, and the record of what lost.
+ *
+ * Purely additive in the schema, and then it does something no previous migration has: it creates
+ * **triggers**. Room does not model them, so they exist in exactly two places — here, for a shop
+ * that upgrades, and in `onCreate`, for a machine installing fresh. Both are generated from
+ * [SYNC_TRIGGERS] so the pair cannot drift; a mismatch would be invisible, because the app would
+ * work perfectly and sync nothing.
+ *
+ * No existing table changes shape. That is a consequence of 9d — marking a stock movement as sent
+ * would be an `UPDATE` on an append-only table — and of 9i, which gives each device its own block
+ * of receipt numbers rather than adding a column to `sale`.
+ *
+ * Table DDL copied verbatim from Room's exported `8.json`.
+ */
+val MIGRATION_7_8: Migration = object : Migration(7, 8) {
+    override fun migrate(connection: SQLiteConnection) {
+        connection.execSQL(
+            "CREATE TABLE IF NOT EXISTS `sync_outbox` (`seq` INTEGER PRIMARY KEY AUTOINCREMENT " +
+                "NOT NULL, `tableName` TEXT NOT NULL, `rowId` TEXT NOT NULL, `enqueuedAt` INTEGER " +
+                "NOT NULL)",
+        )
+        connection.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_sync_outbox_tableName_rowId` ON " +
+                "`sync_outbox` (`tableName`, `rowId`)",
+        )
+        connection.execSQL(
+            "CREATE TABLE IF NOT EXISTS `sync_cursor` (`id` TEXT NOT NULL, `lastSeq` INTEGER NOT " +
+                "NULL, PRIMARY KEY(`id`))",
+        )
+        connection.execSQL(
+            "CREATE TABLE IF NOT EXISTS `sync_control` (`key` TEXT NOT NULL, `value` TEXT NOT " +
+                "NULL, PRIMARY KEY(`key`))",
+        )
+        connection.execSQL(
+            "CREATE TABLE IF NOT EXISTS `sync_superseded` (`id` TEXT NOT NULL, `tableName` TEXT " +
+                "NOT NULL, `rowId` TEXT NOT NULL, `previousJson` TEXT NOT NULL, `supersededAt` " +
+                "INTEGER NOT NULL, `byDeviceId` TEXT NOT NULL, PRIMARY KEY(`id`))",
+        )
+        connection.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_sync_superseded_tableName_rowId` ON " +
+                "`sync_superseded` (`tableName`, `rowId`)",
+        )
+
+        SYNC_TRIGGERS.forEach(connection::execSQL)
+    }
+}
+
 /**
  * Every migration this database has ever shipped, in order.
  *
@@ -412,4 +462,5 @@ val ALL_MIGRATIONS: Array<Migration> = arrayOf(
     MIGRATION_4_5,
     MIGRATION_5_6,
     MIGRATION_6_7,
+    MIGRATION_7_8,
 )
