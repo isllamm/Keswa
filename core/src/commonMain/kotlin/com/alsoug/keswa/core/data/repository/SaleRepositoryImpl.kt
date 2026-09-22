@@ -38,16 +38,19 @@ class SaleRepositoryImpl(
     private val receivables: CustomerLedgerDao,
     private val customers: CustomerDao,
     private val ids: IdGenerator,
+    /** This device's block of receipt numbers — see 9i, and [com.alsoug.keswa.core.sync.SyncSettings]. */
+    private val receiptBlock: suspend () -> LongRange = { 0L..Long.MAX_VALUE },
 ) : ISaleRepository {
 
     override suspend fun record(draft: SaleDraft): Result<Sale> = runCatchingCancellable {
         require(draft.lines.isNotEmpty()) { "a sale must have at least one line" }
 
+        val block = receiptBlock()
         database.inTransaction {
             val entity = SaleEntity(
                 id = draft.id,
                 // Allocated inside the transaction, so a sale that never commits leaves no gap.
-                receiptNumber = dao.nextReceiptNumber(),
+                receiptNumber = block.let { dao.nextReceiptNumber(it.first, it.last) },
                 locationId = draft.locationId,
                 priceListId = draft.priceListId,
                 userId = draft.userId,

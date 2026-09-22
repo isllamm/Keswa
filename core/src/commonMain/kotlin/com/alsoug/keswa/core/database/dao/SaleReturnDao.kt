@@ -25,8 +25,12 @@ interface SaleReturnDao {
     @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertLines(lines: List<SaleReturnLineEntity>)
 
-    @Query("SELECT COALESCE(MAX(returnNumber), 0) + 1 FROM sale_return")
-    suspend fun nextReturnNumber(): Long
+    /** The next number in this device's block, for the same reason receipts have one (9i). */
+    @Query(
+        "SELECT COALESCE(MAX(returnNumber), :blockStart) + 1 FROM sale_return " +
+            "WHERE returnNumber BETWEEN :blockStart AND :blockEnd",
+    )
+    suspend fun nextReturnNumber(blockStart: Long = 0, blockEnd: Long = Long.MAX_VALUE): Long
 
     @Query("SELECT * FROM sale_return WHERE id = :id")
     suspend fun getById(id: String): SaleReturnEntity?

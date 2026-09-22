@@ -1,5 +1,8 @@
 plugins {
     alias(libs.plugins.kotlinMultiplatform).apply(false)
+    // Phase 9 — :server is a plain JVM module. Declared here so it resolves the same Kotlin
+    // version as everything else rather than being refused for having an unknown one.
+    alias(libs.plugins.kotlinJvm).apply(false)
     alias(libs.plugins.composeMultiplatform).apply(false)
     alias(libs.plugins.composeCompiler).apply(false)
     alias(libs.plugins.kotlinxSerialization).apply(false)

@@ -8,6 +8,10 @@ import com.alsoug.keswa.core.database.getKeswaDatabase
 import com.alsoug.keswa.core.platform.IPasswordHasher
 import com.alsoug.keswa.core.platform.IPlatformProvider
 import com.alsoug.keswa.core.platform.IReceiptRenderer
+import com.alsoug.keswa.core.platform.AndroidSyncTokenStore
+import com.alsoug.keswa.core.platform.ISyncTokenStore
+import com.alsoug.keswa.core.sync.SyncScheduler
+import com.alsoug.keswa.core.sync.createSyncHttpClient
 import com.alsoug.keswa.core.platform.JvmPasswordHasher
 import com.alsoug.keswa.core.printing.AndroidReceiptRenderer
 import kotlinx.coroutines.CoroutineScope
@@ -29,6 +33,18 @@ actual val platformModule: Module = module {
     // patterns); SupervisorJob so one failed startup task cannot cancel the rest.
     single(named(APPLICATION_SCOPE)) {
         CoroutineScope(SupervisorJob() + get<DispatcherProvider>().io)
+    }
+
+    // Sync — bound per platform because KD-007 answers "where does a secret live" differently on a
+    // shop PC and on a handheld, and because the scheduler needs the application-lifetime scope.
+    single<ISyncTokenStore> { AndroidSyncTokenStore(androidContext(), get()) }
+    single { createSyncHttpClient() }
+    single {
+        SyncScheduler(
+            engine = get(),
+            scope = get(named(APPLICATION_SCOPE)),
+            platform = get(),
+        )
     }
 
     // Database — the one place in the app that needs a Context.
