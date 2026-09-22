@@ -36,6 +36,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alsoug.keswa.core.designsystem.KeswaTheme
 import com.alsoug.keswa.core.domain.model.SellableItem
 import com.alsoug.keswa.core.domain.model.TenderMethod
 import com.alsoug.keswa.core.domain.money.Money
@@ -535,7 +536,7 @@ private val previewBasket = Basket(
 @Preview
 @Composable
 private fun TillSuccessPreview() {
-    MaterialTheme {
+    KeswaTheme {
         TillContent(
             state = TillUiState(
                 basket = previewBasket,
@@ -550,11 +551,11 @@ private fun TillSuccessPreview() {
 @Preview
 @Composable
 private fun TillLoadingPreview() {
-    MaterialTheme { TillContent(state = TillUiState(isLoading = true), onEvent = {}) }
+    KeswaTheme { TillContent(state = TillUiState(isLoading = true), onEvent = {}) }
 }
 
 @Preview
 @Composable
 private fun TillEmptyPreview() {
-    MaterialTheme { TillContent(state = TillUiState(), onEvent = {}) }
+    KeswaTheme { TillContent(state = TillUiState(), onEvent = {}) }
 }

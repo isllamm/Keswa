@@ -1,6 +1,8 @@
 package com.alsoug.keswa
 
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -12,8 +14,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -23,6 +23,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alsoug.keswa.core.designsystem.KeswaTheme
 import com.alsoug.keswa.core.session.ISessionManager
 import com.alsoug.keswa.features.analytics.presentation.screens.dashboard.DashboardScreen
 import com.alsoug.keswa.features.auth.presentation.screens.signin.SignInScreen
@@ -46,7 +47,7 @@ import org.koin.compose.koinInject
  * Features emit their own navigation results and know nothing about these — the shell does the
  * mapping, which is what keeps `features:A` from ever importing `features:B`.
  */
-private sealed interface Route {
+internal sealed interface Route {
     data object Till : Route
     data object Catalogue : Route
     data class ProductEditor(val productId: String) : Route
@@ -69,7 +70,7 @@ fun App(sessions: ISessionManager = koinInject()) {
     val scope = rememberCoroutineScope()
     val notify: (String) -> Unit = { message -> scope.launch { snackbars.showSnackbar(message) } }
 
-    MaterialTheme {
+    KeswaTheme {
         // The whole app sits behind a session. Screens still check their own permissions in the
         // domain layer — this gate is convenience, not the security boundary.
         if (session == null) {
@@ -93,7 +94,6 @@ fun App(sessions: ISessionManager = koinInject()) {
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SignedInApp(
     operator: String,
@@ -106,124 +106,135 @@ private fun SignedInApp(
     // back-office errand, not the other way round.
     var route: Route by remember { mutableStateOf<Route>(Route.Till) }
 
-    Scaffold(
-        topBar = {
-            // Who is operating the till stays visible: every sale is attributed to them, and on a
-            // shared machine that is worth not having to remember.
-            TopAppBar(
-                title = { Text("Keswa") },
-                actions = {
-                    // Four destinations, not eight: the stockroom's own jobs sit behind one
-                    // entry, which is the only way this bar still fits on a handheld.
-                    TextButton(onClick = { route = Route.Till }) { Text("Till") }
-                    TextButton(onClick = { route = Route.Returns }) { Text("Returns") }
-                    TextButton(onClick = { route = Route.Stockroom }) { Text("Stockroom") }
-                    TextButton(onClick = { route = Route.Catalogue }) { Text("Catalogue") }
-                    TextButton(onClick = { route = Route.ShiftClose }) { Text("Shift") }
-                    TextButton(onClick = { route = Route.Customers }) { Text("Customers") }
-                    TextButton(onClick = { route = Route.Dashboard }) { Text("Numbers") }
-                    Text(
-                        "$operator · $role",
-                        style = MaterialTheme.typography.labelMedium,
-                        modifier = Modifier.padding(start = 12.dp, end = 8.dp),
+    Scaffold(snackbarHost = { SnackbarHost(snackbars) }) { padding ->
+        BoxWithConstraints(Modifier.padding(padding).fillMaxSize()) {
+            // The handheld from Phase 6 is the reason this is measured rather than assumed.
+            val compact = maxWidth < COMPACT_WIDTH
+
+            if (compact) {
+                Column(Modifier.fillMaxSize()) {
+                    NavigationStrip(current = route, onNavigate = { route = it })
+                    Destination(route, notify, onNavigate = { route = it }, Modifier.weight(1f))
+                }
+            } else {
+                Row(Modifier.fillMaxSize()) {
+                    NavigationSidebar(
+                        current = route,
+                        operator = operator,
+                        role = role,
+                        onNavigate = { route = it },
+                        onSignOut = onSignOut,
                     )
-                    TextButton(onClick = onSignOut) { Text("Sign out") }
-                },
-            )
-        },
-        snackbarHost = { SnackbarHost(snackbars) },
-    ) { padding ->
-        when (val current = route) {
-            is Route.Till -> TillScreen(
-                viewModel = koinInject(),
-                onMessage = notify,
-                modifier = Modifier.padding(padding),
-            )
-
-            is Route.ShiftClose -> ShiftScreen(
-                viewModel = koinInject(),
-                onBack = { route = Route.Till },
-                onMessage = notify,
-                modifier = Modifier.padding(padding),
-            )
-
-            is Route.Customers -> CustomersScreen(
-                viewModel = koinInject(),
-                onBack = { route = Route.Till },
-                onMessage = notify,
-                modifier = Modifier.padding(padding),
-            )
-
-            is Route.Dashboard -> DashboardScreen(
-                viewModel = koinInject(),
-                onBack = { route = Route.Till },
-                onMessage = notify,
-                modifier = Modifier.padding(padding),
-            )
-
-            is Route.Returns -> ReturnsScreen(
-                viewModel = koinInject(),
-                onBack = { route = Route.Till },
-                onMessage = notify,
-                modifier = Modifier.padding(padding),
-            )
-
-            is Route.Stockroom -> StockroomHub(
-                onOpen = { route = it },
-                onSettings = { route = Route.Settings },
-                modifier = Modifier.padding(padding),
-            )
-
-            is Route.Receiving -> ReceivingScreen(
-                viewModel = koinInject(),
-                onBack = { route = Route.Stockroom },
-                onMessage = notify,
-                modifier = Modifier.padding(padding),
-            )
-
-            is Route.StockCount -> CountScreen(
-                viewModel = koinInject(),
-                onBack = { route = Route.Stockroom },
-                onMessage = notify,
-                modifier = Modifier.padding(padding),
-            )
-
-            is Route.Adjust -> AdjustScreen(
-                viewModel = koinInject(),
-                onBack = { route = Route.Stockroom },
-                onMessage = notify,
-                modifier = Modifier.padding(padding),
-            )
-
-            is Route.Import -> ImportScreen(
-                viewModel = koinInject(),
-                onBack = { route = Route.Stockroom },
-                onMessage = notify,
-                modifier = Modifier.padding(padding),
-            )
-
-            is Route.Catalogue -> CatalogBrowserScreen(
-                viewModel = koinInject(),
-                onOpenProduct = { route = Route.ProductEditor(it) },
-                onMessage = notify,
-                modifier = Modifier.padding(padding),
-            )
-
-            is Route.ProductEditor -> ProductEditorScreen(
-                productId = current.productId,
-                viewModel = koinInject(),
-                onBack = { route = Route.Catalogue },
-                onMessage = notify,
-                modifier = Modifier.padding(padding),
-            )
-
-            is Route.Settings -> SettingsScreen(
-                viewModel = koinInject(),
-                onBack = { route = Route.Stockroom },
-                onMessage = notify,
-                modifier = Modifier.padding(padding),
-            )
+                    Destination(route, notify, onNavigate = { route = it }, Modifier.weight(1f))
+                }
+            }
         }
+    }
+}
+
+/**
+ * Maps a route to its screen.
+ *
+ * Features emit their own navigation results and know nothing about these — the shell does the
+ * mapping, which is what keeps `features:A` from ever importing `features:B`.
+ */
+@Composable
+private fun Destination(
+    route: Route,
+    notify: (String) -> Unit,
+    onNavigate: (Route) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    when (val current = route) {
+        is Route.Till -> TillScreen(
+            viewModel = koinInject(),
+            onMessage = notify,
+            modifier = modifier,
+        )
+
+        is Route.ShiftClose -> ShiftScreen(
+            viewModel = koinInject(),
+            onBack = { onNavigate(Route.Till) },
+            onMessage = notify,
+            modifier = modifier,
+        )
+
+        is Route.Customers -> CustomersScreen(
+            viewModel = koinInject(),
+            onBack = { onNavigate(Route.Till) },
+            onMessage = notify,
+            modifier = modifier,
+        )
+
+        is Route.Dashboard -> DashboardScreen(
+            viewModel = koinInject(),
+            onBack = { onNavigate(Route.Till) },
+            onMessage = notify,
+            modifier = modifier,
+        )
+
+        is Route.Returns -> ReturnsScreen(
+            viewModel = koinInject(),
+            onBack = { onNavigate(Route.Till) },
+            onMessage = notify,
+            modifier = modifier,
+        )
+
+        is Route.Stockroom -> StockroomHub(
+            onOpen = onNavigate,
+            onSettings = { onNavigate(Route.Settings) },
+            modifier = modifier,
+        )
+
+        is Route.Receiving -> ReceivingScreen(
+            viewModel = koinInject(),
+            onBack = { onNavigate(Route.Stockroom) },
+            onMessage = notify,
+            modifier = modifier,
+        )
+
+        is Route.StockCount -> CountScreen(
+            viewModel = koinInject(),
+            onBack = { onNavigate(Route.Stockroom) },
+            onMessage = notify,
+            modifier = modifier,
+        )
+
+        is Route.Adjust -> AdjustScreen(
+            viewModel = koinInject(),
+            onBack = { onNavigate(Route.Stockroom) },
+            onMessage = notify,
+            modifier = modifier,
+        )
+
+        is Route.Import -> ImportScreen(
+            viewModel = koinInject(),
+            onBack = { onNavigate(Route.Stockroom) },
+            onMessage = notify,
+            modifier = modifier,
+        )
+
+        is Route.Catalogue -> CatalogBrowserScreen(
+            viewModel = koinInject(),
+            onOpenProduct = { onNavigate(Route.ProductEditor(it)) },
+            onMessage = notify,
+            modifier = modifier,
+        )
+
+        is Route.ProductEditor -> ProductEditorScreen(
+            productId = current.productId,
+            viewModel = koinInject(),
+            onBack = { onNavigate(Route.Catalogue) },
+            onMessage = notify,
+            modifier = modifier,
+        )
+
+        is Route.Settings -> SettingsScreen(
+            viewModel = koinInject(),
+            onBack = { onNavigate(Route.Stockroom) },
+            onMessage = notify,
+            modifier = modifier,
+        )
     }
 }
 

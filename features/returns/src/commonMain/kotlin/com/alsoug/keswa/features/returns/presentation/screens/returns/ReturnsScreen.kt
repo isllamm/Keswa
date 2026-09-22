@@ -37,6 +37,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alsoug.keswa.core.designsystem.KeswaTheme
 import com.alsoug.keswa.core.domain.model.ReturnCondition
 import com.alsoug.keswa.core.domain.model.TenderMethod
 import com.alsoug.keswa.core.domain.money.Money
@@ -374,7 +375,7 @@ private val previewLines = listOf(
 @Preview
 @Composable
 private fun ReturnsInPolicyPreview() {
-    MaterialTheme {
+    KeswaTheme {
         ReturnsContent(
             state = ReturnsUiState(
                 saleId = "s1",
@@ -393,7 +394,7 @@ private fun ReturnsInPolicyPreview() {
 @Preview
 @Composable
 private fun ReturnsOutsidePolicyPreview() {
-    MaterialTheme {
+    KeswaTheme {
         ReturnsContent(
             state = ReturnsUiState(
                 saleId = "s1",
@@ -413,7 +414,7 @@ private fun ReturnsOutsidePolicyPreview() {
 @Preview
 @Composable
 private fun ReturnsEmptyPreview() {
-    MaterialTheme {
+    KeswaTheme {
         ReturnsContent(state = ReturnsUiState(returnWindowDays = 14), onEvent = {}, onBack = {})
     }
 }

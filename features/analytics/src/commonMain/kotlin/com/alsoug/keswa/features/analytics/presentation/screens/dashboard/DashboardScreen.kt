@@ -24,6 +24,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alsoug.keswa.core.designsystem.KeswaTheme
 import com.alsoug.keswa.core.domain.model.AnalyticsPeriod
 import com.alsoug.keswa.core.domain.model.BusyHours
 import com.alsoug.keswa.core.domain.model.ColourBucket
@@ -329,7 +330,7 @@ private val previewMovers = listOf(
 @Preview
 @Composable
 private fun DashboardSuccessPreview() {
-    MaterialTheme {
+    KeswaTheme {
         DashboardContent(
             state = DashboardUiState(
                 kpis = previewKpis,
@@ -349,7 +350,7 @@ private fun DashboardSuccessPreview() {
 @Preview
 @Composable
 private fun DashboardAsSellerPreview() {
-    MaterialTheme {
+    KeswaTheme {
         DashboardContent(
             state = DashboardUiState(isPermitted = false),
             onEvent = {},
@@ -362,7 +363,7 @@ private fun DashboardAsSellerPreview() {
 @Composable
 private fun DashboardDayOnePreview() {
     // Every new install sees this first, so it is the state most worth eyeballing.
-    MaterialTheme {
+    KeswaTheme {
         DashboardContent(
             state = DashboardUiState(
                 kpis = HeadlineKpis(Money.ZERO, Money.ZERO, 0, 0, 0, Money.ZERO),
@@ -376,7 +377,7 @@ private fun DashboardDayOnePreview() {
 @Preview
 @Composable
 private fun DashboardLoadingPreview() {
-    MaterialTheme {
+    KeswaTheme {
         DashboardContent(state = DashboardUiState(isLoading = true), onEvent = {}, onBack = {})
     }
 }

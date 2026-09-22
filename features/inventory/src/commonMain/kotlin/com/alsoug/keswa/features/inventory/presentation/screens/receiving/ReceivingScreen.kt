@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alsoug.keswa.core.designsystem.KeswaTheme
 import com.alsoug.keswa.core.domain.model.DocumentStatus
 import com.alsoug.keswa.core.domain.model.StockReceipt
 import com.alsoug.keswa.core.domain.money.Money
@@ -368,7 +369,7 @@ private val previewLines = listOf(
 @Preview
 @Composable
 private fun ReceivingDraftPreview() {
-    MaterialTheme {
+    KeswaTheme {
         ReceivingContent(
             state = ReceivingUiState(receipt = previewReceipt, lines = previewLines),
             onEvent = {},
@@ -380,7 +381,7 @@ private fun ReceivingDraftPreview() {
 @Preview
 @Composable
 private fun ReceivingPostedPreview() {
-    MaterialTheme {
+    KeswaTheme {
         ReceivingContent(
             state = ReceivingUiState(
                 receipt = previewReceipt.copy(status = DocumentStatus.POSTED),
@@ -398,7 +399,7 @@ private fun ReceivingPostedPreview() {
 @Preview
 @Composable
 private fun ReceivingLoadingPreview() {
-    MaterialTheme {
+    KeswaTheme {
         ReceivingContent(state = ReceivingUiState(isLoading = true), onEvent = {}, onBack = {})
     }
 }
