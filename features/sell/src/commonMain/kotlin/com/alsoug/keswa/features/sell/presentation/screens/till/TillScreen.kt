@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.sell.presentation.screens.till
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -7,10 +8,13 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
@@ -32,10 +36,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alsoug.keswa.core.designsystem.FigureLargeStyle
+import com.alsoug.keswa.core.designsystem.FigureStyle
 import com.alsoug.keswa.core.designsystem.KeswaTheme
 import com.alsoug.keswa.core.domain.model.SellableItem
 import com.alsoug.keswa.core.domain.model.TenderMethod
@@ -112,22 +122,32 @@ internal fun TillContent(
 @Composable
 private fun ScanBar(state: TillUiState, onEvent: (TillUiEvent) -> Unit) {
     var entry by remember { mutableStateOf("") }
+    val focus = remember { FocusRequester() }
+
+    // A barcode scanner is an HID keyboard: it types the code and presses Enter into whatever has
+    // focus. If focus has drifted — to a discount field, or nowhere after a dialog closed — the
+    // scan is silently swallowed and the operator scans again, harder. So this field takes focus
+    // on arrival and takes it back whenever the till returns to rest.
+    LaunchedEffect(state.isTendering, state.pendingApproval, state.basket.lines.size) {
+        if (!state.isTendering && state.pendingApproval == null) {
+            runCatching { focus.requestFocus() }
+        }
+    }
 
     OutlinedTextField(
         value = entry,
         onValueChange = { entry = it },
         label = { Text("Scan or search — barcode, SKU or name") },
         singleLine = true,
+        textStyle = MaterialTheme.typography.bodyLarge,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
         keyboardActions = KeyboardActions(
             onDone = {
-                // A barcode scanner is an HID keyboard that types and presses Enter, so the same
-                // field serves both; the domain decides what it found.
                 onEvent(TillUiEvent.Scanned(entry))
                 entry = ""
             },
         ),
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().focusRequester(focus),
     )
     Row(modifier = Modifier.padding(top = 6.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         OutlinedButton(
@@ -171,11 +191,19 @@ private fun SearchResults(results: List<SellableItem>, onEvent: (TillUiEvent) ->
 private fun CartLines(state: TillUiState, onEvent: (TillUiEvent) -> Unit, modifier: Modifier) {
     if (state.basket.isEmpty) {
         Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(
-                "Scan something to start",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    "Scan to start",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    "Or type a SKU or a name and press Search",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = KeswaTheme.semantics.muted,
+                    modifier = Modifier.padding(top = 2.dp),
+                )
+            }
         }
         return
     }
@@ -196,45 +224,108 @@ private fun CartLineRow(
     onEvent: (TillUiEvent) -> Unit,
 ) {
     Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Column(modifier = Modifier.weight(1f)) {
+        Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
             Text(line.description, style = MaterialTheme.typography.bodyMedium)
-            Text(
-                buildString {
-                    append(line.sku)
-                    append(" · ")
-                    append(line.unitPrice.format())
-                    if (line.isPriceOverridden) append(" (was ${line.listPrice.format()})")
-                    if (line.isDiscounted) append(" · −${line.lineDiscount.format()}")
-                    // The shop's figures say this is not there. Worth seeing before it is sold,
-                    // not only in a warning afterwards.
-                    if (line.exceedsStock) append(" · only ${line.onHand} in stock")
-                },
-                style = MaterialTheme.typography.labelSmall,
-                color = if (line.exceedsStock) {
-                    MaterialTheme.colorScheme.error
-                } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
-                },
-            )
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Text(
+                    "${line.sku} · ${line.unitPrice.format()}",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = KeswaTheme.semantics.muted,
+                )
+                if (line.isPriceOverridden) {
+                    Marker("was ${line.listPrice.format()}", KeswaTheme.semantics.warning)
+                }
+                if (line.isDiscounted) {
+                    Marker("−${line.lineDiscount.format()}", KeswaTheme.semantics.sold)
+                }
+                // The shop's figures say this is not there. Worth seeing before it is sold, not
+                // only in a warning afterwards — and as its own mark rather than the tail of a
+                // sentence somebody has stopped reading by the third sale of the morning.
+                if (line.exceedsStock) {
+                    Marker("only ${line.onHand} in stock", MaterialTheme.colorScheme.error)
+                }
+            }
         }
 
-        TextButton(onClick = { onEvent(TillUiEvent.QuantityChanged(index, line.quantity - 1)) }) {
-            Text("−")
-        }
-        Text("${line.quantity}", style = MaterialTheme.typography.bodyLarge)
-        TextButton(onClick = { onEvent(TillUiEvent.QuantityChanged(index, line.quantity + 1)) }) {
-            Text("+")
-        }
+        QuantityStepper(
+            quantity = line.quantity,
+            onChange = { onEvent(TillUiEvent.QuantityChanged(index, it)) },
+        )
 
+        // Fixed width and tabular, so every line total in the cart sits on the same decimal point.
         Text(
             lineTotal.format(),
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier.padding(start = 12.dp),
+            style = FigureStyle,
+            textAlign = TextAlign.End,
+            modifier = Modifier.width(96.dp).padding(start = 8.dp),
         )
         TextButton(onClick = { onEvent(TillUiEvent.RemoveLine(index)) }) { Text("✕") }
+    }
+}
+
+/** A small coloured mark beside the line's detail. Never coloured text — it fails at this size. */
+@Composable
+private fun Marker(label: String, colour: Color) {
+    Row(
+        modifier = Modifier.padding(start = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(Modifier.size(6.dp).background(colour, RoundedCornerShape(2.dp)))
+        Text(
+            label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(start = 4.dp),
+        )
+    }
+}
+
+/**
+ * Minus, quantity, plus — at a size a finger can hit and an eye can read.
+ *
+ * Minus is disabled at one rather than removing the line: a mis-tap that empties a line is a
+ * re-scan, and the ✕ is right there for when removal is what was meant.
+ */
+@Composable
+private fun QuantityStepper(quantity: Int, onChange: (Int) -> Unit) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = Modifier
+            .background(KeswaTheme.semantics.sunk, RoundedCornerShape(5.dp))
+            .padding(2.dp),
+    ) {
+        StepperButton("−", enabled = quantity > 1) { onChange(quantity - 1) }
+        Text(
+            quantity.toString(),
+            style = FigureStyle,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.width(32.dp),
+        )
+        StepperButton("+", enabled = true) { onChange(quantity + 1) }
+    }
+}
+
+@Composable
+private fun StepperButton(label: String, enabled: Boolean, onClick: () -> Unit) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = Modifier
+            .size(28.dp)
+            .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(4.dp))
+            .clickable(enabled = enabled, onClick = onClick),
+    ) {
+        Text(
+            label,
+            style = MaterialTheme.typography.titleMedium,
+            color = if (enabled) {
+                MaterialTheme.colorScheme.onSurface
+            } else {
+                KeswaTheme.semantics.muted
+            },
+        )
     }
 }
 
@@ -276,33 +367,48 @@ private fun ShiftBanner(state: TillUiState, onEvent: (TillUiEvent) -> Unit) {
 
 @Composable
 private fun TotalsPanel(state: TillUiState) {
-    Column(modifier = Modifier.fillMaxWidth()) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(KeswaTheme.semantics.sunk, RoundedCornerShape(7.dp))
+            .padding(12.dp),
+    ) {
         AmountRow("Subtotal", state.totals.subtotal)
         if (!state.totals.discount.isZero) AmountRow("Discount", -state.totals.discount)
         if (state.vatBasisPoints > 0) AmountRow("VAT · ض.ق.م", state.totals.tax)
-        HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
-        AmountRow("Total", state.totals.total, emphasised = true)
-        Text(
-            "${state.totals.itemCount} pcs",
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        HorizontalDivider(
+            color = KeswaTheme.semantics.hair,
+            modifier = Modifier.padding(vertical = 8.dp),
         )
+
+        // The total is the number the customer is about to be asked for, and the one the operator
+        // reads out. It was `titleLarge`, the same size as a section heading.
+        Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
+            Column(Modifier.weight(1f)) {
+                Text("Total", style = MaterialTheme.typography.titleMedium)
+                Text(
+                    "${state.totals.itemCount} pcs",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = KeswaTheme.semantics.muted,
+                )
+            }
+            Text(state.totals.total.format(), style = FigureLargeStyle)
+        }
     }
 }
 
 @Composable
 private fun AmountRow(label: String, amount: Money, emphasised: Boolean = false) {
-    val style = if (emphasised) {
-        MaterialTheme.typography.titleLarge
-    } else {
-        MaterialTheme.typography.bodyMedium
-    }
     Row(
         modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Text(label, style = style)
-        Text(amount.format(), style = style)
+        Text(
+            label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(amount.format(), style = if (emphasised) FigureLargeStyle else FigureStyle)
     }
 }
 
@@ -310,49 +416,72 @@ private fun AmountRow(label: String, amount: Money, emphasised: Boolean = false)
 private fun Actions(state: TillUiState, onEvent: (TillUiEvent) -> Unit) {
     var discount by remember { mutableStateOf("") }
     var holdLabel by remember { mutableStateOf("") }
+    // Local disclosure, per ADR-030: a `remember` in the screen, never a boolean in the state.
+    var showMore by remember { mutableStateOf(false) }
 
     Column(modifier = Modifier.fillMaxWidth().padding(top = 12.dp)) {
+        // Tall on purpose. It is the action of the screen, it is hit hundreds of times a day, and
+        // on a touch till a 40dp button is a mis-tap waiting for a queue.
         Button(
             onClick = { onEvent(TillUiEvent.StartTender) },
             enabled = state.canTender,
-            modifier = Modifier.fillMaxWidth(),
-        ) { Text("Take payment") }
-
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            shape = RoundedCornerShape(7.dp),
+            modifier = Modifier.fillMaxWidth().height(56.dp),
         ) {
-            OutlinedTextField(
-                value = discount,
-                onValueChange = { discount = it },
-                label = { Text("Order discount") },
-                singleLine = true,
-                modifier = Modifier.weight(1f),
-            )
-            TextButton(
-                onClick = { onEvent(TillUiEvent.RequestOrderDiscount(discount)) },
-                enabled = !state.basket.isEmpty,
-            ) { Text("Apply") }
+            Text("Take payment", style = MaterialTheme.typography.titleMedium)
         }
 
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        // A discount and a hold are the exceptions, not the routine, and two permanently-open text
+        // fields said the opposite — they took a third of the column and drew the eye away from
+        // the total on every single sale.
+        TextButton(
+            onClick = { showMore = !showMore },
+            enabled = !state.basket.isEmpty,
+            modifier = Modifier.padding(top = 4.dp),
         ) {
-            OutlinedTextField(
-                value = holdLabel,
-                onValueChange = { holdLabel = it },
-                label = { Text("Hold as") },
-                singleLine = true,
-                modifier = Modifier.weight(1f),
-            )
-            TextButton(
-                onClick = {
-                    onEvent(TillUiEvent.Hold(holdLabel))
-                    holdLabel = ""
-                },
-                enabled = !state.basket.isEmpty,
-            ) { Text("Hold") }
+            Text(if (showMore) "Fewer options" else "Discount or hold")
+        }
+
+        if (showMore) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                OutlinedTextField(
+                    value = discount,
+                    onValueChange = { discount = it },
+                    label = { Text("Order discount") },
+                    singleLine = true,
+                    modifier = Modifier.weight(1f),
+                )
+                TextButton(
+                    onClick = { onEvent(TillUiEvent.RequestOrderDiscount(discount)) },
+                    enabled = !state.basket.isEmpty,
+                ) { Text("Apply") }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                OutlinedTextField(
+                    value = holdLabel,
+                    onValueChange = { holdLabel = it },
+                    label = { Text("Hold as") },
+                    singleLine = true,
+                    modifier = Modifier.weight(1f),
+                )
+                TextButton(
+                    onClick = {
+                        onEvent(TillUiEvent.Hold(holdLabel))
+                        holdLabel = ""
+                        showMore = false
+                    },
+                    enabled = !state.basket.isEmpty,
+                ) { Text("Hold") }
+            }
         }
 
         if (state.lastSaleId != null) {
