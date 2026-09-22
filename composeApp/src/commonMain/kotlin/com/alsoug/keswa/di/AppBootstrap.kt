@@ -8,6 +8,7 @@ import com.alsoug.keswa.features.inventory.di.inventoryModule
 import com.alsoug.keswa.features.returns.di.returnsModule
 import com.alsoug.keswa.features.sell.di.sellModule
 import com.alsoug.keswa.features.settings.di.settingsModule
+import com.alsoug.keswa.features.wholesale.di.wholesaleModule
 import org.koin.core.KoinApplication
 import org.koin.core.context.startKoin
 import org.koin.dsl.KoinAppDeclaration
@@ -28,5 +29,6 @@ fun initKoin(declaration: KoinAppDeclaration? = null): KoinApplication =
             inventoryModule,
             returnsModule,
             analyticsModule,
+            wholesaleModule,
         )
     }

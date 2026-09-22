@@ -60,7 +60,18 @@ enum class SaleStatus { COMPLETED, VOIDED }
  * `CARD` records that a card was used; it drives no terminal. Whether this app ever talks to one is
  * Q2, and until that is answered a record is what the shop needs and all it needs.
  */
-enum class TenderMethod { CASH, CARD }
+enum class TenderMethod {
+    CASH,
+    CARD,
+
+    /**
+     * On account — the wholesale tender.
+     *
+     * Settles the sale at the till and opens a receivable in the same transaction. The money is
+     * owed rather than received, which is exactly what the customer ledger is for.
+     */
+    CREDIT,
+}
 
 /**
  * Where a document that moves stock has got to.
@@ -77,3 +88,12 @@ enum class DocumentStatus { DRAFT, POSTED }
  * writes a `RETURN` movement before its `DAMAGE` one, because the shop did take it back.
  */
 enum class ReturnCondition { SELLABLE, DAMAGED }
+
+/**
+ * What kind of entry moved a customer's balance.
+ *
+ * Signed amounts throughout: an invoice is positive (they owe more), a payment negative. The
+ * balance is `SUM(amount)` and nothing else — the same shape as the stock ledger, and for the same
+ * three reasons: it is auditable, it merges without conflict resolution, and it cannot be edited.
+ */
+enum class LedgerEntryType { INVOICE, PAYMENT, CREDIT_NOTE, ADJUSTMENT }

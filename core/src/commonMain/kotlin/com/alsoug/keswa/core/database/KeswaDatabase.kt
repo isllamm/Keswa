@@ -5,8 +5,11 @@ import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.RoomDatabaseConstructor
 import com.alsoug.keswa.core.database.dao.AnalyticsDao
+import com.alsoug.keswa.core.database.dao.AssortmentPackDao
 import com.alsoug.keswa.core.database.dao.CategoryDao
 import com.alsoug.keswa.core.database.dao.ColourDao
+import com.alsoug.keswa.core.database.dao.CustomerDao
+import com.alsoug.keswa.core.database.dao.CustomerLedgerDao
 import com.alsoug.keswa.core.database.dao.HeldSaleDao
 import com.alsoug.keswa.core.database.dao.LocationDao
 import com.alsoug.keswa.core.database.dao.PriceDao
@@ -24,7 +27,11 @@ import com.alsoug.keswa.core.database.dao.VariantBarcodeDao
 import com.alsoug.keswa.core.database.dao.VariantDao
 import com.alsoug.keswa.core.database.entities.AppSettingEntity
 import com.alsoug.keswa.core.database.entities.AppUserEntity
+import com.alsoug.keswa.core.database.entities.AssortmentPackEntity
+import com.alsoug.keswa.core.database.entities.AssortmentPackLineEntity
 import com.alsoug.keswa.core.database.entities.CategoryEntity
+import com.alsoug.keswa.core.database.entities.CustomerEntity
+import com.alsoug.keswa.core.database.entities.CustomerLedgerEntryEntity
 import com.alsoug.keswa.core.database.entities.ColourEntity
 import com.alsoug.keswa.core.database.entities.HeldSaleEntity
 import com.alsoug.keswa.core.database.entities.HeldSaleLineEntity
@@ -79,8 +86,13 @@ import com.alsoug.keswa.core.database.entities.VariantEntity
         StockCountLineEntity::class,
         SaleReturnEntity::class,
         SaleReturnLineEntity::class,
+        CustomerEntity::class,
+        CustomerLedgerEntryEntity::class,
+        AssortmentPackEntity::class,
+        AssortmentPackLineEntity::class,
     ],
-    version = 6, // 6: added sale_return/_line
+    version = 7, // 7: wholesale — customer, customer_ledger_entry, assortment packs; sale gained a customer
+    // 6: added sale_return/_line
     // 5: added stock_receipt/_line, stock_count/_line; stock_movement gained cost and note
     // 4: added sale, sale_line, payment, shift, held_sale, held_sale_line
     // 3: added app_user (sign-in, roles, lockout)
@@ -108,6 +120,9 @@ abstract class KeswaDatabase : RoomDatabase() {
     abstract fun stockCountDao(): StockCountDao
     abstract fun saleReturnDao(): SaleReturnDao
     abstract fun analyticsDao(): AnalyticsDao
+    abstract fun customerDao(): CustomerDao
+    abstract fun customerLedgerDao(): CustomerLedgerDao
+    abstract fun assortmentPackDao(): AssortmentPackDao
 }
 
 /**
