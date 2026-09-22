@@ -164,6 +164,16 @@ class FakePriceRepository : IPriceRepository {
         nameAr: String,
     ): Result<PriceList> = Result.success(list)
 
+    override suspend fun listsOfType(type: PriceListType): Result<List<PriceList>> =
+        Result.success(if (type == list.type) listOf(list) else emptyList())
+
+    override suspend fun createList(
+        id: String,
+        name: String,
+        nameAr: String,
+        type: PriceListType,
+    ): Result<PriceList> = Result.success(list.copy(id = id, name = name, type = type))
+
     override suspend fun effectivePrice(
         variantId: String,
         priceListId: String,

@@ -91,6 +91,26 @@ class PriceRepositoryImpl(
         ).also { dao.upsertList(it) }.toDomain()
     }
 
+    override suspend fun listsOfType(type: PriceListType): Result<List<PriceList>> =
+        runCatchingCancellable { dao.getLists().filter { it.type == type }.map { it.toDomain() } }
+
+    override suspend fun createList(
+        id: String,
+        name: String,
+        nameAr: String,
+        type: PriceListType,
+    ): Result<PriceList> = runCatchingCancellable {
+        dao.getListById(id)?.toDomain() ?: PriceListEntity(
+            id = id,
+            name = name,
+            nameAr = nameAr,
+            type = type,
+            // Never the default: one list is what the till falls back to, and a trade list is not it.
+            isDefault = false,
+            isActive = true,
+        ).also { dao.upsertList(it) }.toDomain()
+    }
+
     override suspend fun effectivePrice(
         variantId: String,
         priceListId: String,

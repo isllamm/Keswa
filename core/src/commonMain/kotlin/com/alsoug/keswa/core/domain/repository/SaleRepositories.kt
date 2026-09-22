@@ -4,6 +4,7 @@ import com.alsoug.keswa.core.domain.model.HeldSale
 import com.alsoug.keswa.core.domain.model.HeldSaleLine
 import com.alsoug.keswa.core.domain.model.Payment
 import com.alsoug.keswa.core.domain.model.PriceList
+import com.alsoug.keswa.core.domain.model.PriceListType
 import com.alsoug.keswa.core.domain.model.Sale
 import com.alsoug.keswa.core.domain.model.SaleLine
 import com.alsoug.keswa.core.domain.model.SellableItem
@@ -24,6 +25,9 @@ data class SaleDraft(
     val priceListId: String,
     val userId: String,
     val shiftId: String?,
+    val customerId: String? = null,
+    /** Set when an admin approved this sale going over the customer's credit limit. */
+    val creditAuthorisedByUserId: String? = null,
     val subtotal: Money,
     val discount: Money,
     val tax: Money,
@@ -118,6 +122,17 @@ interface IPriceRepository {
     suspend fun defaultList(): Result<PriceList?>
 
     suspend fun ensureDefaultList(id: String, name: String, nameAr: String): Result<PriceList>
+
+    /** Every list of a kind — how a trade list is found without assuming there is exactly one. */
+    suspend fun listsOfType(type: PriceListType): Result<List<PriceList>>
+
+    /** Creates a non-default list. Phase 7's trade prices are the first caller. */
+    suspend fun createList(
+        id: String,
+        name: String,
+        nameAr: String,
+        type: PriceListType,
+    ): Result<PriceList>
 
     suspend fun effectivePrice(variantId: String, priceListId: String, at: Long): Result<Money?>
 

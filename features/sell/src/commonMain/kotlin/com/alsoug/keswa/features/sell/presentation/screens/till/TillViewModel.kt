@@ -331,6 +331,15 @@ class TillViewModel(
             SaleResult.EmptyBasket -> _effect.emit(TillUiEffect.ShowError("Nothing to sell"))
             is SaleResult.UnderTendered ->
                 _effect.emit(TillUiEffect.ShowError("Short by ${result.shortBy.format()}"))
+            is SaleResult.OverCreditLimit -> _effect.emit(
+                TillUiEffect.ShowError(
+                    "Over the credit limit by ${result.over.format()} — needs an approval",
+                ),
+            )
+            SaleResult.CustomerIsCashOnly ->
+                _effect.emit(TillUiEffect.ShowError("This customer is cash only"))
+            SaleResult.NoCustomerForCredit ->
+                _effect.emit(TillUiEffect.ShowError("Pick a customer before selling on account"))
         }
     }
 

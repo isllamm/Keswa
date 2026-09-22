@@ -34,6 +34,8 @@ class SaleLedgerTest {
         database = database,
         dao = database.saleDao(),
         ledger = database.stockLedgerDao(),
+        receivables = database.customerLedgerDao(),
+        customers = database.customerDao(),
         ids = SequentialIds(),
     )
 

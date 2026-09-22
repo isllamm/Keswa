@@ -314,6 +314,91 @@ val MIGRATION_5_6: Migration = object : Migration(5, 6) {
 }
 
 /**
+ * 6 → 7: wholesale — customers, the receivables ledger, and assortment packs.
+ *
+ * `sale` gains a nullable `customerId` and `sale_line` a nullable `packId`: a wholesale invoice is
+ * a sale with a customer, not a parallel document, so every retail row simply keeps a null there
+ * and nothing about existing trading changes.
+ *
+ * DDL copied verbatim from Room's exported `7.json`.
+ */
+val MIGRATION_6_7: Migration = object : Migration(6, 7) {
+    override fun migrate(connection: SQLiteConnection) {
+        connection.execSQL(
+            "ALTER TABLE `sale` ADD COLUMN `customerId` TEXT",
+        )
+        connection.execSQL(
+            "ALTER TABLE `sale_line` ADD COLUMN `packId` TEXT",
+        )
+        connection.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_sale_customerId` ON `sale` (`customerId`)",
+        )
+        connection.execSQL(
+            "CREATE TABLE IF NOT EXISTS `customer` (`id` TEXT NOT NULL, `name` TEXT NOT NULL, " +
+                "`nameAr` TEXT NOT NULL, `phone` TEXT, `taxId` TEXT, `priceListId` TEXT NOT NULL, " +
+                "`creditLimitPiastres` INTEGER NOT NULL, `paymentTermsDays` INTEGER NOT NULL, " +
+                "`isActive` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL, `updatedAt` INTEGER NOT " +
+                "NULL, PRIMARY KEY(`id`), FOREIGN KEY(`priceListId`) REFERENCES `price_list`(`id`) ON " +
+                "UPDATE NO ACTION ON DELETE RESTRICT )",
+        )
+        connection.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_customer_priceListId` ON `customer` " +
+                "(`priceListId`)",
+        )
+        connection.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_customer_name` ON `customer` (`name`)",
+        )
+        connection.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_customer_phone` ON `customer` (`phone`)",
+        )
+        connection.execSQL(
+            "CREATE TABLE IF NOT EXISTS `customer_ledger_entry` (`id` TEXT NOT NULL, `customerId` " +
+                "TEXT NOT NULL, `entryType` TEXT NOT NULL, `amountPiastres` INTEGER NOT NULL, " +
+                "`refType` TEXT, `refId` TEXT, `occurredAt` INTEGER NOT NULL, `dueAt` INTEGER, " +
+                "`userId` TEXT NOT NULL, `note` TEXT, `authorisedByUserId` TEXT, PRIMARY KEY(`id`), " +
+                "FOREIGN KEY(`customerId`) REFERENCES `customer`(`id`) ON UPDATE NO ACTION ON DELETE " +
+                "RESTRICT )",
+        )
+        connection.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_customer_ledger_entry_customerId_occurredAt` ON " +
+                "`customer_ledger_entry` (`customerId`, `occurredAt`)",
+        )
+        connection.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_customer_ledger_entry_refType_refId` ON " +
+                "`customer_ledger_entry` (`refType`, `refId`)",
+        )
+        connection.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_customer_ledger_entry_dueAt` ON " +
+                "`customer_ledger_entry` (`dueAt`)",
+        )
+        connection.execSQL(
+            "CREATE TABLE IF NOT EXISTS `assortment_pack` (`id` TEXT NOT NULL, `name` TEXT NOT " +
+                "NULL, `nameAr` TEXT NOT NULL, `pricePiastres` INTEGER NOT NULL, `isActive` INTEGER " +
+                "NOT NULL, PRIMARY KEY(`id`))",
+        )
+        connection.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_assortment_pack_name` ON `assortment_pack` " +
+                "(`name`)",
+        )
+        connection.execSQL(
+            "CREATE TABLE IF NOT EXISTS `assortment_pack_line` (`id` TEXT NOT NULL, `packId` TEXT " +
+                "NOT NULL, `variantId` TEXT NOT NULL, `quantity` INTEGER NOT NULL, PRIMARY KEY(`id`), " +
+                "FOREIGN KEY(`packId`) REFERENCES `assortment_pack`(`id`) ON UPDATE NO ACTION ON " +
+                "DELETE CASCADE , FOREIGN KEY(`variantId`) REFERENCES `variant`(`id`) ON UPDATE NO " +
+                "ACTION ON DELETE RESTRICT )",
+        )
+        connection.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_assortment_pack_line_packId` ON " +
+                "`assortment_pack_line` (`packId`)",
+        )
+        connection.execSQL(
+            "CREATE INDEX IF NOT EXISTS `index_assortment_pack_line_variantId` ON " +
+                "`assortment_pack_line` (`variantId`)",
+        )
+    }
+}
+
+/**
  * Every migration this database has ever shipped, in order.
  *
  * KD-002: the local database is the source of truth until sync arrives, so
@@ -326,4 +411,5 @@ val ALL_MIGRATIONS: Array<Migration> = arrayOf(
     MIGRATION_3_4,
     MIGRATION_4_5,
     MIGRATION_5_6,
+    MIGRATION_6_7,
 )

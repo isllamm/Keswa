@@ -92,6 +92,7 @@ class AnalyticsTest {
                 priceListId = PRICE_LIST_ID,
                 userId = "usr-1",
                 shiftId = null,
+                customerId = null,
                 status = SaleStatus.COMPLETED,
                 subtotalPiastres = total,
                 discountPiastres = 0,
@@ -122,6 +123,7 @@ class AnalyticsTest {
                     taxPiastres = 0,
                     unitCostPiastres = unitCost,
                     authorisedByUserId = null,
+                    packId = null,
                 ),
             ),
         )

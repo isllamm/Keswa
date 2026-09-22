@@ -27,7 +27,7 @@ val sellModule = module {
     factory { CalculateBasketTotalUseCase() }
     factory { ResolveTillContextUseCase(get(), get()) }
     factory { FindSellableUseCase(get()) { now() } }
-    factory { CompleteSaleUseCase(get(), get(), get(), get(), get()) { now() } }
+    factory { CompleteSaleUseCase(get(), get(), get(), get(), get(), get(), get()) { now() } }
     factory { PrintReceiptUseCase(get(), get(), get(), get()) }
     factory { ReauthenticateUseCase(get()) }
     factory { VoidSaleUseCase(get()) { now() } }

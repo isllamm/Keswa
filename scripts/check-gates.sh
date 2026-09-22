@@ -60,6 +60,24 @@ if require_paths "destructive migration (KD-002)" "$SRC"; then
        "use IPlatformProvider.log()"
 fi
 
+# An exported schema for a version that has already shipped describes a database that exists in
+# a shop. Changing one makes every migration test lie: the fixture it builds is a version that
+# never existed, and the real upgrade fails on a live install instead.
+#
+# This bites by accident — add a column, compile once before bumping the version, and Room
+# rewrites the current file in place. Git is the right tool for "this file is history".
+#
+# Vacuous in CI, where the tree matches HEAD. It earns its keep locally, at the moment somebody
+# has just done it.
+SCHEMA_DIR="core/schemas/com.alsoug.keswa.core.database.KeswaDatabase"
+if [ -d "$SCHEMA_DIR" ]; then
+  CURRENT=$(ls "$SCHEMA_DIR" | sed 's/\.json$//' | sort -n | tail -1)
+  CHANGED=$(git diff --name-only -- "$SCHEMA_DIR" 2>/dev/null | grep -v "/$CURRENT\.json$" || true)
+  gate "shipped schemas are immutable (KD-002)" \
+       "$CHANGED" \
+       "an exported schema below v$CURRENT has changed; restore it with git checkout -- <file>"
+fi
+
 if require_paths "commonMain purity (KD-004)" "$COMMON"; then
   gate "commonMain free of java.* and android.* (KD-004)" \
        "$(code_grep '^import \(java\|android\)\.' $COMMON)" \
