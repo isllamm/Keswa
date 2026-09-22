@@ -1,9 +1,10 @@
 package com.alsoug.keswa.features.analytics.presentation.components
 
-import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.ui.graphics.Color
+import com.alsoug.keswa.core.designsystem.KeswaTheme
 
 /**
  * The chart palette, and the rules that keep every panel reading as one system.
@@ -36,35 +37,34 @@ data class ChartColours(
     val heatTo: Color,
 )
 
+/**
+ * Read from the theme, never from a literal here.
+ *
+ * These used to be two hand-written tables that called `isSystemInDarkTheme()` themselves. They
+ * carried the prototype's *series* colours and somebody else's cool-grey neutrals — `#E4E4E7`
+ * grid, `#6B7280` axis text, a pure-white surface — so the charts sat on a slightly different
+ * system from the page around them. Nobody would have called it a bug; it just never looked like
+ * one product.
+ */
 @Composable
 @ReadOnlyComposable
-fun chartColours(): ChartColours = if (isSystemInDarkTheme()) DARK else LIGHT
-
-private val LIGHT = ChartColours(
-    sold = Color(0xFF2A78D6),
-    onHand = Color(0xFFEB6834),
-    grid = Color(0xFFE4E4E7),
-    axisText = Color(0xFF6B7280),
-    surface = Color(0xFFFFFFFF),
-    good = Color(0xFF0CA30C),
-    warning = Color(0xFFFAB219),
-    critical = Color(0xFFD03B3B),
-    heatFrom = Color(0xFFEFF4FB),
-    heatTo = Color(0xFF2A78D6),
-)
-
-private val DARK = ChartColours(
-    sold = Color(0xFF3987E5),
-    onHand = Color(0xFFD95926),
-    grid = Color(0xFF32353B),
-    axisText = Color(0xFF9AA0AA),
-    surface = Color(0xFF17191D),
-    good = Color(0xFF3FBF3F),
-    warning = Color(0xFFE0A519),
-    critical = Color(0xFFE05A5A),
-    heatFrom = Color(0xFF1B2330),
-    heatTo = Color(0xFF3987E5),
-)
+fun chartColours(): ChartColours {
+    val semantics = KeswaTheme.semantics
+    return ChartColours(
+        sold = semantics.sold,
+        onHand = semantics.onHand,
+        grid = semantics.grid,
+        axisText = semantics.muted,
+        surface = MaterialTheme.colorScheme.surface,
+        good = semantics.good,
+        warning = semantics.warning,
+        critical = semantics.critical,
+        // The sequential ramp's ends. In dark mode the ramp is reversed, so "more" stays the
+        // higher-contrast end against whatever the page is.
+        heatFrom = semantics.ramp.first(),
+        heatTo = semantics.ramp.last(),
+    )
+}
 
 /**
  * Axis ticks on round numbers — 0, 20K, 40K, 60K — never on the data's own maximum.

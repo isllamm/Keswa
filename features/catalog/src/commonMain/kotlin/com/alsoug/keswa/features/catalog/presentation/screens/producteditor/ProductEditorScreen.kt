@@ -29,6 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alsoug.keswa.core.designsystem.KeswaTheme
 import com.alsoug.keswa.core.domain.model.Colour
 import com.alsoug.keswa.core.domain.money.Money
 import com.alsoug.keswa.features.catalog.presentation.components.ColourList
@@ -205,7 +206,7 @@ private val previewRows = listOf(
 @Preview
 @Composable
 private fun ProductEditorSuccessPreview() {
-    MaterialTheme {
+    KeswaTheme {
         ProductEditorContent(
             state = ProductEditorUiState(
                 productLabel = "Oxford shirt",
@@ -220,7 +221,7 @@ private fun ProductEditorSuccessPreview() {
 @Preview
 @Composable
 private fun ProductEditorLoadingPreview() {
-    MaterialTheme {
+    KeswaTheme {
         ProductEditorContent(state = ProductEditorUiState(isLoading = true), onEvent = {})
     }
 }
@@ -228,7 +229,7 @@ private fun ProductEditorLoadingPreview() {
 @Preview
 @Composable
 private fun ProductEditorEmptyPreview() {
-    MaterialTheme {
+    KeswaTheme {
         ProductEditorContent(
             state = ProductEditorUiState(
                 productLabel = "New product",

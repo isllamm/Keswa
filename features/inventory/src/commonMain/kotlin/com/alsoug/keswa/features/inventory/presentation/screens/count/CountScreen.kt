@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alsoug.keswa.core.designsystem.KeswaTheme
 import com.alsoug.keswa.core.domain.model.DocumentStatus
 import com.alsoug.keswa.core.domain.model.StockCount
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -259,7 +260,7 @@ private val previewLines = listOf(
 @Preview
 @Composable
 private fun CountOpenPreview() {
-    MaterialTheme {
+    KeswaTheme {
         CountContent(
             state = CountUiState(count = previewCount, lines = previewLines),
             onEvent = {},
@@ -271,7 +272,7 @@ private fun CountOpenPreview() {
 @Preview
 @Composable
 private fun CountPostedPreview() {
-    MaterialTheme {
+    KeswaTheme {
         CountContent(
             state = CountUiState(
                 count = previewCount.copy(status = DocumentStatus.POSTED),
@@ -289,5 +290,5 @@ private fun CountPostedPreview() {
 @Preview
 @Composable
 private fun CountStartPreview() {
-    MaterialTheme { CountContent(state = CountUiState(), onEvent = {}, onBack = {}) }
+    KeswaTheme { CountContent(state = CountUiState(), onEvent = {}, onBack = {}) }
 }

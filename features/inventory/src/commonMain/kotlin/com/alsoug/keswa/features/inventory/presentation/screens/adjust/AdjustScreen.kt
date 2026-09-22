@@ -28,6 +28,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alsoug.keswa.core.designsystem.KeswaTheme
 import com.alsoug.keswa.core.domain.model.MovementReason
 import com.alsoug.keswa.core.domain.model.SellableItem
 import com.alsoug.keswa.core.domain.model.StockMovement
@@ -228,7 +229,7 @@ private val previewHistory = listOf(
 @Preview
 @Composable
 private fun AdjustSuccessPreview() {
-    MaterialTheme {
+    KeswaTheme {
         AdjustContent(
             state = AdjustUiState(
                 item = previewItem,
@@ -245,11 +246,11 @@ private fun AdjustSuccessPreview() {
 @Preview
 @Composable
 private fun AdjustEmptyPreview() {
-    MaterialTheme { AdjustContent(state = AdjustUiState(), onEvent = {}, onBack = {}) }
+    KeswaTheme { AdjustContent(state = AdjustUiState(), onEvent = {}, onBack = {}) }
 }
 
 @Preview
 @Composable
 private fun AdjustLoadingPreview() {
-    MaterialTheme { AdjustContent(state = AdjustUiState(isLoading = true), onEvent = {}, onBack = {}) }
+    KeswaTheme { AdjustContent(state = AdjustUiState(isLoading = true), onEvent = {}, onBack = {}) }
 }

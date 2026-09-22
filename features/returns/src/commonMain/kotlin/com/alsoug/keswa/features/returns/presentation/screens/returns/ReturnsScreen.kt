@@ -37,6 +37,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alsoug.keswa.core.designsystem.KeswaTheme
 import com.alsoug.keswa.core.domain.model.ReturnCondition
 import com.alsoug.keswa.core.domain.model.TenderMethod
 import com.alsoug.keswa.core.domain.money.Money
@@ -71,14 +72,13 @@ fun ReturnsScreen(
         }
     }
 
-    ReturnsContent(state = state, onEvent = viewModel::onEvent, onBack = onBack, modifier = modifier)
+    ReturnsContent(state = state, onEvent = viewModel::onEvent, modifier = modifier)
 }
 
 @Composable
 internal fun ReturnsContent(
     state: ReturnsUiState,
     onEvent: (ReturnsUiEvent) -> Unit,
-    onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxSize()) {
@@ -87,7 +87,6 @@ internal fun ReturnsContent(
         }
 
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(8.dp)) {
-            TextButton(onClick = onBack) { Text("← Back") }
             Text("Returns", style = MaterialTheme.typography.titleMedium)
         }
 
@@ -374,7 +373,7 @@ private val previewLines = listOf(
 @Preview
 @Composable
 private fun ReturnsInPolicyPreview() {
-    MaterialTheme {
+    KeswaTheme {
         ReturnsContent(
             state = ReturnsUiState(
                 saleId = "s1",
@@ -385,7 +384,6 @@ private fun ReturnsInPolicyPreview() {
                 reason = "wrong size",
             ),
             onEvent = {},
-            onBack = {},
         )
     }
 }
@@ -393,7 +391,7 @@ private fun ReturnsInPolicyPreview() {
 @Preview
 @Composable
 private fun ReturnsOutsidePolicyPreview() {
-    MaterialTheme {
+    KeswaTheme {
         ReturnsContent(
             state = ReturnsUiState(
                 saleId = "s1",
@@ -405,7 +403,6 @@ private fun ReturnsOutsidePolicyPreview() {
                 reason = "faulty seam",
             ),
             onEvent = {},
-            onBack = {},
         )
     }
 }
@@ -413,7 +410,7 @@ private fun ReturnsOutsidePolicyPreview() {
 @Preview
 @Composable
 private fun ReturnsEmptyPreview() {
-    MaterialTheme {
-        ReturnsContent(state = ReturnsUiState(returnWindowDays = 14), onEvent = {}, onBack = {})
+    KeswaTheme {
+        ReturnsContent(state = ReturnsUiState(returnWindowDays = 14), onEvent = {})
     }
 }

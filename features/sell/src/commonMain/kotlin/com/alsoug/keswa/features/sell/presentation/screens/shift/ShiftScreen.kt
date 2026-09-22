@@ -23,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alsoug.keswa.core.designsystem.KeswaTheme
 import com.alsoug.keswa.core.domain.model.Shift
 import com.alsoug.keswa.core.domain.model.ZReport
 import com.alsoug.keswa.core.domain.money.Money
@@ -191,7 +192,7 @@ private val previewShift = Shift(
 @Preview
 @Composable
 private fun ShiftReportPreview() {
-    MaterialTheme {
+    KeswaTheme {
         ShiftContent(
             state = ShiftUiState(
                 shift = previewShift,
@@ -222,7 +223,7 @@ private fun ShiftReportPreview() {
 @Preview
 @Composable
 private fun ShiftCountPreview() {
-    MaterialTheme {
+    KeswaTheme {
         ShiftContent(
             state = ShiftUiState(shift = previewShift.copy(closedAt = null, countedCash = null)),
             onEvent = {},
@@ -233,5 +234,5 @@ private fun ShiftCountPreview() {
 @Preview
 @Composable
 private fun ShiftLoadingPreview() {
-    MaterialTheme { ShiftContent(state = ShiftUiState(isLoading = true), onEvent = {}) }
+    KeswaTheme { ShiftContent(state = ShiftUiState(isLoading = true), onEvent = {}) }
 }
