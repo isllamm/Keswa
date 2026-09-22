@@ -3,7 +3,10 @@ package com.alsoug.keswa.core.di
 import com.alsoug.keswa.core.coroutines.DefaultDispatcherProvider
 import com.alsoug.keswa.core.coroutines.DispatcherProvider
 import com.alsoug.keswa.core.data.repository.AnalyticsRepositoryImpl
+import com.alsoug.keswa.core.data.repository.AssortmentPackRepositoryImpl
 import com.alsoug.keswa.core.data.repository.CategoryRepositoryImpl
+import com.alsoug.keswa.core.data.repository.CustomerRepositoryImpl
+import com.alsoug.keswa.core.data.repository.ReceivablesRepositoryImpl
 import com.alsoug.keswa.core.data.repository.ColourRepositoryImpl
 import com.alsoug.keswa.core.data.repository.ProductRepositoryImpl
 import com.alsoug.keswa.core.data.repository.HeldSaleRepositoryImpl
@@ -23,7 +26,10 @@ import com.alsoug.keswa.core.database.KeswaDatabase
 import com.alsoug.keswa.core.domain.IdGenerator
 import com.alsoug.keswa.core.domain.UuidIdGenerator
 import com.alsoug.keswa.core.domain.repository.IAnalyticsRepository
+import com.alsoug.keswa.core.domain.repository.IAssortmentPackRepository
 import com.alsoug.keswa.core.domain.repository.ICategoryRepository
+import com.alsoug.keswa.core.domain.repository.ICustomerRepository
+import com.alsoug.keswa.core.domain.repository.IReceivablesRepository
 import com.alsoug.keswa.core.domain.repository.IHeldSaleRepository
 import com.alsoug.keswa.core.domain.repository.ILocationRepository
 import com.alsoug.keswa.core.domain.repository.IPriceRepository
@@ -98,10 +104,24 @@ val coreModule = module {
             get(),
             get<KeswaDatabase>().saleDao(),
             get<KeswaDatabase>().stockLedgerDao(),
+            get<KeswaDatabase>().customerLedgerDao(),
+            get<KeswaDatabase>().customerDao(),
             get(),
         )
     }
     single<IAnalyticsRepository> { AnalyticsRepositoryImpl(get<KeswaDatabase>().analyticsDao()) }
+
+    // Wholesale — receivables are an append-only ledger, the same shape as stock
+    single<ICustomerRepository> { CustomerRepositoryImpl(get<KeswaDatabase>().customerDao()) { now() } }
+    single<IReceivablesRepository> {
+        ReceivablesRepositoryImpl(
+            get<KeswaDatabase>().customerLedgerDao(),
+            get<KeswaDatabase>().customerDao(),
+        )
+    }
+    single<IAssortmentPackRepository> {
+        AssortmentPackRepositoryImpl(get<KeswaDatabase>().assortmentPackDao())
+    }
     single<ISaleReturnRepository> {
         SaleReturnRepositoryImpl(
             get(),

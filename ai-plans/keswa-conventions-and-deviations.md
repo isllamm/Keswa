@@ -220,13 +220,28 @@ one and gets re-examined in the same phase.
 
 ## Part C — Open questions
 
-| # | Question | Blocks |
-|---|---|---|
-| **Q1** | Wholesale+retail, or multi-tenant SaaS? | Phase 7 only — see below |
-| **Q2** | "Receipt will not be payment receipts" — separate payment terminal, or non-fiscal slips? | Phase 10 only |
-| **Q3** | Printers already owned, or buying? | Phase 3 |
-| **Q4** | Is quantity ever fractional (fabric by the metre)? | Phase 1 — `Int` vs scaled integer |
+| # | Question | Answer | Blocks |
+|---|---|---|---|
+| **Q1** | Wholesale+retail, or multi-tenant SaaS? | ✅ **Wholesale + retail** (21 Sep 2026) | Phase 7 — now unblocked and building |
+| **Q2** | "Receipt will not be payment receipts" — separate payment terminal, or non-fiscal slips? | ✅ **Non-fiscal slips** (21 Sep 2026) | Phase 10 — now almost entirely removed |
+| **Q3** | Printers already owned, or buying? | — | Phase 3 (shipped; addresses are configuration) |
+| **Q4** | Is quantity ever fractional (fabric by the metre)? | — | Phase 1 — `Int` vs scaled integer |
 
-**Q1 is narrower than first assessed.** A desktop app sold to many shops is *multi-instance*, not
-multi-tenant — each shop runs its own local database. Tenancy only bites the **server** in Phase 9.
-Phases 0–6 proceed either way.
+**Q1 — wholesale + retail.** Phase 7 is built: customers, price tiers, credit limits, an
+append-only receivables ledger, invoices with terms, and assortment packs. Tenancy does not arise:
+a desktop app sold to many shops is *multi-instance*, not multi-tenant, and each shop runs its own
+local database. Phase 9's sync stays single-tenant.
+
+**Q2 — non-fiscal slips.** This removes the largest single unknown in the project. Phase 10's
+B2C e-Receipt work disappears along with architecture-plan **R1**, the offline/QR conflict that had
+no good answer: a receipt printed offline cannot carry an ETA-validated QR, and now it does not
+need to. The e-seal material that would have been Tier 1 data is gone too, which narrows KD-006's
+scope in Phase 9 to sync tokens alone.
+
+> If a shop is later obliged to issue B2B e-Invoices, that work returns — and the isolation KD-005
+> bought (`:features:fiscal` behind an interface) still keeps the blast radius to one module.
+> Nobody should start it without reading ETA's own SDK documentation: everything in §5 of the
+> architecture plan came from secondary sources.
+
+**Q4 is still open**, and cheap to keep open — `Int` quantities are correct for garments, and
+fabric by the metre would be a Phase 1 revisit rather than a patch.

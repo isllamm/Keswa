@@ -37,6 +37,9 @@ class CompleteSaleUseCaseTest {
         sales = sales,
         sessions = sessions,
         users = users,
+        // No customer and no balance: these are retail sales, which is Phase 5's whole subject.
+        customers = FakeCustomers(null),
+        receivables = FakeReceivables(Money.ZERO),
         calculate = CalculateBasketTotalUseCase(),
         ids = SequentialIds("sale"),
         now = { 1_757_000_000_000 },

@@ -9,6 +9,9 @@ import com.alsoug.keswa.core.domain.model.TenderMethod
 import com.alsoug.keswa.core.domain.model.User
 import com.alsoug.keswa.core.domain.model.permissions
 import com.alsoug.keswa.core.domain.money.Money
+import com.alsoug.keswa.core.domain.model.CreditPolicy
+import com.alsoug.keswa.core.domain.repository.ICustomerRepository
+import com.alsoug.keswa.core.domain.repository.IReceivablesRepository
 import com.alsoug.keswa.core.domain.repository.ISaleRepository
 import com.alsoug.keswa.core.domain.repository.IUserRepository
 import com.alsoug.keswa.core.domain.repository.SaleDraft
@@ -36,6 +39,20 @@ sealed interface SaleResult {
     data class Completed(val sale: Sale, val warnings: List<SaleWarning>) : SaleResult
     data object EmptyBasket : SaleResult
     data class UnderTendered(val shortBy: Money) : SaleResult
+
+    /**
+     * Over the customer's credit limit, and refused.
+     *
+     * A stop rather than a warning: a limit that can be clicked through on a busy morning is not a
+     * limit, and the busy morning is what it exists for. An admin can still approve it in place.
+     */
+    data class OverCreditLimit(val balance: Money, val limit: Money, val over: Money) : SaleResult
+
+    /** A limit of zero. Nobody has decided to trust this customer yet. */
+    data object CustomerIsCashOnly : SaleResult
+
+    /** A credit tender with nobody to bill. */
+    data object NoCustomerForCredit : SaleResult
 }
 
 sealed interface SaleWarning {
@@ -58,6 +75,8 @@ class CompleteSaleUseCase(
     private val sales: ISaleRepository,
     private val sessions: ISessionManager,
     private val users: IUserRepository,
+    private val customers: ICustomerRepository,
+    private val receivables: IReceivablesRepository,
     private val calculate: CalculateBasketTotalUseCase,
     private val ids: IdGenerator,
     private val now: () -> Long,
@@ -69,6 +88,8 @@ class CompleteSaleUseCase(
         context: TillContext,
         shiftId: String?,
         vatBasisPoints: Int,
+        customerId: String? = null,
+        creditAuthorisedByUserId: String? = null,
     ): Result<SaleResult> = runCatching {
         sessions.require(Permission.SELL)
         if (basket.isEmpty) return@runCatching SaleResult.EmptyBasket
@@ -82,6 +103,15 @@ class CompleteSaleUseCase(
             return@runCatching SaleResult.UnderTendered(totals.total - settled)
         }
 
+        val onAccount = tenders
+            .filter { it.method == TenderMethod.CREDIT }
+            .fold(Money.ZERO) { sum, tender -> sum + tender.amount }
+        if (!onAccount.isZero) {
+            // Nothing is written until the limit has been checked against the real balance.
+            checkCredit(customerId, onAccount, creditAuthorisedByUserId)
+                ?.let { return@runCatching it }
+        }
+
         val saleId = ids.newId()
         val timestamp = now()
         val handedOver = tenders.fold(Money.ZERO) { sum, tender -> sum + tender.tendered }
@@ -92,6 +122,8 @@ class CompleteSaleUseCase(
             priceListId = context.priceListId,
             userId = user.id,
             shiftId = shiftId,
+            customerId = customerId,
+            creditAuthorisedByUserId = creditAuthorisedByUserId,
             subtotal = totals.subtotal,
             discount = totals.discount,
             tax = totals.tax,
@@ -131,6 +163,42 @@ class CompleteSaleUseCase(
         )
 
         SaleResult.Completed(sales.record(draft).getOrThrow(), basket.warnings())
+    }
+
+    /**
+     * The credit limit, checked against the balance as it actually is.
+     *
+     * Returns the refusal to report, or null to proceed. An approval from somebody with
+     * `VOID_SALE`-level authority lets it through, and is recorded on the ledger entry — an
+     * over-limit sale nobody can trace is not a control.
+     */
+    private suspend fun checkCredit(
+        customerId: String?,
+        amount: Money,
+        approvedByUserId: String?,
+    ): SaleResult? {
+        if (customerId == null) return SaleResult.NoCustomerForCredit
+
+        val customer = customers.getById(customerId).getOrThrow()
+            ?: return SaleResult.NoCustomerForCredit
+        if (CreditPolicy.isCashOnly(customer.creditLimit)) return SaleResult.CustomerIsCashOnly
+
+        val balance = receivables.balance(customerId).getOrThrow()
+        if (!CreditPolicy.wouldExceed(balance, customer.creditLimit, amount)) return null
+
+        // Over the limit: only a verified approval gets past, and it is looked up, not trusted.
+        if (approvedByUserId != null) {
+            val approver = users.findById(approvedByUserId).getOrThrow()
+                ?: throw Error.ForbiddenAccess("approval names a user who does not exist")
+            if (Permission.VOID_SALE in approver.user.role.permissions) return null
+            throw Error.ForbiddenAccess("approver cannot grant credit over the limit")
+        }
+
+        return SaleResult.OverCreditLimit(
+            balance = balance,
+            limit = customer.creditLimit,
+            over = CreditPolicy.excess(balance, customer.creditLimit, amount),
+        )
     }
 
     /**

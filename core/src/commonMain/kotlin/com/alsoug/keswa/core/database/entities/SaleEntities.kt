@@ -29,6 +29,7 @@ import com.alsoug.keswa.core.domain.model.TenderMethod
     ],
     indices = [
         Index(value = ["receiptNumber"], unique = true),
+        Index("customerId"),
         Index("occurredAt"),
         Index("shiftId"),
         Index("userId"),
@@ -42,6 +43,8 @@ data class SaleEntity(
     val priceListId: String,
     val userId: String,
     val shiftId: String?,
+    /** Null for a retail walk-in. Set for a wholesale sale, whether on account or paid at once. */
+    val customerId: String?,
     val status: SaleStatus,
     val subtotalPiastres: Long,
     val discountPiastres: Long,
@@ -98,6 +101,8 @@ data class SaleLineEntity(
     val taxPiastres: Long,
     val unitCostPiastres: Long,
     val authorisedByUserId: String?,
+    /** The assortment pack this line was expanded from, so a receipt can group the carton. */
+    val packId: String?,
 )
 
 /**

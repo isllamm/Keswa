@@ -15,10 +15,10 @@
 | **4** | **Users, roles & login** | `phase-4-auth-plan.md` ← **new** |
 | 5 | Sell flow | `phase-5-sell-plan.md` ✅ built |
 | 6 | Receiving, labels, counts + Android | `phase-6-receiving-plan.md` ✅ built |
-| 7 | Wholesale ⚠️ Q1 | outlined below — **skipped for now, still gated** |
+| 7 | Wholesale | `phase-7-wholesale-plan.md` ✅ built (Q1 = wholesale + retail) |
 | 8 | Returns, exchanges & analytics | `phase-8-returns-plan.md` ✅ · `phase-8-analytics-plan.md` ✅ |
 | 9 | Backend, sync, web back office | outlined below |
-| 10 | ETA fiscal ⚠️ Q2 | outlined below |
+| 10 | ETA fiscal | **all but removed** — Q2 = non-fiscal slips |
 
 **Why auth went in at 4, not later:** Phase 1 stamps `userId` on every stock movement, and the ledger
 is append-only by design. Ship selling before login and every sale in the shop's permanent history is
@@ -96,10 +96,12 @@ day one to keep this cheap; a CI grep gate from Phase 0 would make it cheaper st
 
 ---
 
-## Phase 7 — Wholesale ⚠️ gated on Q1
+## Phase 7 — Wholesale ✅
 
-**Only built if Q1 = wholesale + retail.** If Q1 = multi-tenant SaaS, this is replaced by tenancy
-work folded into Phase 9.
+**Q1 answered on 21 Sep 2026: wholesale + retail.** Built — full plan in
+`phase-7-wholesale-plan.md`. Tenancy does not arise, so Phase 9's sync stays single-tenant.
+
+Taken *after* Phase 8, because it was gated when Phase 8 was not.
 
 **Contents:** customer records, price lists/tiers (tables exist from Phase 1), credit limits and
 accounts receivable, invoices with terms, partial payments and statements, **assortment packs**
@@ -151,10 +153,17 @@ the shop paid.
 
 ---
 
-## Phase 10 — ETA fiscal integration ⚠️ gated on Q2
+## Phase 10 — ETA fiscal integration — ⚠️ **all but removed**
 
-**Q2 decides how much of this exists.** If payment receipts come from a separate terminal, or the
-slips are non-fiscal, the B2C half disappears.
+**Q2 answered on 21 Sep 2026: non-fiscal slips.** The B2C e-Receipt half disappears, and with it
+**R1**, the offline/QR conflict that was the largest single unknown in the project: a receipt
+printed offline cannot carry an ETA-validated QR, and now it does not need to. The e-seal material
+that would have been Tier 1 data is gone too, which narrows KD-006's remaining scope in Phase 9 to
+sync tokens alone.
+
+What remains below is kept for the day a shop is obliged to issue B2B e-Invoices. Nobody should
+start it without reading ETA's own SDK documentation — everything in §5 of the architecture plan
+came from secondary sources.
 
 **Contents:** ETA e-Invoice (B2B, CAdES-BES, PKCS#11 USB token or HSM) and/or e-Receipt (B2C, POS
 registration, e-seal, QR on the printed receipt).
