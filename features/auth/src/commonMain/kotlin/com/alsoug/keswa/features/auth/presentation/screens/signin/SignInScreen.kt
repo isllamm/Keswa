@@ -38,6 +38,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alsoug.keswa.core.designsystem.KeswaTheme
 import com.alsoug.keswa.core.domain.model.User
 import com.alsoug.keswa.core.domain.model.UserRole
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -311,7 +312,7 @@ private val previewSellers = listOf(
 @Preview
 @Composable
 private fun SignInSellerPreview() {
-    MaterialTheme {
+    KeswaTheme {
         SignInContent(
             state = SignInUiState(sellers = previewSellers, selectedSellerId = "u1", pin = "12"),
             onEvent = {},
@@ -322,7 +323,7 @@ private fun SignInSellerPreview() {
 @Preview
 @Composable
 private fun SignInAdminPreview() {
-    MaterialTheme {
+    KeswaTheme {
         SignInContent(
             state = SignInUiState(
                 sellers = previewSellers,
@@ -338,13 +339,13 @@ private fun SignInAdminPreview() {
 @Preview
 @Composable
 private fun SignInFirstRunPreview() {
-    MaterialTheme { SignInContent(state = SignInUiState(needsSetup = true), onEvent = {}) }
+    KeswaTheme { SignInContent(state = SignInUiState(needsSetup = true), onEvent = {}) }
 }
 
 @Preview
 @Composable
 private fun SignInRecoveryCodePreview() {
-    MaterialTheme {
+    KeswaTheme {
         SignInContent(state = SignInUiState(recoveryCode = "KSW-BDFH-JKLM-NPQR"), onEvent = {})
     }
 }
@@ -352,7 +353,7 @@ private fun SignInRecoveryCodePreview() {
 @Preview
 @Composable
 private fun SignInLockedPreview() {
-    MaterialTheme {
+    KeswaTheme {
         SignInContent(
             state = SignInUiState(
                 sellers = previewSellers,

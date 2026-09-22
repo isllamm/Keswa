@@ -26,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alsoug.keswa.core.designsystem.KeswaTheme
 import com.alsoug.keswa.core.domain.money.Money
 import com.alsoug.keswa.features.inventory.domain.usecase.ImportProblem
 import com.alsoug.keswa.features.inventory.domain.usecase.ImportRow
@@ -211,7 +212,7 @@ private val previewRows = listOf(
 @Preview
 @Composable
 private fun ImportCheckedPreview() {
-    MaterialTheme {
+    KeswaTheme {
         ImportContent(
             state = ImportUiState(text = "…", rows = previewRows),
             onEvent = {},
@@ -223,7 +224,7 @@ private fun ImportCheckedPreview() {
 @Preview
 @Composable
 private fun ImportRejectedPreview() {
-    MaterialTheme {
+    KeswaTheme {
         ImportContent(
             state = ImportUiState(
                 text = "…",
@@ -241,5 +242,5 @@ private fun ImportRejectedPreview() {
 @Preview
 @Composable
 private fun ImportEmptyPreview() {
-    MaterialTheme { ImportContent(state = ImportUiState(), onEvent = {}, onBack = {}) }
+    KeswaTheme { ImportContent(state = ImportUiState(), onEvent = {}, onBack = {}) }
 }

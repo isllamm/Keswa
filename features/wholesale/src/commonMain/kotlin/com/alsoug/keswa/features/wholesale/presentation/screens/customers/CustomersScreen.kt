@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alsoug.keswa.core.designsystem.KeswaTheme
 import com.alsoug.keswa.core.domain.model.Ageing
 import com.alsoug.keswa.core.domain.model.Customer
 import com.alsoug.keswa.core.domain.model.LedgerEntry
@@ -375,7 +376,7 @@ private val previewEntries = listOf(
 @Preview
 @Composable
 private fun CustomersSuccessPreview() {
-    MaterialTheme {
+    KeswaTheme {
         CustomersContent(
             state = CustomersUiState(
                 customers = previewRows,
@@ -399,13 +400,13 @@ private fun CustomersSuccessPreview() {
 @Preview
 @Composable
 private fun CustomersEmptyPreview() {
-    MaterialTheme { CustomersContent(state = CustomersUiState(), onEvent = {}, onBack = {}) }
+    KeswaTheme { CustomersContent(state = CustomersUiState(), onEvent = {}, onBack = {}) }
 }
 
 @Preview
 @Composable
 private fun CustomersLoadingPreview() {
-    MaterialTheme {
+    KeswaTheme {
         CustomersContent(state = CustomersUiState(isLoading = true), onEvent = {}, onBack = {})
     }
 }
