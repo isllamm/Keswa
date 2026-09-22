@@ -13,7 +13,7 @@ set -uo pipefail
 FAILED=0
 
 # Discovered rather than listed, so a new feature module is covered the day it lands.
-MODULES="core composeApp features"
+MODULES="core composeApp features server"
 SRC=$(find $MODULES -maxdepth 3 -type d -name src 2>/dev/null | tr '\n' ' ')
 COMMON=$(find $MODULES -maxdepth 4 -type d -name commonMain 2>/dev/null | tr '\n' ' ')
 PROD=$(find $MODULES -maxdepth 4 -type d \( -name commonMain -o -name desktopMain -o -name androidMain -o -name jvmCommonMain \) 2>/dev/null | tr '\n' ' ')
@@ -51,7 +51,7 @@ if require_paths "destructive migration (KD-002)" "$SRC"; then
        "the local database is the source of truth; ship a tested Migration instead"
 
   gate "no println outside the logger (ADR-029)" \
-       "$(code_grep 'println(' $SRC | grep -v 'DesktopPlatformProvider.kt' || true)" \
+       "$(code_grep 'println(' $SRC | grep -v 'DesktopPlatformProvider.kt' | grep -v 'ServerPlatformProvider.kt' || true)" \
        "use IPlatformProvider.log()"
 
   # Android's equivalent, gated from the day the target landed rather than after the first leak.
@@ -93,9 +93,28 @@ fi
 # A credential in a log survives backups, support bundles and screenshares.
 if require_paths "no credential logging" "$PROD"; then
   gate "no credential reaches the logger" \
-       "$(code_grep 'log(.*\(secret\|password\|pin\|Pin\|Secret\|Password\)' $PROD)" \
-       "never log a credential, at any level, masked or not (ADR-029, KD-auth)"
+       "$(code_grep 'log(.*\(secret\|password\|pin\|token\|Pin\|Secret\|Password\|Token\)' $PROD)" \
+       "never log a credential, at any level, masked or not (ADR-029, KD-auth, KD-007)"
 fi
+
+# Room does not model triggers, so the outbox DDL has to run in two places: the v8 migration for a
+# shop that upgrades, and onCreate for a machine installing fresh. Miss one and the app works
+# perfectly and syncs nothing — the quietest failure in the project. Both read one generated list,
+# and this is what says they still do.
+TRIGGER_SOURCES="core/src/commonMain/kotlin/com/alsoug/keswa/core/database"
+MISSING_TRIGGERS=""
+for file in "$TRIGGER_SOURCES/migrations/Migrations.kt" "$TRIGGER_SOURCES/KeswaDatabaseFactory.kt"; do
+  if [ ! -f "$file" ]; then
+    MISSING_TRIGGERS="$MISSING_TRIGGERS
+$file is missing"
+  elif ! grep -q 'SYNC_TRIGGERS' "$file"; then
+    MISSING_TRIGGERS="$MISSING_TRIGGERS
+$file no longer installs SYNC_TRIGGERS"
+  fi
+done
+gate "the outbox triggers are installed on upgrade and on a fresh database (KD-010)" \
+     "$MISSING_TRIGGERS" \
+     "both the migration and onCreate must run SYNC_TRIGGERS, or one kind of install syncs nothing"
 
 if require_paths "domain purity (ADR-005)" "$DOMAIN"; then
   gate "domain has zero framework imports (ADR-005)" \

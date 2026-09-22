@@ -23,6 +23,7 @@ import com.alsoug.keswa.core.database.dao.StockReceiptDao
 import com.alsoug.keswa.core.database.dao.ShiftDao
 import com.alsoug.keswa.core.database.dao.UserDao
 import com.alsoug.keswa.core.database.dao.StockLedgerDao
+import com.alsoug.keswa.core.database.dao.SyncDao
 import com.alsoug.keswa.core.database.dao.VariantBarcodeDao
 import com.alsoug.keswa.core.database.dao.VariantDao
 import com.alsoug.keswa.core.database.entities.AppSettingEntity
@@ -51,11 +52,15 @@ import com.alsoug.keswa.core.database.entities.StockMovementEntity
 import com.alsoug.keswa.core.database.entities.StockReceiptEntity
 import com.alsoug.keswa.core.database.entities.StockReceiptLineEntity
 import com.alsoug.keswa.core.database.entities.StockOnHandEntity
+import com.alsoug.keswa.core.database.entities.SyncControlEntity
+import com.alsoug.keswa.core.database.entities.SyncCursorEntity
+import com.alsoug.keswa.core.database.entities.SyncOutboxEntity
+import com.alsoug.keswa.core.database.entities.SyncSupersededEntity
 import com.alsoug.keswa.core.database.entities.VariantBarcodeEntity
 import com.alsoug.keswa.core.database.entities.VariantEntity
 
 /**
- * The shop's database — and, until sync ships in Phase 9, the only copy of its sales history.
+ * The shop's database — and, until this shop enrols a second device, the only copy of its sales history.
  *
  * That is why KD-002 forbids `fallbackToDestructiveMigration`: there is no server to re-fetch from,
  * so a dropped table is permanent data loss. Every version bump ships a tested [androidx.room.migration.Migration].
@@ -90,8 +95,13 @@ import com.alsoug.keswa.core.database.entities.VariantEntity
         CustomerLedgerEntryEntity::class,
         AssortmentPackEntity::class,
         AssortmentPackLineEntity::class,
+        SyncOutboxEntity::class,
+        SyncCursorEntity::class,
+        SyncControlEntity::class,
+        SyncSupersededEntity::class,
     ],
-    version = 7, // 7: wholesale — customer, customer_ledger_entry, assortment packs; sale gained a customer
+    version = 8, // 8: sync — outbox, cursor, control and superseded, plus the outbox triggers
+    // 7: wholesale — customer, customer_ledger_entry, assortment packs; sale gained a customer
     // 6: added sale_return/_line
     // 5: added stock_receipt/_line, stock_count/_line; stock_movement gained cost and note
     // 4: added sale, sale_line, payment, shift, held_sale, held_sale_line
@@ -123,6 +133,7 @@ abstract class KeswaDatabase : RoomDatabase() {
     abstract fun customerDao(): CustomerDao
     abstract fun customerLedgerDao(): CustomerLedgerDao
     abstract fun assortmentPackDao(): AssortmentPackDao
+    abstract fun syncDao(): SyncDao
 }
 
 /**

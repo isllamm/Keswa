@@ -5,8 +5,8 @@ Three levels, and one rule each.
 ```
 prod                      what is installed in the shop
 └── dev                   integration — everything that has landed and is green
-    ├── feature/phase-7-wholesale
-    ├── feature/phase-9-backend
+    ├── feature/phase-9-sync
+    ├── feature/phase-9-backoffice
     └── fix/<short-name>
 ```
 
@@ -56,8 +56,8 @@ git tag -a v0.1.0 -m "First install — Downtown branch"
 ```
 
 A release tag is what you check out to reproduce exactly what a shop is running when they phone
-about a bug. That matters more here than in most projects: the database is the shop's only copy of
-its history until sync arrives in Phase 9, so knowing precisely which schema version they are on is
+about a bug. That matters more here than in most projects: until a shop enrols a second device its
+database is the only copy of its history, so knowing precisely which schema version they are on is
 the difference between a five-minute fix and a guess.
 
 ## Tags
@@ -67,15 +67,16 @@ is the better marker for something finished, because it does not move.
 
 ## Current state
 
-`dev` sits at the end of Phase 7, which was taken last because Q1 gated it. `prod` is still at Phase 4. Nothing has been installed in a shop
-yet, so `prod` means "last known-good, ready to install" rather than "running somewhere" — it will
-start meaning the latter the day the first till is set up.
+`dev` sits at the end of Phase 9's first half — the server and the sync engine. `prod` is still at
+Phase 4. Nothing has been installed in a shop yet, so `prod` means "last known-good, ready to
+install" rather than "running somewhere" — it will start meaning the latter the day the first till
+is set up.
 
 **Phase 5 is the last one that can be installed carelessly.** From here the database can hold a
 shop's real trading history, and KD-002's migration tests stop being a discipline and start being
 the only thing standing between an upgrade and a permanent loss.
 
-Historical phase branches (`feature/phase-0-scaffold` … `feature/phase-7-wholesale`) point at the commit
+Historical phase branches (`feature/phase-0-scaffold` … `feature/phase-9-sync`) point at the commit
 where each phase landed. They are kept for reference and are safe to delete once you are happy the
 tags are enough.
 
