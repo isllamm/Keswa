@@ -23,7 +23,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alsoug.keswa.core.designsystem.EmptyState
 import com.alsoug.keswa.core.designsystem.KeswaTheme
+import com.alsoug.keswa.core.designsystem.ScreenHeader
 import com.alsoug.keswa.core.domain.model.Shift
 import com.alsoug.keswa.core.domain.model.ZReport
 import com.alsoug.keswa.core.domain.money.Money
@@ -66,22 +68,27 @@ internal fun ShiftContent(
     onEvent: (ShiftUiEvent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier.fillMaxSize().padding(16.dp)) {
+    Column(modifier = modifier.fillMaxSize()) {
         if (state.isLoading) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
 
-        Text("Close shift", style = MaterialTheme.typography.titleLarge)
+        ScreenHeader(
+            title = "Shift",
+            subtitle = "Float, takings, and the count that closes it",
+        )
 
-        when {
-            state.report != null -> ReportCard(state.report)
-            state.shift == null -> Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center,
-            ) { Text("No shift is open") }
-            else -> CountForm(state, onEvent)
-        }
+        Column(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
+            when {
+                state.report != null -> ReportCard(state.report)
+                state.shift == null -> EmptyState(
+                    title = "No shift is open",
+                    hint = "Open one at the till to start counting takings against a float",
+                )
+                else -> CountForm(state, onEvent)
+            }
 
-        Row(modifier = Modifier.padding(top = 16.dp)) {
-            TextButton(onClick = { onEvent(ShiftUiEvent.Done) }) { Text("Back to till") }
+            Row(modifier = Modifier.padding(top = 16.dp)) {
+                TextButton(onClick = { onEvent(ShiftUiEvent.Done) }) { Text("Back to till") }
+            }
         }
     }
 }

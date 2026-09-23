@@ -33,7 +33,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alsoug.keswa.core.designsystem.EmptyState
+import com.alsoug.keswa.core.designsystem.FigureLargeStyle
+import com.alsoug.keswa.core.designsystem.FigureStyle
 import com.alsoug.keswa.core.designsystem.KeswaTheme
+import com.alsoug.keswa.core.designsystem.ScreenHeader
 import com.alsoug.keswa.core.domain.model.Ageing
 import com.alsoug.keswa.core.domain.model.Customer
 import com.alsoug.keswa.core.domain.model.LedgerEntry
@@ -82,9 +86,10 @@ internal fun CustomersContent(
     Column(modifier = modifier.fillMaxSize()) {
         if (state.isLoading) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
 
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(8.dp)) {
-            Text("Customers", style = MaterialTheme.typography.titleMedium)
-        }
+        ScreenHeader(
+            title = "Customers",
+            subtitle = "Accounts, terms, and what is owed",
+        )
 
         Row(modifier = Modifier.fillMaxSize()) {
             Column(modifier = Modifier.weight(1f).padding(12.dp)) {
@@ -108,13 +113,10 @@ internal fun CustomersContent(
 
             Column(modifier = Modifier.width(360.dp).padding(12.dp)) {
                 if (state.selected == null) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(
-                            "Pick a customer to see the account",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
+                    EmptyState(
+                        title = "Pick a customer",
+                        hint = "Their balance, ageing and history are all on one panel",
+                    )
                 } else {
                     Account(state, onEvent)
                 }
@@ -192,7 +194,7 @@ private fun ColumnScope.Account(state: CustomersUiState, onEvent: (CustomersUiEv
         TextButton(onClick = { onEvent(CustomersUiEvent.Deselect) }) { Text("✕") }
     }
 
-    Text(state.balance.format(), style = MaterialTheme.typography.headlineMedium)
+    Text(state.balance.format(), style = FigureLargeStyle)
     Text(
         if (state.isCashOnly) {
             "Cash only — nobody has set a limit"
@@ -260,7 +262,7 @@ private fun ColumnScope.Account(state: CustomersUiState, onEvent: (CustomersUiEv
                         )
                     }
                 }
-                Text(entry.amount.format(), style = MaterialTheme.typography.bodyMedium)
+                Text(entry.amount.format(), style = FigureStyle)
             }
             HorizontalDivider()
         }
@@ -290,7 +292,7 @@ private fun AgeingRow(label: String, amount: Money) {
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(label, style = MaterialTheme.typography.labelMedium)
-        Text(amount.format(), style = MaterialTheme.typography.labelMedium)
+        Text(amount.format(), style = FigureStyle)
     }
 }
 

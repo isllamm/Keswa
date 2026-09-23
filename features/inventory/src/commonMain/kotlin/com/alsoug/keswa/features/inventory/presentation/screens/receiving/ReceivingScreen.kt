@@ -35,7 +35,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alsoug.keswa.core.designsystem.EmptyState
+import com.alsoug.keswa.core.designsystem.FigureLargeStyle
+import com.alsoug.keswa.core.designsystem.FigureStyle
 import com.alsoug.keswa.core.designsystem.KeswaTheme
+import com.alsoug.keswa.core.designsystem.ScreenHeader
 import com.alsoug.keswa.core.domain.model.DocumentStatus
 import com.alsoug.keswa.core.domain.model.StockReceipt
 import com.alsoug.keswa.core.domain.money.Money
@@ -86,10 +90,11 @@ internal fun ReceivingContent(
             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
         }
 
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(8.dp)) {
-            TextButton(onClick = onBack) { Text("← Back") }
-            Text("Receiving", style = MaterialTheme.typography.titleMedium)
-        }
+        ScreenHeader(
+            title = "Receiving",
+            subtitle = "Book in a delivery, and let it set the cost",
+            onBack = onBack,
+        )
 
         Row(modifier = Modifier.fillMaxSize()) {
             Column(modifier = Modifier.weight(1f).padding(12.dp)) {
@@ -162,11 +167,17 @@ private fun Lines(
     modifier: Modifier,
 ) {
     if (state.lines.isEmpty()) {
-        Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(
-                if (state.receipt == null) "Start a delivery to begin" else "Scan the first carton",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+        if (state.receipt == null) {
+            EmptyState(
+                title = "Start a delivery",
+                hint = "Name the supplier and a reference, then scan what arrived",
+                modifier = modifier,
+            )
+        } else {
+            EmptyState(
+                title = "Scan the first carton",
+                hint = "Each colour is counted separately — the cost follows from what you enter",
+                modifier = modifier,
             )
         }
         return
@@ -189,7 +200,7 @@ private fun Lines(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                Text(line.lineTotal.format(), style = MaterialTheme.typography.bodyLarge)
+                Text(line.lineTotal.format(), style = FigureStyle)
                 if (state.isDraft) {
                     TextButton(onClick = { onEvent(ReceivingUiEvent.RemoveLine(line.lineId)) }) {
                         Text("✕")
@@ -226,7 +237,7 @@ private fun Summary(state: ReceivingUiState, onEvent: (ReceivingUiEvent) -> Unit
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text("Cost", style = MaterialTheme.typography.titleMedium)
-            Text(state.totalCost.format(), style = MaterialTheme.typography.titleMedium)
+            Text(state.totalCost.format(), style = FigureLargeStyle)
         }
 
         if (state.isDraft) {

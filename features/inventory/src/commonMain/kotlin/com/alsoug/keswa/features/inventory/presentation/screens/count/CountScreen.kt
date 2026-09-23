@@ -31,7 +31,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alsoug.keswa.core.designsystem.EmptyState
 import com.alsoug.keswa.core.designsystem.KeswaTheme
+import com.alsoug.keswa.core.designsystem.ScreenHeader
 import com.alsoug.keswa.core.domain.model.DocumentStatus
 import com.alsoug.keswa.core.domain.model.StockCount
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -79,10 +81,11 @@ internal fun CountContent(
             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
         }
 
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            TextButton(onClick = onBack) { Text("← Back") }
-            Text("Stock count", style = MaterialTheme.typography.titleMedium)
-        }
+        ScreenHeader(
+            title = "Stock count",
+            subtitle = "Blind — the expected figure comes after",
+            onBack = onBack,
+        )
 
         when {
             state.count == null -> StartCard(onEvent)
@@ -180,9 +183,10 @@ private fun PostedCount(state: CountUiState) {
         HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
 
         if (state.lines.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Nothing counted")
-            }
+            EmptyState(
+                title = "Nothing counted yet",
+                hint = "Scan a garment to add it. The expected figure is shown after you post.",
+            )
             return
         }
 

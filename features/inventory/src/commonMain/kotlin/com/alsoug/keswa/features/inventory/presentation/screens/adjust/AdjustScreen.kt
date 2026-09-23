@@ -29,6 +29,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alsoug.keswa.core.designsystem.KeswaTheme
+import com.alsoug.keswa.core.designsystem.ScreenHeader
 import com.alsoug.keswa.core.domain.model.MovementReason
 import com.alsoug.keswa.core.domain.model.SellableItem
 import com.alsoug.keswa.core.domain.model.StockMovement
@@ -76,10 +77,11 @@ internal fun AdjustContent(
     Column(modifier = modifier.fillMaxSize().padding(12.dp)) {
         if (state.isLoading) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
 
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            TextButton(onClick = onBack) { Text("← Back") }
-            Text("Adjust stock", style = MaterialTheme.typography.titleMedium)
-        }
+        ScreenHeader(
+            title = "Adjust stock",
+            subtitle = "Damage, theft, a sample given away",
+            onBack = onBack,
+        )
         Text(
             "For what a delivery and a count cannot explain: damage, theft, a sample given away.",
             style = MaterialTheme.typography.labelSmall,

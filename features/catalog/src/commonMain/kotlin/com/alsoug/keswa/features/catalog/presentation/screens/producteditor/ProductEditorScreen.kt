@@ -30,6 +30,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alsoug.keswa.core.designsystem.KeswaTheme
+import com.alsoug.keswa.core.designsystem.ScreenHeader
 import com.alsoug.keswa.core.domain.model.Colour
 import com.alsoug.keswa.core.domain.money.Money
 import com.alsoug.keswa.features.catalog.presentation.components.ColourList
@@ -80,10 +81,11 @@ internal fun ProductEditorContent(
     Column(modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)) {
         if (state.isLoading) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
 
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            TextButton(onClick = { onEvent(ProductEditorUiEvent.Back) }) { Text("← Back") }
-            Text(state.productLabel, style = MaterialTheme.typography.titleMedium)
-        }
+        ScreenHeader(
+            title = state.productLabel,
+            subtitle = "Each colour is its own SKU",
+            onBack = { onEvent(ProductEditorUiEvent.Back) },
+        )
         Text(
             "Each colour is its own SKU, with its own barcode and stock.",
             style = MaterialTheme.typography.labelSmall,
