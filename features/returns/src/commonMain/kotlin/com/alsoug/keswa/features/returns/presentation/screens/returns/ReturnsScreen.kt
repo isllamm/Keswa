@@ -37,7 +37,10 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alsoug.keswa.core.designsystem.EmptyState
+import com.alsoug.keswa.core.designsystem.FigureLargeStyle
 import com.alsoug.keswa.core.designsystem.KeswaTheme
+import com.alsoug.keswa.core.designsystem.ScreenHeader
 import com.alsoug.keswa.core.domain.model.ReturnCondition
 import com.alsoug.keswa.core.domain.model.TenderMethod
 import com.alsoug.keswa.core.domain.money.Money
@@ -86,9 +89,10 @@ internal fun ReturnsContent(
             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
         }
 
-        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(8.dp)) {
-            Text("Returns", style = MaterialTheme.typography.titleMedium)
-        }
+        ScreenHeader(
+            title = "Returns",
+            subtitle = "Scan the receipt's code, or find the sale",
+        )
 
         Row(modifier = Modifier.fillMaxSize()) {
             Column(modifier = Modifier.weight(1f).padding(12.dp)) {
@@ -148,14 +152,17 @@ private fun Lines(
     modifier: Modifier,
 ) {
     if (state.lines.isEmpty()) {
-        Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text(
-                state.lastReturn?.let { "Return #${it.returnNumber} done" }
-                    ?: "Find the receipt to start",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+        state.lastReturn?.let { done ->
+            EmptyState(
+                title = "Return #${done.returnNumber} done",
+                hint = "Scan another receipt when you are ready",
+                modifier = modifier,
             )
-        }
+        } ?: EmptyState(
+            title = "Find the receipt",
+            hint = "Scan the code on it, or enter the receipt number",
+            modifier = modifier,
+        )
         return
     }
 
@@ -243,7 +250,7 @@ private fun ColumnScope.Summary(state: ReturnsUiState, onEvent: (ReturnsUiEvent)
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text("Refund", style = MaterialTheme.typography.titleLarge)
-        Text(state.refundTotal.format(), style = MaterialTheme.typography.titleLarge)
+        Text(state.refundTotal.format(), style = FigureLargeStyle)
     }
 
     Row(
