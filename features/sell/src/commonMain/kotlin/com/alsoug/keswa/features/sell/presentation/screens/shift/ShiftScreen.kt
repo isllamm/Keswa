@@ -87,7 +87,7 @@ internal fun ShiftContent(
             }
 
             Row(modifier = Modifier.padding(top = 16.dp)) {
-                TextButton(onClick = { onEvent(ShiftUiEvent.Done) }) { Text("Back to till") }
+                TextButton(onClick = { onEvent(ShiftUiEvent.Done) }) { Text(KeswaTheme.strings.backToTill) }
             }
         }
     }
@@ -97,22 +97,21 @@ internal fun ShiftContent(
 private fun CountForm(state: ShiftUiState, onEvent: (ShiftUiEvent) -> Unit) {
     Column(modifier = Modifier.widthIn(max = 420.dp).padding(top = 12.dp)) {
         Text(
-            "Count the drawer first. The expected figure is shown after you close, on purpose — " +
-                "counting towards a number you can already see finds nothing.",
+            KeswaTheme.strings.countTheDrawerFirst,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         OutlinedTextField(
             value = state.countedCash,
             onValueChange = { onEvent(ShiftUiEvent.CountedCashChanged(it)) },
-            label = { Text("Cash counted") },
+            label = { Text(KeswaTheme.strings.cashCounted) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
         )
         OutlinedTextField(
             value = state.note,
             onValueChange = { onEvent(ShiftUiEvent.NoteChanged(it)) },
-            label = { Text("Note (optional)") },
+            label = { Text(KeswaTheme.strings.noteOptional) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
         )
@@ -120,7 +119,7 @@ private fun CountForm(state: ShiftUiState, onEvent: (ShiftUiEvent) -> Unit) {
             onClick = { onEvent(ShiftUiEvent.Close) },
             enabled = state.canClose,
             modifier = Modifier.padding(top = 12.dp),
-        ) { Text("Close shift") }
+        ) { Text(KeswaTheme.strings.closeShift) }
     }
 }
 
@@ -128,7 +127,7 @@ private fun CountForm(state: ShiftUiState, onEvent: (ShiftUiEvent) -> Unit) {
 private fun ReportCard(report: ZReport) {
     Card(modifier = Modifier.widthIn(max = 480.dp).padding(top = 12.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text("Z-report", style = MaterialTheme.typography.titleMedium)
+            Text(KeswaTheme.strings.zReport, style = MaterialTheme.typography.titleMedium)
             ReportRow("Sales", "${report.saleCount}")
             ReportRow("Voided", "${report.voidedCount}")
             HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
@@ -140,14 +139,14 @@ private fun ReportCard(report: ZReport) {
             ReportRow("Float", report.shift.openingFloat.format())
             ReportRow("Cash", report.cashTaken.format())
             ReportRow("Card", report.cardTaken.format())
-            ReportRow("Change given", report.changeGiven.format())
+            ReportRow(KeswaTheme.strings.changeGiven, report.changeGiven.format())
             if (report.returnCount > 0) {
                 ReportRow("Returns", "${report.returnCount}")
                 // Cash refunds genuinely leave the drawer; card refunds never touch it.
-                ReportRow("Refunded in cash", report.cashRefunded.format())
+                ReportRow(KeswaTheme.strings.refundedInCash, report.cashRefunded.format())
             }
             HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
-            ReportRow("Expected in drawer", report.expectedCash.format())
+            ReportRow(KeswaTheme.strings.expectedInDrawer, report.expectedCash.format())
             ReportRow("Counted", report.countedCash?.format() ?: "—")
             report.difference?.let { difference ->
                 Text(

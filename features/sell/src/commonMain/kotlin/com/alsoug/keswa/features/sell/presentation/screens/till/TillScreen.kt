@@ -46,6 +46,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alsoug.keswa.core.designsystem.EmptyState
 import com.alsoug.keswa.core.designsystem.KeswaTheme
+import com.alsoug.keswa.core.designsystem.localisedName
 import com.alsoug.keswa.core.domain.model.SellableItem
 import com.alsoug.keswa.core.domain.model.TenderMethod
 import com.alsoug.keswa.core.domain.money.Money
@@ -173,7 +174,10 @@ private fun SearchResults(results: List<SellableItem>, onEvent: (TillUiEvent) ->
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Column {
-                    Text(item.description, style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        localisedName(item.description, item.descriptionAr),
+                        style = MaterialTheme.typography.bodyMedium,
+                    )
                     Text(
                         "${item.sku} · ${item.onHand} in stock",
                         style = MaterialTheme.typography.labelSmall,
@@ -217,7 +221,10 @@ private fun CartLineRow(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(modifier = Modifier.weight(1f).padding(end = 8.dp)) {
-            Text(line.description, style = MaterialTheme.typography.bodyMedium)
+            Text(
+                localisedName(line.description, line.descriptionAr),
+                style = MaterialTheme.typography.bodyMedium,
+            )
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     "${line.sku} · ${line.unitPrice.format()}",
@@ -225,7 +232,7 @@ private fun CartLineRow(
                     color = KeswaTheme.semantics.muted,
                 )
                 if (line.isPriceOverridden) {
-                    Marker("was ${line.listPrice.format()}", KeswaTheme.semantics.warning)
+                    Marker(KeswaTheme.strings.wasPrice(line.listPrice.format()), KeswaTheme.semantics.warning)
                 }
                 if (line.isDiscounted) {
                     Marker("−${line.lineDiscount.format()}", KeswaTheme.semantics.sold)
@@ -234,7 +241,7 @@ private fun CartLineRow(
                 // only in a warning afterwards — and as its own mark rather than the tail of a
                 // sentence somebody has stopped reading by the third sale of the morning.
                 if (line.exceedsStock) {
-                    Marker("only ${line.onHand} in stock", MaterialTheme.colorScheme.error)
+                    Marker(KeswaTheme.strings.onlyInStock(line.onHand), MaterialTheme.colorScheme.error)
                 }
             }
         }
@@ -325,25 +332,25 @@ private fun ShiftBanner(state: TillUiState, onEvent: (TillUiEvent) -> Unit) {
     Card(modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp)) {
         Column(modifier = Modifier.padding(12.dp)) {
             if (state.shift == null) {
-                Text("No shift open", style = MaterialTheme.typography.titleSmall)
+                Text(KeswaTheme.strings.noShiftOpen, style = MaterialTheme.typography.titleSmall)
                 Text(
-                    "Sales still work, but they will not appear on a Z-report.",
+                    KeswaTheme.strings.salesStillWorkNoZ,
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 OutlinedTextField(
                     value = float,
                     onValueChange = { float = it },
-                    label = { Text("Opening float") },
+                    label = { Text(KeswaTheme.strings.openingFloat) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                 )
                 Button(
                     onClick = { onEvent(TillUiEvent.OpenShift(float)) },
                     modifier = Modifier.padding(top = 6.dp),
-                ) { Text("Open shift") }
+                ) { Text(KeswaTheme.strings.openShift) }
             } else {
-                Text("Shift open", style = MaterialTheme.typography.titleSmall)
+                Text(KeswaTheme.strings.shiftOpen, style = MaterialTheme.typography.titleSmall)
                 Text(
                     "Float ${state.shift.openingFloat.format()}",
                     style = MaterialTheme.typography.labelSmall,
@@ -485,7 +492,7 @@ private fun Actions(state: TillUiState, onEvent: (TillUiEvent) -> Unit) {
 @Composable
 private fun HeldSales(state: TillUiState, onEvent: (TillUiEvent) -> Unit) {
     Column(modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
-        Text("Held", style = MaterialTheme.typography.titleSmall)
+        Text(KeswaTheme.strings.heldSales, style = MaterialTheme.typography.titleSmall)
         state.heldSales.forEach { held ->
             Row(
                 modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
@@ -494,7 +501,7 @@ private fun HeldSales(state: TillUiState, onEvent: (TillUiEvent) -> Unit) {
             ) {
                 Text(held.label, style = MaterialTheme.typography.bodyMedium)
                 Row {
-                    TextButton(onClick = { onEvent(TillUiEvent.Resume(held.id)) }) { Text("Resume") }
+                    TextButton(onClick = { onEvent(TillUiEvent.Resume(held.id)) }) { Text(KeswaTheme.strings.resume) }
                     TextButton(onClick = { onEvent(TillUiEvent.DiscardHeld(held.id)) }) { Text("✕") }
                 }
             }
@@ -509,7 +516,7 @@ private fun TenderDialog(state: TillUiState, onEvent: (TillUiEvent) -> Unit) {
 
     AlertDialog(
         onDismissRequest = { onEvent(TillUiEvent.CancelTender) },
-        title = { Text("Take ${state.totals.total.format()}") },
+        title = { Text(KeswaTheme.strings.takeAmount(state.totals.total.format())) },
         text = {
             Column {
                 state.tenders.forEachIndexed { index, tender ->
@@ -526,7 +533,7 @@ private fun TenderDialog(state: TillUiState, onEvent: (TillUiEvent) -> Unit) {
                 OutlinedTextField(
                     value = cash,
                     onValueChange = { cash = it },
-                    label = { Text("Cash handed over") },
+                    label = { Text(KeswaTheme.strings.cashHandedOver) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                 )
@@ -538,12 +545,12 @@ private fun TenderDialog(state: TillUiState, onEvent: (TillUiEvent) -> Unit) {
                         onEvent(TillUiEvent.AddTender(TenderMethod.CASH, applied.format(), cash))
                         cash = ""
                     },
-                ) { Text("Add cash") }
+                ) { Text(KeswaTheme.strings.addCash) }
 
                 OutlinedTextField(
                     value = card,
                     onValueChange = { card = it },
-                    label = { Text("Card") },
+                    label = { Text(KeswaTheme.strings.card) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                 )
@@ -552,7 +559,7 @@ private fun TenderDialog(state: TillUiState, onEvent: (TillUiEvent) -> Unit) {
                         onEvent(TillUiEvent.AddTender(TenderMethod.CARD, card, card))
                         card = ""
                     },
-                ) { Text("Add card") }
+                ) { Text(KeswaTheme.strings.addCard) }
 
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 AmountRow("Outstanding", state.outstanding)
@@ -563,10 +570,10 @@ private fun TenderDialog(state: TillUiState, onEvent: (TillUiEvent) -> Unit) {
             Button(
                 onClick = { onEvent(TillUiEvent.Complete) },
                 enabled = state.isFullySettled && !state.isCommitting,
-            ) { Text("Complete") }
+            ) { Text(KeswaTheme.strings.complete) }
         },
         dismissButton = {
-            TextButton(onClick = { onEvent(TillUiEvent.CancelTender) }) { Text("Cancel") }
+            TextButton(onClick = { onEvent(TillUiEvent.CancelTender) }) { Text(KeswaTheme.strings.cancel) }
         },
     )
 }
@@ -578,7 +585,7 @@ private fun ApprovalDialog(pending: PendingApproval, onEvent: (TillUiEvent) -> U
 
     AlertDialog(
         onDismissRequest = { onEvent(TillUiEvent.CancelApproval) },
-        title = { Text("Approval needed") },
+        title = { Text(KeswaTheme.strings.approvalNeeded) },
         text = {
             Column {
                 Text(
@@ -588,14 +595,14 @@ private fun ApprovalDialog(pending: PendingApproval, onEvent: (TillUiEvent) -> U
                 OutlinedTextField(
                     value = username,
                     onValueChange = { username = it },
-                    label = { Text("Username") },
+                    label = { Text(KeswaTheme.strings.username) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                 )
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
-                    label = { Text("Password") },
+                    label = { Text(KeswaTheme.strings.password) },
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
@@ -603,10 +610,10 @@ private fun ApprovalDialog(pending: PendingApproval, onEvent: (TillUiEvent) -> U
             }
         },
         confirmButton = {
-            Button(onClick = { onEvent(TillUiEvent.Approve(username, password)) }) { Text("Approve") }
+            Button(onClick = { onEvent(TillUiEvent.Approve(username, password)) }) { Text(KeswaTheme.strings.approve) }
         },
         dismissButton = {
-            TextButton(onClick = { onEvent(TillUiEvent.CancelApproval) }) { Text("Cancel") }
+            TextButton(onClick = { onEvent(TillUiEvent.CancelApproval) }) { Text(KeswaTheme.strings.cancel) }
         },
     )
 }

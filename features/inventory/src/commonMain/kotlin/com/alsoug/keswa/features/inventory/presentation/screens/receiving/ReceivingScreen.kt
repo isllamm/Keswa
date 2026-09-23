@@ -118,28 +118,28 @@ internal fun ReceivingContent(
 private fun StartForm(state: ReceivingUiState, onEvent: (ReceivingUiEvent) -> Unit) {
     Column {
         Text(
-            "Nothing moves until the delivery is posted, so unpacking can be interrupted.",
+            KeswaTheme.strings.nothingMovesUntilPosted,
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         OutlinedTextField(
             value = state.reference,
             onValueChange = { onEvent(ReceivingUiEvent.ReferenceChanged(it)) },
-            label = { Text("Reference — invoice or delivery note") },
+            label = { Text(KeswaTheme.strings.referenceInvoiceOrNote) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
         )
         OutlinedTextField(
             value = state.supplierName,
             onValueChange = { onEvent(ReceivingUiEvent.SupplierChanged(it)) },
-            label = { Text("Supplier") },
+            label = { Text(KeswaTheme.strings.supplier) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
         )
         Button(
             onClick = { onEvent(ReceivingUiEvent.StartReceipt) },
             modifier = Modifier.padding(top = 8.dp),
-        ) { Text("Start delivery") }
+        ) { Text(KeswaTheme.strings.startDelivery) }
     }
 }
 
@@ -148,7 +148,7 @@ private fun ScanBar(state: ReceivingUiState, onEvent: (ReceivingUiEvent) -> Unit
     OutlinedTextField(
         value = state.scanEntry,
         onValueChange = { onEvent(ReceivingUiEvent.ScanEntryChanged(it)) },
-        label = { Text("Scan a garment to add it — colour by colour") },
+        label = { Text(KeswaTheme.strings.scanToAddColourByColour) },
         singleLine = true,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
         keyboardActions = KeyboardActions(
@@ -216,7 +216,7 @@ private fun Summary(state: ReceivingUiState, onEvent: (ReceivingUiEvent) -> Unit
         state.receipt?.let { receipt ->
             Text(receipt.reference, style = MaterialTheme.typography.titleSmall)
             Text(
-                receipt.supplierName.ifBlank { "No supplier" },
+                receipt.supplierName.ifBlank { KeswaTheme.strings.noSupplier },
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -227,14 +227,14 @@ private fun Summary(state: ReceivingUiState, onEvent: (ReceivingUiEvent) -> Unit
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Text("Pieces", style = MaterialTheme.typography.bodyMedium)
+            Text(KeswaTheme.strings.piecesLabel, style = MaterialTheme.typography.bodyMedium)
             Text("${state.pieceCount}", style = MaterialTheme.typography.bodyMedium)
         }
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
-            Text("Cost", style = MaterialTheme.typography.titleMedium)
+            Text(KeswaTheme.strings.cost, style = MaterialTheme.typography.titleMedium)
             Text(state.totalCost.format(), style = KeswaTheme.figureLarge)
         }
 
@@ -243,16 +243,16 @@ private fun Summary(state: ReceivingUiState, onEvent: (ReceivingUiEvent) -> Unit
                 onClick = { onEvent(ReceivingUiEvent.Post) },
                 enabled = state.canPost,
                 modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
-            ) { Text("Post delivery") }
+            ) { Text(KeswaTheme.strings.postDelivery) }
             OutlinedButton(
                 onClick = { onEvent(ReceivingUiEvent.Discard) },
                 modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
-            ) { Text("Discard") }
+            ) { Text(KeswaTheme.strings.discard) }
         } else if (state.receipt != null) {
             OutlinedButton(
                 onClick = { onEvent(ReceivingUiEvent.PrintTags) },
                 modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
-            ) { Text("Print hang tags") }
+            ) { Text(KeswaTheme.strings.printHangTags) }
         }
     }
 }
@@ -261,9 +261,9 @@ private fun Summary(state: ReceivingUiState, onEvent: (ReceivingUiEvent) -> Unit
 private fun CostChanges(changes: List<CostChange>) {
     Card(modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
         Column(modifier = Modifier.padding(12.dp)) {
-            Text("Cost moved", style = MaterialTheme.typography.titleSmall)
+            Text(KeswaTheme.strings.costMoved, style = MaterialTheme.typography.titleSmall)
             Text(
-                "Weighted average, so the new figure sits between the old stock and this delivery.",
+                KeswaTheme.strings.weightedAverageNote,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -286,7 +286,7 @@ private fun CostChanges(changes: List<CostChange>) {
 @Composable
 private fun Recent(state: ReceivingUiState, onEvent: (ReceivingUiEvent) -> Unit) {
     Column(modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
-        Text("Recent deliveries", style = MaterialTheme.typography.titleSmall)
+        Text(KeswaTheme.strings.recentDeliveries, style = MaterialTheme.typography.titleSmall)
         state.recent.take(MAX_RECENT).forEach { receipt ->
             Row(
                 modifier = Modifier
@@ -319,24 +319,24 @@ private fun LineDialog(state: ReceivingUiState, onEvent: (ReceivingUiEvent) -> U
                 OutlinedTextField(
                     value = state.quantityEntry,
                     onValueChange = { onEvent(ReceivingUiEvent.QuantityChanged(it)) },
-                    label = { Text("Quantity") },
+                    label = { Text(KeswaTheme.strings.quantity) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                 )
                 OutlinedTextField(
                     value = state.costEntry,
                     onValueChange = { onEvent(ReceivingUiEvent.CostChanged(it)) },
-                    label = { Text("Unit cost") },
+                    label = { Text(KeswaTheme.strings.unitCost) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                 )
             }
         },
         confirmButton = {
-            Button(onClick = { onEvent(ReceivingUiEvent.ConfirmLine) }) { Text("Add") }
+            Button(onClick = { onEvent(ReceivingUiEvent.ConfirmLine) }) { Text(KeswaTheme.strings.add) }
         },
         dismissButton = {
-            TextButton(onClick = { onEvent(ReceivingUiEvent.CancelLine) }) { Text("Cancel") }
+            TextButton(onClick = { onEvent(ReceivingUiEvent.CancelLine) }) { Text(KeswaTheme.strings.cancel) }
         },
     )
 }

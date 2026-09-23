@@ -91,9 +91,9 @@ internal fun CatalogBrowserContent(
 
         Row(modifier = Modifier.fillMaxSize()) {
             Column(modifier = Modifier.width(280.dp).padding(12.dp)) {
-                Text("Categories", style = MaterialTheme.typography.titleSmall)
+                Text(KeswaTheme.strings.categories, style = MaterialTheme.typography.titleSmall)
                 Text(
-                    "You define this tree — nest it as deep as you like.",
+                    KeswaTheme.strings.youDefineThisTree,
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 8.dp),
@@ -113,7 +113,7 @@ internal fun CatalogBrowserContent(
                 OutlinedTextField(
                     value = state.search,
                     onValueChange = { onEvent(CatalogBrowserUiEvent.SearchChanged(it)) },
-                    label = { Text("Search products") },
+                    label = { Text(KeswaTheme.strings.searchProducts) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -169,7 +169,7 @@ private fun AddCategoryRow(canAddSub: Boolean, onEvent: (CatalogBrowserUiEvent) 
         OutlinedTextField(
             value = name,
             onValueChange = { name = it },
-            label = { Text("New category") },
+            label = { Text(KeswaTheme.strings.newCategory) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -180,14 +180,14 @@ private fun AddCategoryRow(canAddSub: Boolean, onEvent: (CatalogBrowserUiEvent) 
                     onEvent(CatalogBrowserUiEvent.CreateCategory(name, name, underSelected = false))
                     name = ""
                 },
-            ) { Text("Add top level") }
+            ) { Text(KeswaTheme.strings.addTopLevel) }
             TextButton(
                 enabled = name.isNotBlank() && canAddSub,
                 onClick = {
                     onEvent(CatalogBrowserUiEvent.CreateCategory(name, name, underSelected = true))
                     name = ""
                 },
-            ) { Text("Add under selected") }
+            ) { Text(KeswaTheme.strings.addUnderSelected) }
         }
     }
 }
@@ -203,7 +203,7 @@ private fun AddProductRow(enabled: Boolean, onEvent: (CatalogBrowserUiEvent) -> 
         OutlinedTextField(
             value = name,
             onValueChange = { name = it },
-            label = { Text("New product") },
+            label = { Text(KeswaTheme.strings.newProduct) },
             singleLine = true,
             modifier = Modifier.weight(1f),
         )
@@ -213,7 +213,7 @@ private fun AddProductRow(enabled: Boolean, onEvent: (CatalogBrowserUiEvent) -> 
                 onEvent(CatalogBrowserUiEvent.CreateProduct(name, name))
                 name = ""
             },
-        ) { Text("Create") }
+        ) { Text(KeswaTheme.strings.create) }
     }
 }
 

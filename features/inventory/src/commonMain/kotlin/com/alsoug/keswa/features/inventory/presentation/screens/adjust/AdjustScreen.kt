@@ -83,7 +83,7 @@ internal fun AdjustContent(
             onBack = onBack,
         )
         Text(
-            "For what a delivery and a count cannot explain: damage, theft, a sample given away.",
+            KeswaTheme.strings.adjustNoteLong,
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -91,7 +91,7 @@ internal fun AdjustContent(
         OutlinedTextField(
             value = state.scanEntry,
             onValueChange = { onEvent(AdjustUiEvent.ScanEntryChanged(it)) },
-            label = { Text("Scan the garment") },
+            label = { Text(KeswaTheme.strings.scanTheGarment) },
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { onEvent(AdjustUiEvent.Scanned(state.scanEntry)) }),
@@ -120,7 +120,7 @@ private fun Form(item: SellableItem, state: AdjustUiState, onEvent: (AdjustUiEve
                 onValueChange = { onEvent(AdjustUiEvent.QuantityChanged(it)) },
                 // Signed, because a correction goes both ways and "-3" is clearer than a
                 // direction toggle the operator has to notice.
-                label = { Text("Change — negative to write off, e.g. -3") },
+                label = { Text(KeswaTheme.strings.changeNegativeToWriteOff) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
             )
@@ -141,7 +141,7 @@ private fun Form(item: SellableItem, state: AdjustUiState, onEvent: (AdjustUiEve
             OutlinedTextField(
                 value = state.note,
                 onValueChange = { onEvent(AdjustUiEvent.NoteChanged(it)) },
-                label = { Text("Reason — required") },
+                label = { Text(KeswaTheme.strings.reasonRequired) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
             )
@@ -151,9 +151,9 @@ private fun Form(item: SellableItem, state: AdjustUiState, onEvent: (AdjustUiEve
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 Button(onClick = { onEvent(AdjustUiEvent.Apply) }, enabled = state.canApply) {
-                    Text("Apply")
+                    Text(KeswaTheme.strings.apply)
                 }
-                TextButton(onClick = { onEvent(AdjustUiEvent.Clear) }) { Text("Clear") }
+                TextButton(onClick = { onEvent(AdjustUiEvent.Clear) }) { Text(KeswaTheme.strings.clear) }
             }
         }
     }
@@ -162,9 +162,9 @@ private fun Form(item: SellableItem, state: AdjustUiState, onEvent: (AdjustUiEve
 @Composable
 private fun History(movements: List<StockMovement>, modifier: Modifier) {
     Column(modifier = modifier.padding(top = 16.dp)) {
-        Text("This item's ledger", style = MaterialTheme.typography.titleSmall)
+        Text(KeswaTheme.strings.thisItemsLedger, style = MaterialTheme.typography.titleSmall)
         Text(
-            "Append-only: a correction is another line, never an edit of one above it.",
+            KeswaTheme.strings.appendOnlyCorrection,
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )

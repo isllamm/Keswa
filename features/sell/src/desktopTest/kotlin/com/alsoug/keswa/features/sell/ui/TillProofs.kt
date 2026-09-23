@@ -5,6 +5,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.ImageComposeScene
 import androidx.compose.ui.unit.Density
+import com.alsoug.keswa.core.designsystem.KeswaLanguage
 import com.alsoug.keswa.core.designsystem.KeswaTheme
 import com.alsoug.keswa.features.sell.domain.model.Basket
 import com.alsoug.keswa.features.sell.domain.model.BasketLine
@@ -56,6 +57,21 @@ class TillProofs {
             }
         }
 
+        render("till-arabic") {
+            Page(dark = false, language = KeswaLanguage.ARABIC) {
+                TillContent(
+                    state = TillUiState(
+                        basket = proofBasket,
+                        totals = CalculateBasketTotalUseCase()(proofBasket, vatBasisPoints = 1_400),
+                        vatBasisPoints = 1_400,
+                        lastSaleId = "sale-1",
+                        lastReceiptNumber = 412,
+                    ),
+                    onEvent = {},
+                )
+            }
+        }
+
         render("till-empty") {
             Page(dark = false) { TillContent(state = TillUiState(), onEvent = {}) }
         }
@@ -70,8 +86,12 @@ class TillProofs {
  * screen looked broken; only the proof was.
  */
 @Composable
-private fun Page(dark: Boolean, content: @Composable () -> Unit) {
-    KeswaTheme(dark = dark) {
+private fun Page(
+    dark: Boolean,
+    language: KeswaLanguage = KeswaLanguage.ENGLISH,
+    content: @Composable () -> Unit,
+) {
+    KeswaTheme(dark = dark, language = language) {
         Surface(color = MaterialTheme.colorScheme.background) { content() }
     }
 }

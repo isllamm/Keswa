@@ -76,8 +76,8 @@ internal fun SettingsContent(
         )
 
         Section(
-            title = "Receipt printer",
-            subtitle = "ESC/POS over TCP 9100. Arabic prints as an image, so the firmware never sees it.",
+            title = KeswaTheme.strings.receiptPrinter,
+            subtitle = KeswaTheme.strings.receiptPrinterNote,
         ) {
             AddressRow(
                 host = settings.receiptHost,
@@ -92,12 +92,12 @@ internal fun SettingsContent(
             OutlinedButton(
                 enabled = state.canTestReceipt,
                 onClick = { onEvent(SettingsUiEvent.TestReceipt) },
-            ) { Text("Test print") }
+            ) { Text(KeswaTheme.strings.testPrint) }
         }
 
         Section(
-            title = "Label printer",
-            subtitle = "TSPL. Use thermal transfer with a ribbon — direct thermal tags fade against fabric.",
+            title = KeswaTheme.strings.labelPrinter,
+            subtitle = KeswaTheme.strings.labelPrinterNote,
         ) {
             AddressRow(
                 host = settings.labelHost,
@@ -106,10 +106,10 @@ internal fun SettingsContent(
                 onPort = { onEvent(SettingsUiEvent.Edit(settings.copy(labelPort = it))) },
             )
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                NumberField("Width mm", settings.labelWidthMm) {
+                NumberField(KeswaTheme.strings.widthMm, settings.labelWidthMm) {
                     onEvent(SettingsUiEvent.Edit(settings.copy(labelWidthMm = it)))
                 }
-                NumberField("Height mm", settings.labelHeightMm) {
+                NumberField(KeswaTheme.strings.heightMm, settings.labelHeightMm) {
                     onEvent(SettingsUiEvent.Edit(settings.copy(labelHeightMm = it)))
                 }
                 NumberField("Gap mm", settings.labelGapMm) {
@@ -119,19 +119,19 @@ internal fun SettingsContent(
             OutlinedButton(
                 enabled = state.canTestLabel,
                 onClick = { onEvent(SettingsUiEvent.TestLabel) },
-            ) { Text("Test label") }
+            ) { Text(KeswaTheme.strings.testLabel) }
         }
 
         Section(
-            title = "Barcode scanner",
-            subtitle = "An HID keyboard — no driver. Characters arriving faster than this gap are a scan, not typing.",
+            title = KeswaTheme.strings.barcodeScanner,
+            subtitle = KeswaTheme.strings.barcodeScannerNote,
         ) {
-            NumberField("Max gap ms", settings.scanMaxGapMillis.toInt()) {
+            NumberField(KeswaTheme.strings.maxGapMs, settings.scanMaxGapMillis.toInt()) {
                 onEvent(SettingsUiEvent.Edit(settings.copy(scanMaxGapMillis = it.toLong())))
             }
         }
 
-        Button(onClick = { onEvent(SettingsUiEvent.Save) }) { Text("Save") }
+        Button(onClick = { onEvent(SettingsUiEvent.Save) }) { Text(KeswaTheme.strings.save) }
     }
 }
 
@@ -161,14 +161,14 @@ private fun AddressRow(host: String, port: Int, onHost: (String) -> Unit, onPort
         OutlinedTextField(
             value = host,
             onValueChange = onHost,
-            label = { Text("Host") },
+            label = { Text(KeswaTheme.strings.host) },
             singleLine = true,
             modifier = Modifier.weight(1f),
         )
         OutlinedTextField(
             value = port.toString(),
             onValueChange = { text -> text.filter(Char::isDigit).toIntOrNull()?.let(onPort) },
-            label = { Text("Port") },
+            label = { Text(KeswaTheme.strings.port) },
             singleLine = true,
             modifier = Modifier.width(110.dp),
         )
