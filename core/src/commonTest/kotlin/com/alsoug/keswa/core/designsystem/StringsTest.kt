@@ -46,6 +46,24 @@ class StringsTest {
     }
 
     @Test
+    fun `the labels that carry a value are translated too`() {
+        // Methods are not in STRING_READERS, so they get their own check — the point of the whole
+        // file is that nothing is left in English by omission.
+        assertTrue(arabic.importRows(42) != english.importRows(42))
+        assertTrue(arabic.takeAmount("1.00") != english.takeAmount("1.00"))
+        assertTrue(arabic.refundAmount("1.00") != english.refundAmount("1.00"))
+        assertTrue(arabic.newSecretAtLeast(8) != english.newSecretAtLeast(8))
+        assertTrue(arabic.wasPrice("1.00") != english.wasPrice("1.00"))
+        assertTrue(arabic.onlyInStock(1) != english.onlyInStock(1))
+        assertTrue(arabic.chooseNewSecret(isPin = true) != english.chooseNewSecret(isPin = true))
+        assertTrue(arabic.chooseNewSecret(isPin = false) != english.chooseNewSecret(isPin = false))
+
+        // And the value itself still appears, in both.
+        assertTrue("42" in arabic.importRows(42))
+        assertTrue("42" in english.importRows(42))
+    }
+
+    @Test
     fun `a week has seven days in both languages`() {
         assertEquals(7, english.weekdays.size)
         assertEquals(7, arabic.weekdays.size)
@@ -89,4 +107,42 @@ private val STRING_READERS: List<(Strings) -> String> = listOf(
     { it.soldSuffix }, { it.throughSuffix }, { it.leftSuffix }, { it.marginPrefix },
     { it.nothingSoldPeriod }, { it.noStockToCompare }, { it.noTradingHours },
     { it.nothingReceived }, { it.nothingHasSold },
+    { it.scanTheGarment }, { it.changeNegativeToWriteOff }, { it.reasonRequired }, { it.thisItemsLedger },
+    { it.categories }, { it.searchProducts }, { it.newCategory }, { it.addTopLevel },
+    { it.addUnderSelected }, { it.newProduct }, { it.create }, { it.blindByDesign },
+    { it.startACount }, { it.scanThenTypeShelf }, { it.noteOptional }, { it.postCount },
+    { it.discard }, { it.counted }, { it.howManyOnShelf }, { it.record },
+    { it.nameOrPhone }, { it.newShort }, { it.amount }, { it.receivePayment },
+    { it.howOverdue }, { it.newCustomer }, { it.name }, { it.phone },
+    { it.creditLimitBlankForCash }, { it.paymentTermsDays }, { it.rows }, { it.check },
+    { it.imported }, { it.importAnother }, { it.retire }, { it.price },
+    { it.save }, { it.supplierBarcode }, { it.eanThirteen }, { it.attach },
+    { it.referenceInvoiceOrNote }, { it.supplier }, { it.startDelivery }, { it.scanToAddColourByColour },
+    { it.piecesLabel }, { it.cost }, { it.postDelivery }, { it.printHangTags },
+    { it.costMoved }, { it.recentDeliveries }, { it.quantity }, { it.unitCost },
+    { it.add }, { it.scanReceiptQrOrNumber }, { it.refund }, { it.needsAnApproval },
+    { it.getApproval }, { it.startOver }, { it.approvalNeeded }, { it.username },
+    { it.password }, { it.approve }, { it.testPrint }, { it.testLabel },
+    { it.host }, { it.port }, { it.backToTill }, { it.cashCounted },
+    { it.closeShift }, { it.zReport }, { it.seller }, { it.admin },
+    { it.whoIsOnTheTill }, { it.signIn }, { it.createOwnerAccount }, { it.yourName },
+    { it.passwordAtLeastEight }, { it.createAccount }, { it.writeThisDown }, { it.iHaveWrittenItDown },
+    { it.chooseNewPassword }, { it.chooseNewPin }, { it.saveAndContinue }, { it.openingFloat },
+    { it.openShift }, { it.shiftOpen }, { it.heldSales }, { it.resume },
+    { it.cashHandedOver }, { it.addCash }, { it.card }, { it.addCard },
+    { it.complete }, { it.detailsResetByAdmin },
+    { it.receiptPrinter }, { it.receiptPrinterNote }, { it.labelPrinter },
+    { it.labelPrinterNote }, { it.widthMm }, { it.heightMm },
+    { it.barcodeScanner }, { it.barcodeScannerNote }, { it.maxGapMs },
+    { it.countTheDrawerFirst }, { it.changeGiven }, { it.refundedInCash },
+    { it.expectedInDrawer }, { it.salesStillWorkNoZ }, { it.lockedTryShortly },
+    { it.newInstallationNobody }, { it.recoveryOnlyWayBack }, { it.eachColourOwnSkuLong },
+    { it.addAColour }, { it.scanCodeOnGarment }, { it.youDefineThisTree },
+    { it.adjustNoteLong }, { it.appendOnlyCorrection }, { it.pasteSpreadsheetNote },
+    { it.nothingWasImported }, { it.oneBadRowNone }, { it.stockArrivedAsDelivery },
+    { it.blindCountNote }, { it.nothingMovesUntilPosted }, { it.noSupplier },
+    { it.weightedAverageNote }, { it.noCustomersYet }, { it.cashOnlyShort },
+    { it.cashOnlyNoLimit }, { it.takeAPayment }, { it.againstAccountNote },
+    { it.accountHistory }, { it.notYetDue }, { it.overSixtyDays },
+    { it.allReturned }, { it.outsideWindowAdmin }, { it.adminCanTakeBack },
 )

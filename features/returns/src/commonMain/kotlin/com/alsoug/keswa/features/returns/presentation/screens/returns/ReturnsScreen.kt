@@ -117,7 +117,7 @@ private fun Lookup(state: ReturnsUiState, onEvent: (ReturnsUiEvent) -> Unit) {
         value = state.lookupEntry,
         onValueChange = { onEvent(ReturnsUiEvent.LookupEntryChanged(it)) },
         // The QR on the receipt carries the sale's id. Phase 5 printed it for exactly this.
-        label = { Text("Scan the receipt QR, or type its number") },
+        label = { Text(KeswaTheme.strings.scanReceiptQrOrNumber) },
         singleLine = true,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
         keyboardActions = KeyboardActions(onDone = { onEvent(ReturnsUiEvent.Lookup) }),
@@ -185,7 +185,7 @@ private fun Lines(
 
                     if (line.isFullyReturned) {
                         Text(
-                            "all returned",
+                            KeswaTheme.strings.allReturned,
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
@@ -248,7 +248,7 @@ private fun ColumnScope.Summary(state: ReturnsUiState, onEvent: (ReturnsUiEvent)
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Text("Refund", style = MaterialTheme.typography.titleLarge)
+        Text(KeswaTheme.strings.refund, style = MaterialTheme.typography.titleLarge)
         Text(state.refundTotal.format(), style = KeswaTheme.figureLarge)
     }
 
@@ -268,7 +268,7 @@ private fun ColumnScope.Summary(state: ReturnsUiState, onEvent: (ReturnsUiEvent)
     OutlinedTextField(
         value = state.reason,
         onValueChange = { onEvent(ReturnsUiEvent.ReasonChanged(it)) },
-        label = { Text("Reason — required") },
+        label = { Text(KeswaTheme.strings.reasonRequired) },
         singleLine = true,
         modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
     )
@@ -276,12 +276,12 @@ private fun ColumnScope.Summary(state: ReturnsUiState, onEvent: (ReturnsUiEvent)
     if (state.needsAuthority && state.hasSale) {
         Card(modifier = Modifier.fillMaxWidth().padding(top = 12.dp)) {
             Column(modifier = Modifier.padding(12.dp)) {
-                Text("Needs an approval", style = MaterialTheme.typography.titleSmall)
+                Text(KeswaTheme.strings.needsAnApproval, style = MaterialTheme.typography.titleSmall)
                 Text(
                     if (state.approvedByUserId != null) {
                         "Approved."
                     } else {
-                        "Outside the window, so an admin has to say yes — and it goes on the record."
+                        KeswaTheme.strings.outsideWindowAdmin
                     },
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -290,7 +290,7 @@ private fun ColumnScope.Summary(state: ReturnsUiState, onEvent: (ReturnsUiEvent)
                     OutlinedButton(
                         onClick = { onEvent(ReturnsUiEvent.RequestApproval) },
                         modifier = Modifier.padding(top = 8.dp),
-                    ) { Text("Get approval") }
+                    ) { Text(KeswaTheme.strings.getApproval) }
                 }
             }
         }
@@ -300,13 +300,13 @@ private fun ColumnScope.Summary(state: ReturnsUiState, onEvent: (ReturnsUiEvent)
         onClick = { onEvent(ReturnsUiEvent.Complete) },
         enabled = state.canComplete,
         modifier = Modifier.fillMaxWidth().padding(top = 12.dp),
-    ) { Text("Refund ${state.refundTotal.format()}") }
+    ) { Text(KeswaTheme.strings.refundAmount(state.refundTotal.format())) }
 
     if (state.hasSale) {
         OutlinedButton(
             onClick = { onEvent(ReturnsUiEvent.Clear) },
             modifier = Modifier.fillMaxWidth().padding(top = 6.dp),
-        ) { Text("Start over") }
+        ) { Text(KeswaTheme.strings.startOver) }
     }
 }
 
@@ -317,24 +317,24 @@ private fun ApprovalDialog(onEvent: (ReturnsUiEvent) -> Unit) {
 
     AlertDialog(
         onDismissRequest = { onEvent(ReturnsUiEvent.CancelApproval) },
-        title = { Text("Approval needed") },
+        title = { Text(KeswaTheme.strings.approvalNeeded) },
         text = {
             Column {
                 Text(
-                    "An admin can take this back outside the window.",
+                    KeswaTheme.strings.adminCanTakeBack,
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 OutlinedTextField(
                     value = username,
                     onValueChange = { username = it },
-                    label = { Text("Username") },
+                    label = { Text(KeswaTheme.strings.username) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                 )
                 OutlinedTextField(
                     value = password,
                     onValueChange = { password = it },
-                    label = { Text("Password") },
+                    label = { Text(KeswaTheme.strings.password) },
                     singleLine = true,
                     visualTransformation = PasswordVisualTransformation(),
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
@@ -343,11 +343,11 @@ private fun ApprovalDialog(onEvent: (ReturnsUiEvent) -> Unit) {
         },
         confirmButton = {
             Button(onClick = { onEvent(ReturnsUiEvent.Approve(username, password)) }) {
-                Text("Approve")
+                Text(KeswaTheme.strings.approve)
             }
         },
         dismissButton = {
-            TextButton(onClick = { onEvent(ReturnsUiEvent.CancelApproval) }) { Text("Cancel") }
+            TextButton(onClick = { onEvent(ReturnsUiEvent.CancelApproval) }) { Text(KeswaTheme.strings.cancel) }
         },
     )
 }

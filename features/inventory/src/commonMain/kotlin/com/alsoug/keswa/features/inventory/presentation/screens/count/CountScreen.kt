@@ -100,16 +100,14 @@ internal fun CountContent(
 @Composable
 private fun StartCard(onEvent: (CountUiEvent) -> Unit) {
     Column(modifier = Modifier.widthIn(max = 520.dp).padding(top = 12.dp)) {
-        Text("Blind by design", style = MaterialTheme.typography.titleSmall)
+        Text(KeswaTheme.strings.blindByDesign, style = MaterialTheme.typography.titleSmall)
         Text(
-            "You will not see what the system expects until the count is posted. A counter who " +
-                "can see that the system expects twelve will count until they get twelve — and " +
-                "the discrepancy that would have told the owner something disappears.",
+            KeswaTheme.strings.blindCountNote,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Button(onClick = { onEvent(CountUiEvent.Start) }, modifier = Modifier.padding(top = 12.dp)) {
-            Text("Start a count")
+            Text(KeswaTheme.strings.startACount)
         }
     }
 }
@@ -119,7 +117,7 @@ private fun ColumnScope.OpenCount(state: CountUiState, onEvent: (CountUiEvent) -
     OutlinedTextField(
         value = state.scanEntry,
         onValueChange = { onEvent(CountUiEvent.ScanEntryChanged(it)) },
-        label = { Text("Scan a garment, then type what is on the shelf") },
+        label = { Text(KeswaTheme.strings.scanThenTypeShelf) },
         singleLine = true,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
         keyboardActions = KeyboardActions(onDone = { onEvent(CountUiEvent.Scanned(state.scanEntry)) }),
@@ -155,15 +153,15 @@ private fun ColumnScope.OpenCount(state: CountUiState, onEvent: (CountUiEvent) -
     OutlinedTextField(
         value = state.note,
         onValueChange = { onEvent(CountUiEvent.NoteChanged(it)) },
-        label = { Text("Note (optional)") },
+        label = { Text(KeswaTheme.strings.noteOptional) },
         singleLine = true,
         modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
     )
     Row(modifier = Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         Button(onClick = { onEvent(CountUiEvent.Post) }, enabled = state.canPost) {
-            Text("Post count")
+            Text(KeswaTheme.strings.postCount)
         }
-        OutlinedButton(onClick = { onEvent(CountUiEvent.Discard) }) { Text("Discard") }
+        OutlinedButton(onClick = { onEvent(CountUiEvent.Discard) }) { Text(KeswaTheme.strings.discard) }
     }
 }
 
@@ -172,7 +170,7 @@ private fun PostedCount(state: CountUiState) {
     Column(modifier = Modifier.fillMaxSize().padding(top = 12.dp)) {
         Card(modifier = Modifier.widthIn(max = 520.dp)) {
             Column(modifier = Modifier.padding(12.dp)) {
-                Text("Counted", style = MaterialTheme.typography.titleSmall)
+                Text(KeswaTheme.strings.counted, style = MaterialTheme.typography.titleSmall)
                 Text(
                     "${state.lines.size} line(s), ${state.discrepancies.size} did not match",
                     style = MaterialTheme.typography.bodyMedium,
@@ -233,16 +231,16 @@ private fun CountDialog(state: CountUiState, onEvent: (CountUiEvent) -> Unit) {
             OutlinedTextField(
                 value = state.countedEntry,
                 onValueChange = { onEvent(CountUiEvent.CountedChanged(it)) },
-                label = { Text("How many are on the shelf?") },
+                label = { Text(KeswaTheme.strings.howManyOnShelf) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
             )
         },
         confirmButton = {
-            Button(onClick = { onEvent(CountUiEvent.ConfirmLine) }) { Text("Record") }
+            Button(onClick = { onEvent(CountUiEvent.ConfirmLine) }) { Text(KeswaTheme.strings.record) }
         },
         dismissButton = {
-            TextButton(onClick = { onEvent(CountUiEvent.CancelLine) }) { Text("Cancel") }
+            TextButton(onClick = { onEvent(CountUiEvent.CancelLine) }) { Text(KeswaTheme.strings.cancel) }
         },
     )
 }

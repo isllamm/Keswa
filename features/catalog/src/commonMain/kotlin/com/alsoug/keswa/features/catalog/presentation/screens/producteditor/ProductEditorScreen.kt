@@ -87,7 +87,7 @@ internal fun ProductEditorContent(
             onBack = { onEvent(ProductEditorUiEvent.Back) },
         )
         Text(
-            "Each colour is its own SKU, with its own barcode and stock.",
+            KeswaTheme.strings.eachColourOwnSkuLong,
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(bottom = 12.dp),
@@ -98,7 +98,7 @@ internal fun ProductEditorContent(
                 Text("${row.onHand}", style = MaterialTheme.typography.labelMedium)
                 PriceField(row, onEvent)
                 TextButton(onClick = { onEvent(ProductEditorUiEvent.RemoveColour(row.variantId)) }) {
-                    Text("Retire")
+                    Text(KeswaTheme.strings.retire)
                 }
             }
         }
@@ -111,7 +111,7 @@ internal fun ProductEditorContent(
 
         if (state.addableColours.isNotEmpty()) {
             Text(
-                "Add a colour",
+                KeswaTheme.strings.addAColour,
                 style = MaterialTheme.typography.titleSmall,
                 modifier = Modifier.padding(top = 16.dp, bottom = 6.dp),
             )
@@ -147,7 +147,7 @@ private fun PriceField(row: ColourRowUiModel, onEvent: (ProductEditorUiEvent) ->
     OutlinedTextField(
         value = entry,
         onValueChange = { entry = it },
-        label = { Text(if (row.price == null) "No price" else "Price") },
+        label = { Text(if (row.price == null) KeswaTheme.strings.noPrice else KeswaTheme.strings.price) },
         singleLine = true,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
         keyboardActions = KeyboardActions(
@@ -158,7 +158,7 @@ private fun PriceField(row: ColourRowUiModel, onEvent: (ProductEditorUiEvent) ->
     TextButton(
         onClick = { onEvent(ProductEditorUiEvent.SetPrice(row.variantId, entry)) },
         enabled = entry.isNotBlank(),
-    ) { Text("Save") }
+    ) { Text(KeswaTheme.strings.save) }
 }
 
 @Composable
@@ -169,9 +169,9 @@ private fun SupplierBarcodeRow(
 ) {
     var barcode by remember { mutableStateOf("") }
     Column(modifier = Modifier.padding(top = 20.dp)) {
-        Text("Supplier barcode", style = MaterialTheme.typography.titleSmall)
+        Text(KeswaTheme.strings.supplierBarcode, style = MaterialTheme.typography.titleSmall)
         Text(
-            "Scan the code already on the garment — it will resolve to the same SKU as ours.",
+            KeswaTheme.strings.scanCodeOnGarment,
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -183,7 +183,7 @@ private fun SupplierBarcodeRow(
             OutlinedTextField(
                 value = barcode,
                 onValueChange = { barcode = it.filter(Char::isDigit).take(13) },
-                label = { Text("EAN-13") },
+                label = { Text(KeswaTheme.strings.eanThirteen) },
                 singleLine = true,
                 modifier = Modifier.widthIn(max = 240.dp),
             )
@@ -195,7 +195,7 @@ private fun SupplierBarcodeRow(
                     }
                     barcode = ""
                 },
-            ) { Text("Attach") }
+            ) { Text(KeswaTheme.strings.attach) }
         }
     }
 }

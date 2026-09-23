@@ -95,13 +95,13 @@ internal fun CustomersContent(
                     OutlinedTextField(
                         value = state.query,
                         onValueChange = { onEvent(CustomersUiEvent.QueryChanged(it)) },
-                        label = { Text("Name or phone") },
+                        label = { Text(KeswaTheme.strings.nameOrPhone) },
                         singleLine = true,
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                         keyboardActions = KeyboardActions(onSearch = { onEvent(CustomersUiEvent.Search) }),
                         modifier = Modifier.weight(1f),
                     )
-                    TextButton(onClick = { onEvent(CustomersUiEvent.StartCreating) }) { Text("New") }
+                    TextButton(onClick = { onEvent(CustomersUiEvent.StartCreating) }) { Text(KeswaTheme.strings.newShort) }
                 }
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
                 CustomerList(state, onEvent, modifier = Modifier.weight(1f))
@@ -134,7 +134,7 @@ private fun CustomerList(
     if (state.customers.isEmpty()) {
         Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             Text(
-                "No customers yet",
+                KeswaTheme.strings.noCustomersYet,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -157,7 +157,7 @@ private fun CustomerList(
                         if (row.customer.sellsOnAccount) {
                             "limit ${row.customer.creditLimit.format()} · net ${row.customer.paymentTermsDays}"
                         } else {
-                            "cash only"
+                            KeswaTheme.strings.cashOnlyShort
                         },
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -195,7 +195,7 @@ private fun ColumnScope.Account(state: CustomersUiState, onEvent: (CustomersUiEv
     Text(state.balance.format(), style = KeswaTheme.figureLarge)
     Text(
         if (state.isCashOnly) {
-            "Cash only — nobody has set a limit"
+            KeswaTheme.strings.cashOnlyNoLimit
         } else {
             "${state.available.format()} of ${customer.creditLimit.format()} still available"
         },
@@ -206,26 +206,26 @@ private fun ColumnScope.Account(state: CustomersUiState, onEvent: (CustomersUiEv
     AgeingCard(state.ageing)
 
     Text(
-        "Take a payment",
+        KeswaTheme.strings.takeAPayment,
         style = MaterialTheme.typography.titleSmall,
         modifier = Modifier.padding(top = 16.dp),
     )
     Text(
-        "Against the account, not against an invoice — allocation is the report's job.",
+        KeswaTheme.strings.againstAccountNote,
         style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
     OutlinedTextField(
         value = state.paymentEntry,
         onValueChange = { onEvent(CustomersUiEvent.PaymentChanged(it)) },
-        label = { Text("Amount") },
+        label = { Text(KeswaTheme.strings.amount) },
         singleLine = true,
         modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
     )
     OutlinedTextField(
         value = state.paymentNote,
         onValueChange = { onEvent(CustomersUiEvent.PaymentNoteChanged(it)) },
-        label = { Text("Note (optional)") },
+        label = { Text(KeswaTheme.strings.noteOptional) },
         singleLine = true,
         modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
     )
@@ -233,10 +233,10 @@ private fun ColumnScope.Account(state: CustomersUiState, onEvent: (CustomersUiEv
         onClick = { onEvent(CustomersUiEvent.TakePayment) },
         enabled = state.canTakePayment,
         modifier = Modifier.padding(top = 8.dp),
-    ) { Text("Receive") }
+    ) { Text(KeswaTheme.strings.receivePayment) }
 
     Text(
-        "Account history",
+        KeswaTheme.strings.accountHistory,
         style = MaterialTheme.typography.titleSmall,
         modifier = Modifier.padding(top = 16.dp),
     )
@@ -273,11 +273,11 @@ private fun AgeingCard(ageing: Ageing) {
 
     Card(modifier = Modifier.fillMaxWidth().padding(top = 12.dp)) {
         Column(modifier = Modifier.padding(12.dp)) {
-            Text("How overdue", style = MaterialTheme.typography.titleSmall)
-            AgeingRow("Not yet due", ageing.current)
+            Text(KeswaTheme.strings.howOverdue, style = MaterialTheme.typography.titleSmall)
+            AgeingRow(KeswaTheme.strings.notYetDue, ageing.current)
             AgeingRow("1–30 days", ageing.thirtyDays)
             AgeingRow("31–60 days", ageing.sixtyDays)
-            AgeingRow("Over 60 days", ageing.ninetyDaysPlus)
+            AgeingRow(KeswaTheme.strings.overSixtyDays, ageing.ninetyDaysPlus)
         }
     }
 }
@@ -298,20 +298,20 @@ private fun AgeingRow(label: String, amount: Money) {
 private fun NewCustomerDialog(state: CustomersUiState, onEvent: (CustomersUiEvent) -> Unit) {
     AlertDialog(
         onDismissRequest = { onEvent(CustomersUiEvent.CancelCreating) },
-        title = { Text("New customer") },
+        title = { Text(KeswaTheme.strings.newCustomer) },
         text = {
             Column {
                 OutlinedTextField(
                     value = state.newName,
                     onValueChange = { onEvent(CustomersUiEvent.NewNameChanged(it)) },
-                    label = { Text("Name") },
+                    label = { Text(KeswaTheme.strings.name) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 OutlinedTextField(
                     value = state.newPhone,
                     onValueChange = { onEvent(CustomersUiEvent.NewPhoneChanged(it)) },
-                    label = { Text("Phone") },
+                    label = { Text(KeswaTheme.strings.phone) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                 )
@@ -319,14 +319,14 @@ private fun NewCustomerDialog(state: CustomersUiState, onEvent: (CustomersUiEven
                     value = state.newLimit,
                     onValueChange = { onEvent(CustomersUiEvent.NewLimitChanged(it)) },
                     // Blank means zero means cash only. Trust should be granted deliberately.
-                    label = { Text("Credit limit — blank for cash only") },
+                    label = { Text(KeswaTheme.strings.creditLimitBlankForCash) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                 )
                 OutlinedTextField(
                     value = state.newTerms,
                     onValueChange = { onEvent(CustomersUiEvent.NewTermsChanged(it)) },
-                    label = { Text("Payment terms, in days") },
+                    label = { Text(KeswaTheme.strings.paymentTermsDays) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                 )
@@ -336,10 +336,10 @@ private fun NewCustomerDialog(state: CustomersUiState, onEvent: (CustomersUiEven
             Button(
                 onClick = { onEvent(CustomersUiEvent.Create) },
                 enabled = state.newName.isNotBlank(),
-            ) { Text("Create") }
+            ) { Text(KeswaTheme.strings.create) }
         },
         dismissButton = {
-            OutlinedButton(onClick = { onEvent(CustomersUiEvent.CancelCreating) }) { Text("Cancel") }
+            OutlinedButton(onClick = { onEvent(CustomersUiEvent.CancelCreating) }) { Text(KeswaTheme.strings.cancel) }
         },
     )
 }

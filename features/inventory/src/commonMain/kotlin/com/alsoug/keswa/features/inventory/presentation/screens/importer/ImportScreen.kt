@@ -83,9 +83,7 @@ internal fun ImportContent(
             onBack = onBack,
         )
         Text(
-            "Paste the spreadsheet as comma-separated rows: " +
-                "product, productAr, colour, sku, cost, price, quantity. " +
-                "Quantity is optional, and arrives as a delivery so it carries a cost.",
+            KeswaTheme.strings.pasteSpreadsheetNote,
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -98,7 +96,7 @@ internal fun ImportContent(
         OutlinedTextField(
             value = state.text,
             onValueChange = { onEvent(ImportUiEvent.TextChanged(it)) },
-            label = { Text("Rows") },
+            label = { Text(KeswaTheme.strings.rows) },
             modifier = Modifier.fillMaxWidth().heightIn(min = 160.dp, max = 260.dp).padding(top = 8.dp),
         )
 
@@ -111,9 +109,9 @@ internal fun ImportContent(
             OutlinedButton(
                 onClick = { onEvent(ImportUiEvent.Check) },
                 enabled = state.text.isNotBlank(),
-            ) { Text("Check") }
+            ) { Text(KeswaTheme.strings.check) }
             Button(onClick = { onEvent(ImportUiEvent.Apply) }, enabled = state.canApply) {
-                Text("Import ${state.rows.size} rows")
+                Text(KeswaTheme.strings.importRows(state.rows.size))
             }
         }
 
@@ -127,13 +125,13 @@ internal fun ImportContent(
 @Composable
 private fun ColumnScope.Problems(problems: List<ImportProblem>) {
     Text(
-        "Nothing was imported",
+        KeswaTheme.strings.nothingWasImported,
         style = MaterialTheme.typography.titleSmall,
         color = MaterialTheme.colorScheme.error,
         modifier = Modifier.padding(top = 12.dp),
     )
     Text(
-        "A file with one bad row imports none of it, so nobody has to work out which half went in.",
+        KeswaTheme.strings.oneBadRowNone,
         style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
@@ -184,7 +182,7 @@ private fun ColumnScope.Preview(state: ImportUiState) {
 private fun Summary(summary: ImportSummary, onEvent: (ImportUiEvent) -> Unit) {
     Card(modifier = Modifier.fillMaxWidth().padding(top = 12.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
-            Text("Imported", style = MaterialTheme.typography.titleSmall)
+            Text(KeswaTheme.strings.imported, style = MaterialTheme.typography.titleSmall)
             Text("${summary.productsCreated} products", style = MaterialTheme.typography.bodyMedium)
             Text("${summary.variantsCreated} SKUs", style = MaterialTheme.typography.bodyMedium)
             Text(
@@ -192,8 +190,7 @@ private fun Summary(summary: ImportSummary, onEvent: (ImportUiEvent) -> Unit) {
                 style = MaterialTheme.typography.bodyMedium,
             )
             Text(
-                "Stock arrived through an ordinary delivery, so it carries a cost and appears in " +
-                    "the ledger exactly as a van-load would.",
+                KeswaTheme.strings.stockArrivedAsDelivery,
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(top = 6.dp),
@@ -201,7 +198,7 @@ private fun Summary(summary: ImportSummary, onEvent: (ImportUiEvent) -> Unit) {
             OutlinedButton(
                 onClick = { onEvent(ImportUiEvent.Reset) },
                 modifier = Modifier.padding(top = 12.dp),
-            ) { Text("Import another") }
+            ) { Text(KeswaTheme.strings.importAnother) }
         }
     }
 }

@@ -87,7 +87,7 @@ internal fun SignInContent(
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                     verticalAlignment = Alignment.Bottom,
                 ) {
-                    Text("Keswa", style = MaterialTheme.typography.headlineSmall)
+                    Text(KeswaTheme.strings.appName, style = MaterialTheme.typography.headlineSmall)
                     Text("كسوة", style = MaterialTheme.typography.titleMedium)
                 }
 
@@ -110,18 +110,18 @@ private fun SignInPanel(state: SignInUiState, onEvent: (SignInUiEvent) -> Unit) 
                 selected = state.mode == SignInMode.SELLER,
                 onClick = { onEvent(SignInUiEvent.ModeChanged(SignInMode.SELLER)) },
                 shape = SegmentedButtonDefaults.itemShape(0, 2),
-            ) { Text("Seller") }
+            ) { Text(KeswaTheme.strings.seller) }
             SegmentedButton(
                 selected = state.mode == SignInMode.ADMIN,
                 onClick = { onEvent(SignInUiEvent.ModeChanged(SignInMode.ADMIN)) },
                 shape = SegmentedButtonDefaults.itemShape(1, 2),
-            ) { Text("Admin") }
+            ) { Text(KeswaTheme.strings.admin) }
         }
     }
 
     if (state.isLocked) {
         Text(
-            "Locked after too many attempts. Try again shortly.",
+            KeswaTheme.strings.lockedTryShortly,
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.error,
             textAlign = TextAlign.Center,
@@ -136,7 +136,7 @@ private fun SignInPanel(state: SignInUiState, onEvent: (SignInUiEvent) -> Unit) 
 
 @Composable
 private fun SellerPinPanel(state: SignInUiState, onEvent: (SignInUiEvent) -> Unit) {
-    Text("Who is on the till", style = MaterialTheme.typography.labelMedium)
+    Text(KeswaTheme.strings.whoIsOnTheTill, style = MaterialTheme.typography.labelMedium)
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier.fillMaxWidth(),
@@ -193,14 +193,14 @@ private fun AdminPasswordPanel(state: SignInUiState, onEvent: (SignInUiEvent) ->
     OutlinedTextField(
         value = state.username,
         onValueChange = { onEvent(SignInUiEvent.UsernameChanged(it)) },
-        label = { Text("Username") },
+        label = { Text(KeswaTheme.strings.username) },
         singleLine = true,
         modifier = Modifier.fillMaxWidth(),
     )
     OutlinedTextField(
         value = state.password,
         onValueChange = { onEvent(SignInUiEvent.PasswordChanged(it)) },
-        label = { Text("Password") },
+        label = { Text(KeswaTheme.strings.password) },
         singleLine = true,
         visualTransformation = PasswordVisualTransformation(),
         keyboardOptions = KeyboardOptions.Default,
@@ -210,7 +210,7 @@ private fun AdminPasswordPanel(state: SignInUiState, onEvent: (SignInUiEvent) ->
         enabled = state.canSubmitPassword,
         onClick = { onEvent(SignInUiEvent.SubmitPassword) },
         modifier = Modifier.fillMaxWidth(),
-    ) { Text("Sign in") }
+    ) { Text(KeswaTheme.strings.signIn) }
 }
 
 @Composable
@@ -219,9 +219,9 @@ private fun FirstRunPanel(onEvent: (SignInUiEvent) -> Unit) {
     var displayName by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
-    Text("Create the owner account", style = MaterialTheme.typography.titleMedium)
+    Text(KeswaTheme.strings.createOwnerAccount, style = MaterialTheme.typography.titleMedium)
     Text(
-        "This is a new installation, so there is nobody to sign in as yet.",
+        KeswaTheme.strings.newInstallationNobody,
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         textAlign = TextAlign.Center,
@@ -229,21 +229,21 @@ private fun FirstRunPanel(onEvent: (SignInUiEvent) -> Unit) {
     OutlinedTextField(
         value = displayName,
         onValueChange = { displayName = it },
-        label = { Text("Your name") },
+        label = { Text(KeswaTheme.strings.yourName) },
         singleLine = true,
         modifier = Modifier.fillMaxWidth(),
     )
     OutlinedTextField(
         value = username,
         onValueChange = { username = it },
-        label = { Text("Username") },
+        label = { Text(KeswaTheme.strings.username) },
         singleLine = true,
         modifier = Modifier.fillMaxWidth(),
     )
     OutlinedTextField(
         value = password,
         onValueChange = { password = it },
-        label = { Text("Password — at least 8 characters") },
+        label = { Text(KeswaTheme.strings.passwordAtLeastEight) },
         singleLine = true,
         visualTransformation = PasswordVisualTransformation(),
         modifier = Modifier.fillMaxWidth(),
@@ -252,15 +252,14 @@ private fun FirstRunPanel(onEvent: (SignInUiEvent) -> Unit) {
         enabled = username.isNotBlank() && displayName.isNotBlank() && password.length >= 8,
         onClick = { onEvent(SignInUiEvent.Bootstrap(username, displayName, password)) },
         modifier = Modifier.fillMaxWidth(),
-    ) { Text("Create account") }
+    ) { Text(KeswaTheme.strings.createAccount) }
 }
 
 @Composable
 private fun RecoveryCodePanel(code: String, onEvent: (SignInUiEvent) -> Unit) {
-    Text("Write this down", style = MaterialTheme.typography.titleMedium)
+    Text(KeswaTheme.strings.writeThisDown, style = MaterialTheme.typography.titleMedium)
     Text(
-        "It is the only way back into the shop if the admin password is forgotten. " +
-            "There is no server and no email — nobody can reset it for you.",
+        KeswaTheme.strings.recoveryOnlyWayBack,
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         textAlign = TextAlign.Center,
@@ -274,7 +273,7 @@ private fun RecoveryCodePanel(code: String, onEvent: (SignInUiEvent) -> Unit) {
     Button(
         onClick = { onEvent(SignInUiEvent.DismissRecoveryCode) },
         modifier = Modifier.fillMaxWidth(),
-    ) { Text("I have written it down") }
+    ) { Text(KeswaTheme.strings.iHaveWrittenItDown) }
 }
 
 @Composable
@@ -282,9 +281,9 @@ private fun ReplaceSecretPanel(user: User, onEvent: (SignInUiEvent) -> Unit) {
     var secret by remember { mutableStateOf("") }
     val minimum = if (user.role == UserRole.SELLER) 4 else 8
 
-    Text("Choose a new ${if (user.role == UserRole.SELLER) "PIN" else "password"}")
+    Text(KeswaTheme.strings.chooseNewSecret(isPin = user.role == UserRole.SELLER))
     Text(
-        "Your details were reset by an admin, who knows the temporary one.",
+        KeswaTheme.strings.detailsResetByAdmin,
         style = MaterialTheme.typography.bodySmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
         textAlign = TextAlign.Center,
@@ -292,7 +291,7 @@ private fun ReplaceSecretPanel(user: User, onEvent: (SignInUiEvent) -> Unit) {
     OutlinedTextField(
         value = secret,
         onValueChange = { secret = it },
-        label = { Text("New — at least $minimum characters") },
+        label = { Text(KeswaTheme.strings.newSecretAtLeast(minimum)) },
         singleLine = true,
         visualTransformation = PasswordVisualTransformation(),
         modifier = Modifier.fillMaxWidth(),
@@ -301,7 +300,7 @@ private fun ReplaceSecretPanel(user: User, onEvent: (SignInUiEvent) -> Unit) {
         enabled = secret.length >= minimum,
         onClick = { onEvent(SignInUiEvent.ReplaceSecret(secret)) },
         modifier = Modifier.fillMaxWidth(),
-    ) { Text("Save and continue") }
+    ) { Text(KeswaTheme.strings.saveAndContinue) }
 }
 
 private val previewSellers = listOf(
