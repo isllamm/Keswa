@@ -3,6 +3,8 @@ package com.alsoug.keswa.features.sell.presentation.screens.till
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alsoug.keswa.core.coroutines.DispatcherProvider
+import com.alsoug.keswa.core.designsystem.Message
+import com.alsoug.keswa.core.designsystem.message
 import com.alsoug.keswa.core.domain.model.User
 import com.alsoug.keswa.core.domain.money.Money
 import com.alsoug.keswa.core.domain.repository.ISettingsRepository
@@ -165,9 +167,9 @@ class TillViewModel(
             }
             // Refused rather than invented: a catalogue entry created at the till with a queue
             // waiting is junk nobody goes back and cleans up.
-            LookupResult.NotFound -> _effect.emit(TillUiEffect.ShowError("Not in the catalogue: $term"))
+            LookupResult.NotFound -> _effect.emit(TillUiEffect.ShowError(message { it.notInCatalogue(term) }))
             is LookupResult.NotPriced ->
-                _effect.emit(TillUiEffect.ShowError("${result.item.sku} has no price yet"))
+                _effect.emit(TillUiEffect.ShowError(message { it.hasNoPriceYet(result.item.sku) }))
         }
     }
 
@@ -183,19 +185,19 @@ class TillViewModel(
     }
 
     private fun requestLineDiscount(lineIndex: Int, amount: String) {
-        val parsed = Money.parse(amount) ?: return reject("That is not an amount")
+        val parsed = Money.parse(amount) ?: return reject(message { it.notAnAmount })
         _state.update { it.copy(pendingApproval = PendingApproval.LineDiscount(lineIndex, parsed)) }
         attemptWithSessionAuthority()
     }
 
     private fun requestPriceOverride(lineIndex: Int, price: String) {
-        val parsed = Money.parse(price) ?: return reject("That is not an amount")
+        val parsed = Money.parse(price) ?: return reject(message { it.notAnAmount })
         _state.update { it.copy(pendingApproval = PendingApproval.PriceOverride(lineIndex, parsed)) }
         attemptWithSessionAuthority()
     }
 
     private fun requestOrderDiscount(amount: String) {
-        val parsed = Money.parse(amount) ?: return reject("That is not an amount")
+        val parsed = Money.parse(amount) ?: return reject(message { it.notAnAmount })
         _state.update { it.copy(pendingApproval = PendingApproval.OrderDiscount(parsed)) }
         attemptWithSessionAuthority()
     }
@@ -233,11 +235,11 @@ class TillViewModel(
                                 .onFailure { fail(it) }
                         }
                         ReauthResult.BadCredentials ->
-                            _effect.emit(TillUiEffect.ShowError("Incorrect details"))
+                            _effect.emit(TillUiEffect.ShowError(message { it.incorrectDetails }))
                         ReauthResult.NotPermitted ->
-                            _effect.emit(TillUiEffect.ShowError("That account cannot approve this"))
+                            _effect.emit(TillUiEffect.ShowError(message { it.accountCannotApprove }))
                         is ReauthResult.Locked ->
-                            _effect.emit(TillUiEffect.ShowError("Too many attempts — locked for a few minutes"))
+                            _effect.emit(TillUiEffect.ShowError(message { it.tooManyAttempts }))
                     }
                 },
                 onFailure = { fail(it) },
@@ -262,15 +264,15 @@ class TillViewModel(
                 // The use case re-checks this user's permission rather than trusting the screen.
                 val approver = requireNotNull(approvedBy) { "a void always needs an approver" }
                 voidSale(pending.saleId, pending.reason, approver).getOrThrow()
-                _effect.emit(TillUiEffect.ShowMessage("Sale voided"))
+                _effect.emit(TillUiEffect.ShowMessage(message { it.saleVoided }))
             }
         }
     }
 
     private fun addTender(event: TillUiEvent.AddTender) {
-        val amount = Money.parse(event.amount) ?: return reject("That is not an amount")
+        val amount = Money.parse(event.amount) ?: return reject(message { it.notAnAmount })
         val tendered = Money.parse(event.tendered) ?: amount
-        if (amount.isZero || amount.isNegative) return reject("A tender must be more than zero")
+        if (amount.isZero || amount.isNegative) return reject(message { it.tenderMoreThanZero })
 
         _state.update { current ->
             current.copy(
@@ -317,7 +319,7 @@ class TillViewModel(
                     when (warning) {
                         is SaleWarning.SoldBelowStock -> _effect.emit(
                             TillUiEffect.StockWarning(
-                                "${warning.sku}: sold ${warning.sold}, stock said ${warning.onHand}",
+                                message { it.soldBelowStock(warning.sku, warning.sold, warning.onHand) },
                             ),
                         )
                     }
@@ -328,28 +330,28 @@ class TillViewModel(
                     onFailure = { fail(it) },
                 )
             }
-            SaleResult.EmptyBasket -> _effect.emit(TillUiEffect.ShowError("Nothing to sell"))
+            SaleResult.EmptyBasket -> _effect.emit(TillUiEffect.ShowError(message { it.nothingToSell }))
             is SaleResult.UnderTendered ->
-                _effect.emit(TillUiEffect.ShowError("Short by ${result.shortBy.format()}"))
+                _effect.emit(TillUiEffect.ShowError(message { it.shortBy(result.shortBy.format()) }))
             is SaleResult.OverCreditLimit -> _effect.emit(
                 TillUiEffect.ShowError(
-                    "Over the credit limit by ${result.over.format()} — needs an approval",
+                    message { it.overCreditLimitBy(result.over.format()) },
                 ),
             )
             SaleResult.CustomerIsCashOnly ->
-                _effect.emit(TillUiEffect.ShowError("This customer is cash only"))
+                _effect.emit(TillUiEffect.ShowError(message { it.customerIsCashOnly }))
             SaleResult.NoCustomerForCredit ->
-                _effect.emit(TillUiEffect.ShowError("Pick a customer before selling on account"))
+                _effect.emit(TillUiEffect.ShowError(message { it.pickCustomerBeforeCredit }))
         }
     }
 
     private suspend fun report(result: ReceiptResult, receiptNumber: Long) {
         when (result) {
-            ReceiptResult.Printed -> _effect.emit(TillUiEffect.ShowMessage("Sale #$receiptNumber"))
+            ReceiptResult.Printed -> _effect.emit(TillUiEffect.ShowMessage(message { it.salePrinted(receiptNumber) }))
             ReceiptResult.NoPrinter ->
-                _effect.emit(TillUiEffect.ShowMessage("Sale #$receiptNumber — no printer configured"))
+                _effect.emit(TillUiEffect.ShowMessage(message { it.saleNoPrinter(receiptNumber) }))
             is ReceiptResult.Unreachable -> _effect.emit(
-                TillUiEffect.ShowError("Sale #$receiptNumber saved, but the printer did not answer"),
+                TillUiEffect.ShowError(message { it.salePrinterSilent(receiptNumber) }),
             )
         }
     }
@@ -378,7 +380,7 @@ class TillViewModel(
                             heldSales = held ?: current.heldSales,
                         )
                     }
-                    _effect.emit(TillUiEffect.ShowMessage("Held"))
+                    _effect.emit(TillUiEffect.ShowMessage(message { it.heldConfirmation }))
                 },
                 onFailure = { fail(it) },
             )
@@ -400,7 +402,7 @@ class TillViewModel(
                     recalculate()
                     if (resumed.dropped.isNotEmpty()) {
                         _effect.emit(
-                            TillUiEffect.ShowError("${resumed.dropped.size} line(s) no longer sellable"),
+                            TillUiEffect.ShowError(message { it.linesNoLongerSellable(resumed.dropped.size) }),
                         )
                     }
                 },
@@ -424,12 +426,12 @@ class TillViewModel(
 
     private fun open(float: String) {
         val context = till ?: return
-        val amount = Money.parse(float) ?: return reject("That is not an amount")
+        val amount = Money.parse(float) ?: return reject(message { it.notAnAmount })
         viewModelScope.launch(dispatchers.io) {
             openShift(amount, context).fold(
                 onSuccess = { shift ->
                     _state.update { it.copy(shift = shift) }
-                    _effect.emit(TillUiEffect.ShowMessage("Shift open"))
+                    _effect.emit(TillUiEffect.ShowMessage(message { it.shiftOpened }))
                 },
                 onFailure = { fail(it) },
             )
@@ -442,7 +444,7 @@ class TillViewModel(
                 _state.update { it.copy(basket = basket) }
                 recalculate()
             },
-            onFailure = { cause -> reject(cause.message ?: "That change is not allowed") },
+            onFailure = { cause -> reject(message { it.changeNotAllowed }) },
         )
     }
 
@@ -450,12 +452,12 @@ class TillViewModel(
         _state.update { it.copy(totals = calculate(it.basket, it.vatBasisPoints)) }
     }
 
-    private fun reject(message: String) {
+    private fun reject(message: Message) {
         viewModelScope.launch { _effect.emit(TillUiEffect.ShowError(message)) }
     }
 
     private suspend fun fail(cause: Throwable) {
         _state.update { it.copy(isLoading = false, isCommitting = false) }
-        _effect.emit(TillUiEffect.ShowError(cause.message ?: "Something went wrong"))
+        _effect.emit(TillUiEffect.ShowError(message { it.somethingWentWrong }))
     }
 }

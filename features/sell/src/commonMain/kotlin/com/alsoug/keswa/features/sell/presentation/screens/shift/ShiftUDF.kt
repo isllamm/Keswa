@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.sell.presentation.screens.shift
 
+import com.alsoug.keswa.core.designsystem.Message
 import com.alsoug.keswa.core.domain.model.Shift
 import com.alsoug.keswa.core.domain.model.ZReport
 
@@ -33,6 +34,6 @@ sealed interface ShiftNavigation {
 }
 
 sealed interface ShiftUiEffect {
-    data class ShowError(val message: String) : ShiftUiEffect
-    data class ShowMessage(val message: String) : ShiftUiEffect
+    data class ShowError(val message: Message) : ShiftUiEffect
+    data class ShowMessage(val message: Message) : ShiftUiEffect
 }

@@ -27,6 +27,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alsoug.keswa.core.designsystem.KeswaTheme
 import com.alsoug.keswa.core.designsystem.ScreenHeader
+import com.alsoug.keswa.core.designsystem.resolve
 import com.alsoug.keswa.core.domain.model.ShopSettings
 import com.alsoug.keswa.core.printing.MonoBitmap
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -39,6 +40,7 @@ fun SettingsScreen(
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val strings = KeswaTheme.strings
 
     LaunchedEffect(Unit) { viewModel.onEvent(SettingsUiEvent.Load) }
     LaunchedEffect(Unit) {
@@ -47,8 +49,8 @@ fun SettingsScreen(
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
-                is SettingsUiEffect.ShowMessage -> onMessage(effect.message)
-                is SettingsUiEffect.ShowError -> onMessage(effect.message)
+                is SettingsUiEffect.ShowMessage -> onMessage(effect.message.resolve(strings))
+                is SettingsUiEffect.ShowError -> onMessage(effect.message.resolve(strings))
             }
         }
     }

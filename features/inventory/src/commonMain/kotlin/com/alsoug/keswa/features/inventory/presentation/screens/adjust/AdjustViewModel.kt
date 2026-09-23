@@ -3,6 +3,8 @@ package com.alsoug.keswa.features.inventory.presentation.screens.adjust
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alsoug.keswa.core.coroutines.DispatcherProvider
+import com.alsoug.keswa.core.designsystem.Message
+import com.alsoug.keswa.core.designsystem.message
 import com.alsoug.keswa.features.inventory.domain.usecase.AdjustStockUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.FindStockItemUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.ResolveStockLocationUseCase
@@ -68,7 +70,7 @@ class AdjustViewModel(
             find.byBarcode(barcode, location).fold(
                 onSuccess = { item ->
                     if (item == null) {
-                        _effect.emit(AdjustUiEffect.ShowError("Not in the catalogue: $barcode"))
+                        _effect.emit(AdjustUiEffect.ShowError(message { it.notInCatalogue(barcode) }))
                     } else {
                         // What the ledger already says, so the person adjusting can see whether an
                         // earlier correction already covered this. Read before the update, which
@@ -86,7 +88,7 @@ class AdjustViewModel(
         val location = locationId ?: return
         val current = _state.value
         val item = current.item ?: return
-        val quantity = current.quantityEntry.toIntOrNull() ?: return reject("That is not a quantity")
+        val quantity = current.quantityEntry.toIntOrNull() ?: return reject(message { it.notAQuantity })
 
         viewModelScope.launch(dispatchers.io) {
             adjust(item.variantId, location, quantity, current.reason, current.note).fold(
@@ -103,19 +105,19 @@ class AdjustViewModel(
                             history = movements,
                         )
                     }
-                    _effect.emit(AdjustUiEffect.ShowMessage("Adjusted by $quantity"))
+                    _effect.emit(AdjustUiEffect.ShowMessage(message { it.adjustedBy(quantity) }))
                 },
                 onFailure = { fail(it) },
             )
         }
     }
 
-    private fun reject(message: String) {
+    private fun reject(message: Message) {
         viewModelScope.launch { _effect.emit(AdjustUiEffect.ShowError(message)) }
     }
 
     private suspend fun fail(cause: Throwable) {
         _state.update { it.copy(isLoading = false) }
-        _effect.emit(AdjustUiEffect.ShowError(cause.message ?: "Something went wrong"))
+        _effect.emit(AdjustUiEffect.ShowError(message { it.somethingWentWrong }))
     }
 }

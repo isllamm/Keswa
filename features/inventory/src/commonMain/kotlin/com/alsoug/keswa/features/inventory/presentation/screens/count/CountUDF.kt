@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.inventory.presentation.screens.count
 
+import com.alsoug.keswa.core.designsystem.Message
 import com.alsoug.keswa.core.domain.model.StockCount
 
 /**
@@ -56,6 +57,6 @@ sealed interface CountNavigation {
 }
 
 sealed interface CountUiEffect {
-    data class ShowError(val message: String) : CountUiEffect
-    data class ShowMessage(val message: String) : CountUiEffect
+    data class ShowError(val message: Message) : CountUiEffect
+    data class ShowMessage(val message: Message) : CountUiEffect
 }

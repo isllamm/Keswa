@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alsoug.keswa.core.designsystem.KeswaTheme
 import com.alsoug.keswa.core.designsystem.ScreenHeader
+import com.alsoug.keswa.core.designsystem.resolve
 import com.alsoug.keswa.core.domain.model.Colour
 import com.alsoug.keswa.core.domain.money.Money
 import com.alsoug.keswa.features.catalog.presentation.components.ColourList
@@ -47,6 +48,7 @@ fun ProductEditorScreen(
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val strings = KeswaTheme.strings
 
     LaunchedEffect(productId) { viewModel.onEvent(ProductEditorUiEvent.Load(productId)) }
 
@@ -61,8 +63,8 @@ fun ProductEditorScreen(
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
-                is ProductEditorUiEffect.ShowError -> onMessage(effect.message)
-                is ProductEditorUiEffect.ShowMessage -> onMessage(effect.message)
+                is ProductEditorUiEffect.ShowError -> onMessage(effect.message.resolve(strings))
+                is ProductEditorUiEffect.ShowMessage -> onMessage(effect.message.resolve(strings))
                 is ProductEditorUiEffect.BlockedByStock ->
                     onMessage("${effect.onHand} still in stock — sell or adjust them first")
             }

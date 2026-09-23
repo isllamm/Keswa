@@ -3,6 +3,8 @@ package com.alsoug.keswa.features.sell.presentation.screens.shift
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alsoug.keswa.core.coroutines.DispatcherProvider
+import com.alsoug.keswa.core.designsystem.Message
+import com.alsoug.keswa.core.designsystem.message
 import com.alsoug.keswa.core.domain.money.Money
 import com.alsoug.keswa.features.sell.domain.usecase.CloseShiftUseCase
 import com.alsoug.keswa.features.sell.domain.usecase.CurrentShiftUseCase
@@ -58,7 +60,7 @@ class ShiftViewModel(
     private fun close() {
         val current = _state.value
         val shift = current.shift ?: return
-        val counted = Money.parse(current.countedCash) ?: return reject("That is not an amount")
+        val counted = Money.parse(current.countedCash) ?: return reject(message { it.notAnAmount })
 
         viewModelScope.launch(dispatchers.io) {
             _state.update { it.copy(isLoading = true) }
@@ -67,7 +69,7 @@ class ShiftViewModel(
                     _state.update { it.copy(isLoading = false, report = report, shift = report.shift) }
                     val difference = report.difference
                     if (difference != null && !difference.isZero) {
-                        _effect.emit(ShiftUiEffect.ShowMessage("Drawer differs by ${difference.format()}"))
+                        _effect.emit(ShiftUiEffect.ShowMessage(message { it.drawerDiffersBy(difference.format()) }))
                     }
                 },
                 onFailure = { fail(it) },
@@ -75,12 +77,12 @@ class ShiftViewModel(
         }
     }
 
-    private fun reject(message: String) {
+    private fun reject(message: Message) {
         viewModelScope.launch { _effect.emit(ShiftUiEffect.ShowError(message)) }
     }
 
     private suspend fun fail(cause: Throwable) {
         _state.update { it.copy(isLoading = false) }
-        _effect.emit(ShiftUiEffect.ShowError(cause.message ?: "Could not close the shift"))
+        _effect.emit(ShiftUiEffect.ShowError(message { it.couldNotCloseShift }))
     }
 }

@@ -3,6 +3,7 @@ package com.alsoug.keswa.features.returns.presentation.screens.returns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alsoug.keswa.core.coroutines.DispatcherProvider
+import com.alsoug.keswa.core.designsystem.message
 import com.alsoug.keswa.core.domain.model.Permission
 import com.alsoug.keswa.core.domain.repository.ISettingsRepository
 import com.alsoug.keswa.core.session.ApprovalResult
@@ -121,11 +122,11 @@ class ReturnsViewModel(
                     },
                 )
             }
-            SaleLookup.NotFound -> _effect.emit(ReturnsUiEffect.ShowError("No sale with that receipt"))
+            SaleLookup.NotFound -> _effect.emit(ReturnsUiEffect.ShowError(message { it.noSaleWithThatReceipt }))
             is SaleLookup.Voided ->
-                _effect.emit(ReturnsUiEffect.ShowError("That sale was voided — already reversed"))
+                _effect.emit(ReturnsUiEffect.ShowError(message { it.saleAlreadyVoided }))
             SaleLookup.FullyReturned ->
-                _effect.emit(ReturnsUiEffect.ShowError("Everything on that receipt has come back"))
+                _effect.emit(ReturnsUiEffect.ShowError(message { it.everythingCameBack }))
         }
     }
 
@@ -156,11 +157,11 @@ class ReturnsViewModel(
                             it.copy(isAwaitingApproval = false, approvedByUserId = result.user.id)
                         }
                         ApprovalResult.BadCredentials ->
-                            _effect.emit(ReturnsUiEffect.ShowError("Incorrect details"))
+                            _effect.emit(ReturnsUiEffect.ShowError(message { it.incorrectDetails }))
                         ApprovalResult.NotPermitted ->
-                            _effect.emit(ReturnsUiEffect.ShowError("That account cannot approve this"))
+                            _effect.emit(ReturnsUiEffect.ShowError(message { it.accountCannotApprove }))
                         is ApprovalResult.Locked ->
-                            _effect.emit(ReturnsUiEffect.ShowError("Too many attempts — locked for a few minutes"))
+                            _effect.emit(ReturnsUiEffect.ShowError(message { it.tooManyAttempts }))
                     }
                 },
                 onFailure = { fail(it) },
@@ -210,8 +211,12 @@ class ReturnsViewModel(
                 }
                 _effect.emit(
                     ReturnsUiEffect.ShowMessage(
-                        "Refunded ${result.saleReturn.refundAmount.format()} " +
-                            "· return #${result.saleReturn.returnNumber}",
+                        message {
+                        it.refundedReturn(
+                            result.saleReturn.refundAmount.format(),
+                            result.saleReturn.returnNumber,
+                        )
+                    },
                     ),
                 )
                 // Outside the commit, deliberately: a print failure must never undo a refund.
@@ -220,7 +225,7 @@ class ReturnsViewModel(
                         if (note is RefundNoteResult.Unreachable) {
                             _effect.emit(
                                 ReturnsUiEffect.ShowError(
-                                    "Refund saved, but the printer did not answer",
+                                    message { it.refundSavedPrinterSilent },
                                 ),
                             )
                         }
@@ -229,10 +234,10 @@ class ReturnsViewModel(
                 )
             }
             ReturnResult.NothingToReturn ->
-                _effect.emit(ReturnsUiEffect.ShowError("Nothing selected to return"))
+                _effect.emit(ReturnsUiEffect.ShowError(message { it.nothingSelectedToReturn }))
             is ReturnResult.ExceedsSold -> _effect.emit(
                 ReturnsUiEffect.ShowError(
-                    "${result.description}: only ${result.returnable} left to return",
+                    message { it.onlyLeftToReturn(result.description, result.returnable) },
                 ),
             )
         }
@@ -240,6 +245,6 @@ class ReturnsViewModel(
 
     private suspend fun fail(cause: Throwable) {
         _state.update { it.copy(isLoading = false, isCommitting = false) }
-        _effect.emit(ReturnsUiEffect.ShowError(cause.message ?: "Something went wrong"))
+        _effect.emit(ReturnsUiEffect.ShowError(message { it.somethingWentWrong }))
     }
 }

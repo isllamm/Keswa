@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alsoug.keswa.core.designsystem.KeswaTheme
 import com.alsoug.keswa.core.designsystem.ScreenHeader
+import com.alsoug.keswa.core.designsystem.resolve
 import com.alsoug.keswa.core.domain.model.MovementReason
 import com.alsoug.keswa.core.domain.model.SellableItem
 import com.alsoug.keswa.core.domain.model.StockMovement
@@ -44,6 +45,7 @@ fun AdjustScreen(
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val strings = KeswaTheme.strings
 
     LaunchedEffect(Unit) { viewModel.onEvent(AdjustUiEvent.Load) }
 
@@ -58,8 +60,8 @@ fun AdjustScreen(
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
-                is AdjustUiEffect.ShowError -> onMessage(effect.message)
-                is AdjustUiEffect.ShowMessage -> onMessage(effect.message)
+                is AdjustUiEffect.ShowError -> onMessage(effect.message.resolve(strings))
+                is AdjustUiEffect.ShowMessage -> onMessage(effect.message.resolve(strings))
             }
         }
     }

@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.inventory.presentation.screens.importer
 
+import com.alsoug.keswa.core.designsystem.Message
 import com.alsoug.keswa.features.inventory.domain.usecase.ImportProblem
 import com.alsoug.keswa.features.inventory.domain.usecase.ImportRow
 import com.alsoug.keswa.features.inventory.domain.usecase.ImportSummary
@@ -33,6 +34,6 @@ sealed interface ImportNavigation {
 }
 
 sealed interface ImportUiEffect {
-    data class ShowError(val message: String) : ImportUiEffect
-    data class ShowMessage(val message: String) : ImportUiEffect
+    data class ShowError(val message: Message) : ImportUiEffect
+    data class ShowMessage(val message: Message) : ImportUiEffect
 }

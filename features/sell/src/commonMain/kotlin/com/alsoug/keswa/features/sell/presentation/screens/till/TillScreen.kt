@@ -47,6 +47,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alsoug.keswa.core.designsystem.EmptyState
 import com.alsoug.keswa.core.designsystem.KeswaTheme
 import com.alsoug.keswa.core.designsystem.localisedName
+import com.alsoug.keswa.core.designsystem.resolve
 import com.alsoug.keswa.core.domain.model.SellableItem
 import com.alsoug.keswa.core.domain.model.TenderMethod
 import com.alsoug.keswa.core.domain.money.Money
@@ -68,15 +69,16 @@ fun TillScreen(
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val strings = KeswaTheme.strings
 
     LaunchedEffect(Unit) { viewModel.onEvent(TillUiEvent.Load) }
 
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
-                is TillUiEffect.ShowError -> onMessage(effect.message)
-                is TillUiEffect.ShowMessage -> onMessage(effect.message)
-                is TillUiEffect.StockWarning -> onMessage(effect.message)
+                is TillUiEffect.ShowError -> onMessage(effect.message.resolve(strings))
+                is TillUiEffect.ShowMessage -> onMessage(effect.message.resolve(strings))
+                is TillUiEffect.StockWarning -> onMessage(effect.message.resolve(strings))
             }
         }
     }

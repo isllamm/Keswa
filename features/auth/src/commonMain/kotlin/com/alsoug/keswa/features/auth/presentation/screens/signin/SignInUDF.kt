@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.auth.presentation.screens.signin
 
+import com.alsoug.keswa.core.designsystem.Message
 import com.alsoug.keswa.core.domain.model.User
 
 enum class SignInMode { SELLER, ADMIN }
@@ -49,6 +50,6 @@ sealed interface SignInNavigation {
 }
 
 sealed interface SignInUiEffect {
-    data class ShowError(val message: String) : SignInUiEffect
-    data class ShowMessage(val message: String) : SignInUiEffect
+    data class ShowError(val message: Message) : SignInUiEffect
+    data class ShowMessage(val message: Message) : SignInUiEffect
 }

@@ -38,6 +38,7 @@ import com.alsoug.keswa.core.designsystem.localisedName
 import com.alsoug.keswa.core.designsystem.Panel
 import com.alsoug.keswa.core.designsystem.ScreenHeader
 import com.alsoug.keswa.core.designsystem.StatTile
+import com.alsoug.keswa.core.designsystem.resolve
 import com.alsoug.keswa.core.domain.model.AnalyticsPeriod
 import com.alsoug.keswa.core.domain.model.BusyHours
 import com.alsoug.keswa.core.domain.model.ColourBucket
@@ -62,6 +63,7 @@ fun DashboardScreen(
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val strings = KeswaTheme.strings
 
     LaunchedEffect(Unit) { viewModel.onEvent(DashboardUiEvent.Load) }
 
@@ -76,7 +78,7 @@ fun DashboardScreen(
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
-                is DashboardUiEffect.ShowError -> onMessage(effect.message)
+                is DashboardUiEffect.ShowError -> onMessage(effect.message.resolve(strings))
             }
         }
     }

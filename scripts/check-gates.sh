@@ -116,6 +116,16 @@ gate "the outbox triggers are installed on upgrade and on a fresh database (KD-0
      "$MISSING_TRIGGERS" \
      "both the migration and onCreate must run SYNC_TRIGGERS, or one kind of install syncs nothing"
 
+# A ViewModel that writes a sentence has already chosen a language, several layers from anyone who
+# could know which one the shop reads. Effects carry a `Message`; the screen, which is inside the
+# theme, turns it into words.
+VIEWMODELS=$(find features -path "*commonMain*" -name "*ViewModel.kt" 2>/dev/null | tr '\n' ' ')
+if require_paths "no English in a ViewModel message" "$VIEWMODELS"; then
+  gate "ViewModels name a message, they do not write one" \
+       "$(code_grep 'Show\(Error\|Message\)(\"' $VIEWMODELS)" \
+       "emit message { it.someString } instead of a literal — see core/designsystem/Message.kt"
+fi
+
 if require_paths "domain purity (ADR-005)" "$DOMAIN"; then
   gate "domain has zero framework imports (ADR-005)" \
        "$(code_grep '^import' $DOMAIN | grep -E 'androidx\.|compose|ktor|koin' || true)" \

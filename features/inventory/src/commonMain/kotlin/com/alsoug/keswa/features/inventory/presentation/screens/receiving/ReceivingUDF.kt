@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.inventory.presentation.screens.receiving
 
+import com.alsoug.keswa.core.designsystem.Message
 import com.alsoug.keswa.core.domain.model.SellableItem
 import com.alsoug.keswa.core.domain.model.StockReceipt
 import com.alsoug.keswa.core.domain.money.Money
@@ -68,6 +69,6 @@ sealed interface ReceivingNavigation {
 }
 
 sealed interface ReceivingUiEffect {
-    data class ShowError(val message: String) : ReceivingUiEffect
-    data class ShowMessage(val message: String) : ReceivingUiEffect
+    data class ShowError(val message: Message) : ReceivingUiEffect
+    data class ShowMessage(val message: Message) : ReceivingUiEffect
 }

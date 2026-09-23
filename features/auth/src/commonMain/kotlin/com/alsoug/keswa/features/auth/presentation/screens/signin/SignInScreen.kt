@@ -39,6 +39,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alsoug.keswa.core.designsystem.KeswaTheme
+import com.alsoug.keswa.core.designsystem.resolve
 import com.alsoug.keswa.core.domain.model.User
 import com.alsoug.keswa.core.domain.model.UserRole
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -51,6 +52,7 @@ fun SignInScreen(
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val strings = KeswaTheme.strings
 
     LaunchedEffect(Unit) { viewModel.onEvent(SignInUiEvent.Load) }
     LaunchedEffect(Unit) {
@@ -59,8 +61,8 @@ fun SignInScreen(
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
-                is SignInUiEffect.ShowError -> onMessage(effect.message)
-                is SignInUiEffect.ShowMessage -> onMessage(effect.message)
+                is SignInUiEffect.ShowError -> onMessage(effect.message.resolve(strings))
+                is SignInUiEffect.ShowMessage -> onMessage(effect.message.resolve(strings))
             }
         }
     }

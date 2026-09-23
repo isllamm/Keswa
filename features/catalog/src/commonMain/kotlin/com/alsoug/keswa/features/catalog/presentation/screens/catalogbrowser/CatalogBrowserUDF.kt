@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.catalog.presentation.screens.catalogbrowser
 
+import com.alsoug.keswa.core.designsystem.Message
 import com.alsoug.keswa.features.catalog.presentation.model.CategoryNodeUiModel
 import com.alsoug.keswa.features.catalog.presentation.model.ProductUiModel
 
@@ -41,6 +42,6 @@ sealed interface CatalogBrowserNavigation {
 }
 
 sealed interface CatalogBrowserUiEffect {
-    data class ShowError(val message: String) : CatalogBrowserUiEffect
-    data class ShowMessage(val message: String) : CatalogBrowserUiEffect
+    data class ShowError(val message: Message) : CatalogBrowserUiEffect
+    data class ShowMessage(val message: Message) : CatalogBrowserUiEffect
 }

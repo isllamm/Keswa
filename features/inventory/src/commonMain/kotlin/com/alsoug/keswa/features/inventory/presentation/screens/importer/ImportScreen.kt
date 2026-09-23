@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alsoug.keswa.core.designsystem.KeswaTheme
 import com.alsoug.keswa.core.designsystem.ScreenHeader
+import com.alsoug.keswa.core.designsystem.resolve
 import com.alsoug.keswa.core.domain.money.Money
 import com.alsoug.keswa.features.inventory.domain.usecase.ImportProblem
 import com.alsoug.keswa.features.inventory.domain.usecase.ImportRow
@@ -42,6 +43,7 @@ fun ImportScreen(
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val strings = KeswaTheme.strings
 
     LaunchedEffect(Unit) { viewModel.onEvent(ImportUiEvent.Load) }
 
@@ -56,8 +58,8 @@ fun ImportScreen(
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
-                is ImportUiEffect.ShowError -> onMessage(effect.message)
-                is ImportUiEffect.ShowMessage -> onMessage(effect.message)
+                is ImportUiEffect.ShowError -> onMessage(effect.message.resolve(strings))
+                is ImportUiEffect.ShowMessage -> onMessage(effect.message.resolve(strings))
             }
         }
     }

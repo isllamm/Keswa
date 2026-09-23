@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.inventory.presentation.screens.adjust
 
+import com.alsoug.keswa.core.designsystem.Message
 import com.alsoug.keswa.core.domain.model.MovementReason
 import com.alsoug.keswa.core.domain.model.SellableItem
 import com.alsoug.keswa.core.domain.model.StockMovement
@@ -40,6 +41,6 @@ sealed interface AdjustNavigation {
 }
 
 sealed interface AdjustUiEffect {
-    data class ShowError(val message: String) : AdjustUiEffect
-    data class ShowMessage(val message: String) : AdjustUiEffect
+    data class ShowError(val message: Message) : AdjustUiEffect
+    data class ShowMessage(val message: Message) : AdjustUiEffect
 }

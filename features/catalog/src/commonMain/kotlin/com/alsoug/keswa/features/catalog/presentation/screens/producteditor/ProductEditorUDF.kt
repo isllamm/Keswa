@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.catalog.presentation.screens.producteditor
 
+import com.alsoug.keswa.core.designsystem.Message
 import com.alsoug.keswa.core.domain.model.Colour
 import com.alsoug.keswa.features.catalog.presentation.model.ColourRowUiModel
 
@@ -33,8 +34,8 @@ sealed interface ProductEditorNavigation {
 }
 
 sealed interface ProductEditorUiEffect {
-    data class ShowError(val message: String) : ProductEditorUiEffect
-    data class ShowMessage(val message: String) : ProductEditorUiEffect
+    data class ShowError(val message: Message) : ProductEditorUiEffect
+    data class ShowMessage(val message: Message) : ProductEditorUiEffect
     /** The colour could not be removed; the screen explains why rather than failing silently. */
     data class BlockedByStock(val onHand: Int) : ProductEditorUiEffect
 }
