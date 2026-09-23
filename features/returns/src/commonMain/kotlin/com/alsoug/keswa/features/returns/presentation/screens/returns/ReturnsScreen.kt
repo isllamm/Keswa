@@ -38,7 +38,6 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alsoug.keswa.core.designsystem.EmptyState
-import com.alsoug.keswa.core.designsystem.FigureLargeStyle
 import com.alsoug.keswa.core.designsystem.KeswaTheme
 import com.alsoug.keswa.core.designsystem.ScreenHeader
 import com.alsoug.keswa.core.domain.model.ReturnCondition
@@ -90,8 +89,8 @@ internal fun ReturnsContent(
         }
 
         ScreenHeader(
-            title = "Returns",
-            subtitle = "Scan the receipt's code, or find the sale",
+            title = KeswaTheme.strings.returns,
+            subtitle = KeswaTheme.strings.returnsSubtitle,
         )
 
         Row(modifier = Modifier.fillMaxSize()) {
@@ -154,13 +153,13 @@ private fun Lines(
     if (state.lines.isEmpty()) {
         state.lastReturn?.let { done ->
             EmptyState(
-                title = "Return #${done.returnNumber} done",
-                hint = "Scan another receipt when you are ready",
+                title = "${KeswaTheme.strings.returnDone} #${done.returnNumber}",
+                hint = KeswaTheme.strings.returnDoneHint,
                 modifier = modifier,
             )
         } ?: EmptyState(
-            title = "Find the receipt",
-            hint = "Scan the code on it, or enter the receipt number",
+            title = KeswaTheme.strings.findTheReceipt,
+            hint = KeswaTheme.strings.findTheReceiptHint,
             modifier = modifier,
         )
         return
@@ -250,7 +249,7 @@ private fun ColumnScope.Summary(state: ReturnsUiState, onEvent: (ReturnsUiEvent)
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text("Refund", style = MaterialTheme.typography.titleLarge)
-        Text(state.refundTotal.format(), style = FigureLargeStyle)
+        Text(state.refundTotal.format(), style = KeswaTheme.figureLarge)
     }
 
     Row(

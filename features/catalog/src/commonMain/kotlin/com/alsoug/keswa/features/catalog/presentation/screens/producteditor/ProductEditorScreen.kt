@@ -83,7 +83,7 @@ internal fun ProductEditorContent(
 
         ScreenHeader(
             title = state.productLabel,
-            subtitle = "Each colour is its own SKU",
+            subtitle = KeswaTheme.strings.eachColourItsOwnSku,
             onBack = { onEvent(ProductEditorUiEvent.Back) },
         )
         Text(

@@ -57,6 +57,11 @@ kotlin {
             api(libs.ktor.client.content.negotiation)
             api(libs.ktor.serialization.json)
 
+            // IBM Plex, which the prototype has specified since before Phase 0 and the app has
+            // never had. Bundled rather than assumed present: a till is an appliance, and a shop's
+            // Windows machine has whatever its OEM shipped.
+            api(compose.components.resources)
+
             api(libs.androidx.room.runtime)
             api(libs.androidx.sqlite.bundled)
         }
@@ -109,4 +114,12 @@ dependencies {
 
 room {
     schemaDirectory("$projectDir/schemas")
+}
+
+compose.resources {
+    // Named explicitly so every module refers to the fonts by one import rather than a package
+    // Compose derives from the module coordinates.
+    publicResClass = true
+    packageOfResClass = "com.alsoug.keswa.core.resources"
+    generateResClass = auto
 }

@@ -36,8 +36,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alsoug.keswa.core.designsystem.EmptyState
-import com.alsoug.keswa.core.designsystem.FigureLargeStyle
-import com.alsoug.keswa.core.designsystem.FigureStyle
 import com.alsoug.keswa.core.designsystem.KeswaTheme
 import com.alsoug.keswa.core.designsystem.ScreenHeader
 import com.alsoug.keswa.core.domain.model.DocumentStatus
@@ -91,8 +89,8 @@ internal fun ReceivingContent(
         }
 
         ScreenHeader(
-            title = "Receiving",
-            subtitle = "Book in a delivery, and let it set the cost",
+            title = KeswaTheme.strings.receiving,
+            subtitle = KeswaTheme.strings.receivingHint,
             onBack = onBack,
         )
 
@@ -169,14 +167,14 @@ private fun Lines(
     if (state.lines.isEmpty()) {
         if (state.receipt == null) {
             EmptyState(
-                title = "Start a delivery",
-                hint = "Name the supplier and a reference, then scan what arrived",
+                title = KeswaTheme.strings.startADelivery,
+                hint = KeswaTheme.strings.startADeliveryHint,
                 modifier = modifier,
             )
         } else {
             EmptyState(
-                title = "Scan the first carton",
-                hint = "Each colour is counted separately — the cost follows from what you enter",
+                title = KeswaTheme.strings.scanFirstCarton,
+                hint = KeswaTheme.strings.scanFirstCartonHint,
                 modifier = modifier,
             )
         }
@@ -200,7 +198,7 @@ private fun Lines(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                Text(line.lineTotal.format(), style = FigureStyle)
+                Text(line.lineTotal.format(), style = KeswaTheme.figure)
                 if (state.isDraft) {
                     TextButton(onClick = { onEvent(ReceivingUiEvent.RemoveLine(line.lineId)) }) {
                         Text("✕")
@@ -237,7 +235,7 @@ private fun Summary(state: ReceivingUiState, onEvent: (ReceivingUiEvent) -> Unit
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text("Cost", style = MaterialTheme.typography.titleMedium)
-            Text(state.totalCost.format(), style = FigureLargeStyle)
+            Text(state.totalCost.format(), style = KeswaTheme.figureLarge)
         }
 
         if (state.isDraft) {

@@ -20,6 +20,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -29,7 +30,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alsoug.keswa.core.designsystem.KeswaLanguage
 import com.alsoug.keswa.core.designsystem.KeswaTheme
+import com.alsoug.keswa.core.domain.repository.ISettingsRepository
 import com.alsoug.keswa.core.session.ISessionManager
 import com.alsoug.keswa.features.analytics.presentation.screens.dashboard.DashboardScreen
 import com.alsoug.keswa.features.auth.presentation.screens.signin.SignInScreen
@@ -70,13 +73,30 @@ internal sealed interface Route {
 }
 
 @Composable
-fun App(sessions: ISessionManager = koinInject()) {
+fun App(
+    sessions: ISessionManager = koinInject(),
+    settings: ISettingsRepository = koinInject(),
+) {
     val session by sessions.current.collectAsStateWithLifecycle()
     val snackbars = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
     val notify: (String) -> Unit = { message -> scope.launch { snackbars.showSnackbar(message) } }
 
-    KeswaTheme {
+    // Read once at start, then held here. The shop changes its language about as often as it
+    // changes its name, so observing a flow for it would be machinery for an event that does not
+    // happen — and the toggle updates this directly.
+    var language by remember { mutableStateOf(KeswaLanguage.ENGLISH) }
+    LaunchedEffect(Unit) {
+        settings.get().onSuccess { language = KeswaLanguage.ofCode(it.languageCode) }
+    }
+    val switchLanguage: (KeswaLanguage) -> Unit = { chosen ->
+        language = chosen
+        scope.launch {
+            settings.get().onSuccess { settings.save(it.copy(languageCode = chosen.code)) }
+        }
+    }
+
+    KeswaTheme(language = language) {
         // The whole app sits behind a session. Screens still check their own permissions in the
         // domain layer — this gate is convenience, not the security boundary.
         if (session == null) {
@@ -95,6 +115,8 @@ fun App(sessions: ISessionManager = koinInject()) {
                 snackbars = snackbars,
                 notify = notify,
                 onSignOut = sessions::signOut,
+                language = language,
+                onLanguage = switchLanguage,
             )
         }
     }
@@ -107,6 +129,8 @@ private fun SignedInApp(
     snackbars: SnackbarHostState,
     notify: (String) -> Unit,
     onSignOut: () -> Unit,
+    language: KeswaLanguage,
+    onLanguage: (KeswaLanguage) -> Unit,
 ) {
     // The till is where a shop spends its day, so it is what opens — the catalogue is the
     // back-office errand, not the other way round.
@@ -119,7 +143,12 @@ private fun SignedInApp(
 
             if (compact) {
                 Column(Modifier.fillMaxSize()) {
-                    NavigationStrip(current = route, onNavigate = { route = it })
+                    NavigationStrip(
+                        current = route,
+                        onNavigate = { route = it },
+                        language = language,
+                        onLanguage = onLanguage,
+                    )
                     Destination(route, notify, onNavigate = { route = it }, Modifier.weight(1f))
                 }
             } else {
@@ -130,6 +159,8 @@ private fun SignedInApp(
                         role = role,
                         onNavigate = { route = it },
                         onSignOut = onSignOut,
+                        language = language,
+                        onLanguage = onLanguage,
                     )
                     Destination(route, notify, onNavigate = { route = it }, Modifier.weight(1f))
                 }

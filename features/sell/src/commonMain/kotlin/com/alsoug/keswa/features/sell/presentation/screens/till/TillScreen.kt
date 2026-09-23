@@ -45,8 +45,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alsoug.keswa.core.designsystem.EmptyState
-import com.alsoug.keswa.core.designsystem.FigureLargeStyle
-import com.alsoug.keswa.core.designsystem.FigureStyle
 import com.alsoug.keswa.core.designsystem.KeswaTheme
 import com.alsoug.keswa.core.domain.model.SellableItem
 import com.alsoug.keswa.core.domain.model.TenderMethod
@@ -138,7 +136,7 @@ private fun ScanBar(state: TillUiState, onEvent: (TillUiEvent) -> Unit) {
     OutlinedTextField(
         value = entry,
         onValueChange = { entry = it },
-        label = { Text("Scan or search — barcode, SKU or name") },
+        label = { Text(KeswaTheme.strings.scanOrSearch) },
         singleLine = true,
         textStyle = MaterialTheme.typography.bodyLarge,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
@@ -156,9 +154,9 @@ private fun ScanBar(state: TillUiState, onEvent: (TillUiEvent) -> Unit) {
                 onEvent(TillUiEvent.QueryChanged(entry))
                 onEvent(TillUiEvent.Search)
             },
-        ) { Text("Search") }
+        ) { Text(KeswaTheme.strings.search) }
         if (!state.basket.isEmpty) {
-            OutlinedButton(onClick = { onEvent(TillUiEvent.ClearBasket) }) { Text("Clear") }
+            OutlinedButton(onClick = { onEvent(TillUiEvent.ClearBasket) }) { Text(KeswaTheme.strings.clear) }
         }
     }
 }
@@ -182,7 +180,7 @@ private fun SearchResults(results: List<SellableItem>, onEvent: (TillUiEvent) ->
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                Text(item.price?.format() ?: "no price", style = FigureStyle)
+                Text(item.price?.format() ?: KeswaTheme.strings.noPrice, style = KeswaTheme.figure)
             }
         }
     }
@@ -192,8 +190,8 @@ private fun SearchResults(results: List<SellableItem>, onEvent: (TillUiEvent) ->
 private fun CartLines(state: TillUiState, onEvent: (TillUiEvent) -> Unit, modifier: Modifier) {
     if (state.basket.isEmpty) {
         EmptyState(
-            title = "Scan to start",
-            hint = "Or type a SKU or a name and press Search",
+            title = KeswaTheme.strings.scanToStart,
+            hint = KeswaTheme.strings.scanToStartHint,
             modifier = modifier,
         )
         return
@@ -249,7 +247,7 @@ private fun CartLineRow(
         // Fixed width and tabular, so every line total in the cart sits on the same decimal point.
         Text(
             lineTotal.format(),
-            style = FigureStyle,
+            style = KeswaTheme.figure,
             textAlign = TextAlign.End,
             modifier = Modifier.width(96.dp).padding(start = 8.dp),
         )
@@ -291,7 +289,7 @@ private fun QuantityStepper(quantity: Int, onChange: (Int) -> Unit) {
         StepperButton("−", enabled = quantity > 1) { onChange(quantity - 1) }
         Text(
             quantity.toString(),
-            style = FigureStyle,
+            style = KeswaTheme.figure,
             textAlign = TextAlign.Center,
             modifier = Modifier.width(32.dp),
         )
@@ -364,9 +362,9 @@ private fun TotalsPanel(state: TillUiState) {
             .background(KeswaTheme.semantics.sunk, RoundedCornerShape(7.dp))
             .padding(12.dp),
     ) {
-        AmountRow("Subtotal", state.totals.subtotal)
-        if (!state.totals.discount.isZero) AmountRow("Discount", -state.totals.discount)
-        if (state.vatBasisPoints > 0) AmountRow("VAT · ض.ق.م", state.totals.tax)
+        AmountRow(KeswaTheme.strings.subtotal, state.totals.subtotal)
+        if (!state.totals.discount.isZero) AmountRow(KeswaTheme.strings.discount, -state.totals.discount)
+        if (state.vatBasisPoints > 0) AmountRow(KeswaTheme.strings.vat, state.totals.tax)
         HorizontalDivider(
             color = KeswaTheme.semantics.hair,
             modifier = Modifier.padding(vertical = 8.dp),
@@ -376,14 +374,14 @@ private fun TotalsPanel(state: TillUiState) {
         // reads out. It was `titleLarge`, the same size as a section heading.
         Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
             Column(Modifier.weight(1f)) {
-                Text("Total", style = MaterialTheme.typography.titleMedium)
+                Text(KeswaTheme.strings.total, style = MaterialTheme.typography.titleMedium)
                 Text(
-                    "${state.totals.itemCount} pcs",
+                    "${state.totals.itemCount} ${KeswaTheme.strings.pieces}",
                     style = MaterialTheme.typography.labelSmall,
                     color = KeswaTheme.semantics.muted,
                 )
             }
-            Text(state.totals.total.format(), style = FigureLargeStyle)
+            Text(state.totals.total.format(), style = KeswaTheme.figureLarge)
         }
     }
 }
@@ -399,7 +397,7 @@ private fun AmountRow(label: String, amount: Money, emphasised: Boolean = false)
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
-        Text(amount.format(), style = if (emphasised) FigureLargeStyle else FigureStyle)
+        Text(amount.format(), style = if (emphasised) KeswaTheme.figureLarge else KeswaTheme.figure)
     }
 }
 
@@ -419,7 +417,7 @@ private fun Actions(state: TillUiState, onEvent: (TillUiEvent) -> Unit) {
             shape = RoundedCornerShape(7.dp),
             modifier = Modifier.fillMaxWidth().height(56.dp),
         ) {
-            Text("Take payment", style = MaterialTheme.typography.titleMedium)
+            Text(KeswaTheme.strings.takePayment, style = MaterialTheme.typography.titleMedium)
         }
 
         // A discount and a hold are the exceptions, not the routine, and two permanently-open text
@@ -430,7 +428,7 @@ private fun Actions(state: TillUiState, onEvent: (TillUiEvent) -> Unit) {
             enabled = !state.basket.isEmpty,
             modifier = Modifier.padding(top = 4.dp),
         ) {
-            Text(if (showMore) "Fewer options" else "Discount or hold")
+            Text(if (showMore) KeswaTheme.strings.fewerOptions else KeswaTheme.strings.discountOrHold)
         }
 
         if (showMore) {
@@ -442,14 +440,14 @@ private fun Actions(state: TillUiState, onEvent: (TillUiEvent) -> Unit) {
                 OutlinedTextField(
                     value = discount,
                     onValueChange = { discount = it },
-                    label = { Text("Order discount") },
+                    label = { Text(KeswaTheme.strings.orderDiscount) },
                     singleLine = true,
                     modifier = Modifier.weight(1f),
                 )
                 TextButton(
                     onClick = { onEvent(TillUiEvent.RequestOrderDiscount(discount)) },
                     enabled = !state.basket.isEmpty,
-                ) { Text("Apply") }
+                ) { Text(KeswaTheme.strings.apply) }
             }
 
             Row(
@@ -460,7 +458,7 @@ private fun Actions(state: TillUiState, onEvent: (TillUiEvent) -> Unit) {
                 OutlinedTextField(
                     value = holdLabel,
                     onValueChange = { holdLabel = it },
-                    label = { Text("Hold as") },
+                    label = { Text(KeswaTheme.strings.holdAs) },
                     singleLine = true,
                     modifier = Modifier.weight(1f),
                 )
@@ -471,7 +469,7 @@ private fun Actions(state: TillUiState, onEvent: (TillUiEvent) -> Unit) {
                         showMore = false
                     },
                     enabled = !state.basket.isEmpty,
-                ) { Text("Hold") }
+                ) { Text(KeswaTheme.strings.hold) }
             }
         }
 
@@ -479,7 +477,7 @@ private fun Actions(state: TillUiState, onEvent: (TillUiEvent) -> Unit) {
             OutlinedButton(
                 onClick = { onEvent(TillUiEvent.Reprint) },
                 modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-            ) { Text("Reprint #${state.lastReceiptNumber}") }
+            ) { Text("${KeswaTheme.strings.reprint} #${state.lastReceiptNumber}") }
         }
     }
 }

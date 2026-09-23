@@ -27,6 +27,9 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.unit.dp
+import com.alsoug.keswa.core.designsystem.KeswaLanguage
+import com.alsoug.keswa.core.designsystem.KeswaTheme
+import com.alsoug.keswa.core.designsystem.localisedName
 import com.alsoug.keswa.core.domain.model.BusyHours
 import com.alsoug.keswa.core.domain.model.ColourBucket
 import com.alsoug.keswa.core.domain.model.DailyPoint
@@ -62,7 +65,7 @@ fun TrendLine(
 ) {
     val colours = chartColours()
     if (points.isEmpty()) {
-        EmptyPanel("Nothing sold in this period", modifier)
+        EmptyPanel(KeswaTheme.strings.nothingSoldPeriod, modifier)
         return
     }
 
@@ -137,7 +140,7 @@ fun ColourPerformanceChart(
     val colours = chartColours()
     val visible = buckets.filter { it.total > 0 }
     if (visible.isEmpty()) {
-        EmptyPanel("No stock to compare yet", modifier)
+        EmptyPanel(KeswaTheme.strings.noStockToCompare, modifier)
         return
     }
 
@@ -198,7 +201,7 @@ fun ColourPerformanceChart(
                 ) {
                     Swatch(bucket.hex)
                     Text(
-                        bucket.name,
+                        localisedName(bucket.name, bucket.nameAr),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -213,13 +216,13 @@ fun ColourPerformanceChart(
 fun BusyHoursHeatmap(hours: BusyHours, modifier: Modifier = Modifier) {
     val colours = chartColours()
     if (hours.buckets.isEmpty()) {
-        EmptyPanel("No trading hours to show yet", modifier)
+        EmptyPanel(KeswaTheme.strings.noTradingHours, modifier)
         return
     }
 
     val busiest = hours.busiest.coerceAtLeast(1)
     // Sunday first, matching SQLite's %w and the Egyptian working week.
-    val days = listOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
+    val days = KeswaTheme.strings.weekdays
     val openHours = OPENING_HOUR..CLOSING_HOUR
 
     Column(modifier = modifier) {
@@ -317,8 +320,8 @@ private fun AxisLabels(ceiling: Long) {
 @Composable
 private fun Legend(soldColour: Color, onHandColour: Color) {
     Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-        LegendEntry(soldColour, "Sold")
-        LegendEntry(onHandColour, "On hand")
+        LegendEntry(soldColour, KeswaTheme.strings.soldLegend)
+        LegendEntry(onHandColour, KeswaTheme.strings.onHandLegend)
     }
 }
 

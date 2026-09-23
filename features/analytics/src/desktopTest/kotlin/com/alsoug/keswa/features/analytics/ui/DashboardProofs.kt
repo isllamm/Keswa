@@ -5,6 +5,7 @@ import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.ImageComposeScene
 import androidx.compose.ui.unit.Density
+import com.alsoug.keswa.core.designsystem.KeswaLanguage
 import com.alsoug.keswa.core.designsystem.KeswaTheme
 import com.alsoug.keswa.core.domain.model.BusyHours
 import com.alsoug.keswa.core.domain.model.ColourBucket
@@ -73,6 +74,11 @@ class DashboardProofs {
         render("dashboard-dark", height = 1500) {
             Page(dark = true) { DashboardContent(state = busy, onEvent = {}) }
         }
+        render("dashboard-arabic", height = 1500) {
+            Page(dark = false, language = KeswaLanguage.ARABIC) {
+                DashboardContent(state = busy, onEvent = {})
+            }
+        }
         // Every new install sees this first, so it is the state most worth eyeballing.
         render("dashboard-day-one", height = 900) {
             Page(dark = false) {
@@ -89,8 +95,12 @@ class DashboardProofs {
 
 /** Theme, then page — a `Surface` outside the theme reads the baseline scheme. */
 @Composable
-private fun Page(dark: Boolean, content: @Composable () -> Unit) {
-    KeswaTheme(dark = dark) {
+private fun Page(
+    dark: Boolean,
+    language: KeswaLanguage = KeswaLanguage.ENGLISH,
+    content: @Composable () -> Unit,
+) {
+    KeswaTheme(dark = dark, language = language) {
         Surface(color = MaterialTheme.colorScheme.background) { content() }
     }
 }

@@ -85,8 +85,8 @@ internal fun CatalogBrowserContent(
         if (state.isLoading) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
 
         ScreenHeader(
-            title = "Catalogue",
-            subtitle = "Products, colours and prices",
+            title = KeswaTheme.strings.catalogue,
+            subtitle = KeswaTheme.strings.catalogueSubtitle,
         )
 
         Row(modifier = Modifier.fillMaxSize()) {
@@ -119,8 +119,8 @@ internal fun CatalogBrowserContent(
                 )
                 if (state.isEmpty) {
                     EmptyState(
-                        title = "Nothing in this category",
-                        hint = "Add a product, or pick another category on the left",
+                        title = KeswaTheme.strings.nothingInCategory,
+                        hint = KeswaTheme.strings.nothingInCategoryHint,
                     )
                 } else {
                     ProductList(
