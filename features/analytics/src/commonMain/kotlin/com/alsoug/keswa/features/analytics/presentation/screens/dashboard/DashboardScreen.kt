@@ -32,9 +32,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alsoug.keswa.core.designsystem.EmptyState
 import com.alsoug.keswa.core.designsystem.FigureLargeStyle
 import com.alsoug.keswa.core.designsystem.FigureStyle
 import com.alsoug.keswa.core.designsystem.KeswaTheme
+import com.alsoug.keswa.core.designsystem.Panel
+import com.alsoug.keswa.core.designsystem.ScreenHeader
+import com.alsoug.keswa.core.designsystem.StatTile
 import com.alsoug.keswa.core.domain.model.AnalyticsPeriod
 import com.alsoug.keswa.core.domain.model.BusyHours
 import com.alsoug.keswa.core.domain.model.ColourBucket
@@ -93,29 +97,15 @@ internal fun DashboardContent(
         // No back arrow. The navigation is persistent now, so "back" had no answer — it went to
         // the till, which is a destination, not a return. The period picker belongs up here
         // instead, because one filter scopes every panel below it.
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-        ) {
-            Column(Modifier.weight(1f)) {
-                Text("Numbers", style = MaterialTheme.typography.headlineSmall)
-                Text(
-                    "How the shop is doing",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = KeswaTheme.semantics.muted,
-                )
-            }
+        ScreenHeader(title = "Numbers", subtitle = "How the shop is doing") {
             if (state.isPermitted) PeriodPicker(state.period, onEvent)
         }
 
         if (!state.isPermitted) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(
-                    "These figures are for the owner",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            EmptyState(
+                title = "These figures are for the owner",
+                hint = "Ask an admin to sign in if you need them",
+            )
             return
         }
 
@@ -180,19 +170,19 @@ private fun Headline(kpis: HeadlineKpis, showsCost: Boolean) {
             modifier = Modifier.fillMaxWidth().padding(top = 14.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            Tile("Sales", "${kpis.transactions}", modifier = Modifier.weight(1f))
-            Tile("Basket", kpis.averageBasket?.format() ?: "—", modifier = Modifier.weight(1f))
-            Tile("Units", "${kpis.units}", modifier = Modifier.weight(1f))
+            StatTile("Sales", "${kpis.transactions}", modifier = Modifier.weight(1f))
+            StatTile("Basket", kpis.averageBasket?.format() ?: "—", modifier = Modifier.weight(1f))
+            StatTile("Units", "${kpis.units}", modifier = Modifier.weight(1f))
             // A first-class KPI in clothing, not a footnote: fit is guesswork, so a shop with no
             // returns is a shop nobody is trying things on in.
-            Tile(
+            StatTile(
                 label = "Returns",
                 value = kpis.returnRateBasisPoints?.asPercent() ?: "—",
                 accent = KeswaTheme.semantics.warning,
                 modifier = Modifier.weight(1f),
             )
             if (showsCost) {
-                Tile(
+                StatTile(
                     label = "Margin",
                     value = kpis.marginBasisPoints?.asPercent() ?: "—",
                     accent = KeswaTheme.semantics.good,
@@ -200,42 +190,6 @@ private fun Headline(kpis: HeadlineKpis, showsCost: Boolean) {
                 )
             }
         }
-    }
-}
-
-/**
- * A figure and what it is.
- *
- * The value is tabular so a row of tiles reads as a row rather than as five unrelated numbers,
- * and the accent is a mark beside the label — never the colour of the figure itself, which fails
- * contrast at this size and reads as a state the number is in.
- */
-@Composable
-private fun Tile(
-    label: String,
-    value: String,
-    modifier: Modifier = Modifier,
-    accent: Color? = null,
-) {
-    Column(
-        modifier = modifier
-            .background(KeswaTheme.semantics.sunk, RoundedCornerShape(6.dp))
-            .border(1.dp, KeswaTheme.semantics.grid, RoundedCornerShape(6.dp))
-            .padding(12.dp),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            if (accent != null) {
-                Box(Modifier.size(7.dp).background(accent, RoundedCornerShape(2.dp)))
-                Spacer(Modifier.width(5.dp))
-            }
-            Text(
-                label.uppercase(),
-                style = MaterialTheme.typography.labelSmall,
-                color = KeswaTheme.semantics.muted,
-            )
-        }
-        Spacer(Modifier.height(4.dp))
-        Text(value, style = FigureLargeStyle)
     }
 }
 
@@ -322,26 +276,6 @@ private fun Movers(movers: List<Mover>, showsCost: Boolean) {
             }
         }
         HorizontalDivider(color = KeswaTheme.semantics.hair)
-    }
-}
-
-@Composable
-private fun Panel(title: String, content: @Composable () -> Unit) {
-    Column(modifier = Modifier.fillMaxWidth().widthIn(max = 820.dp).padding(top = 16.dp)) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(7.dp))
-                .border(1.dp, KeswaTheme.semantics.grid, RoundedCornerShape(7.dp))
-                .padding(16.dp),
-        ) {
-            Text(
-                title.uppercase(),
-                style = MaterialTheme.typography.labelSmall,
-                color = KeswaTheme.semantics.muted,
-            )
-            Column(modifier = Modifier.padding(top = 10.dp)) { content() }
-        }
     }
 }
 

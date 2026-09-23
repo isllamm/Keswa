@@ -26,7 +26,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alsoug.keswa.core.designsystem.FigureStyle
 import com.alsoug.keswa.core.designsystem.KeswaTheme
+import com.alsoug.keswa.core.designsystem.ScreenHeader
 import com.alsoug.keswa.core.domain.money.Money
 import com.alsoug.keswa.features.inventory.domain.usecase.ImportProblem
 import com.alsoug.keswa.features.inventory.domain.usecase.ImportRow
@@ -76,10 +78,11 @@ internal fun ImportContent(
             LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
         }
 
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            TextButton(onClick = onBack) { Text("← Back") }
-            Text("Import catalogue", style = MaterialTheme.typography.titleMedium)
-        }
+        ScreenHeader(
+            title = "Import catalogue",
+            subtitle = "A supplier's spreadsheet, validated as a whole",
+            onBack = onBack,
+        )
         Text(
             "Paste the spreadsheet as comma-separated rows: " +
                 "product, productAr, colour, sku, cost, price, quantity. " +
@@ -171,7 +174,7 @@ private fun ColumnScope.Preview(state: ImportUiState) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                Text(row.price.format(), style = MaterialTheme.typography.bodyMedium)
+                Text(row.price.format(), style = FigureStyle)
             }
             HorizontalDivider()
         }
