@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alsoug.keswa.core.designsystem.KeswaTheme
+import com.alsoug.keswa.core.designsystem.ScreenHeader
 import com.alsoug.keswa.core.domain.model.ShopSettings
 import com.alsoug.keswa.core.printing.MonoBitmap
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -68,10 +69,11 @@ internal fun SettingsContent(
     ) {
         if (state.isLoading || state.isBusy) LinearProgressIndicator(Modifier.fillMaxWidth())
 
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            TextButton(onClick = { onEvent(SettingsUiEvent.Back) }) { Text("← Back") }
-            Text("Settings", style = MaterialTheme.typography.titleMedium)
-        }
+        ScreenHeader(
+            title = "Settings",
+            subtitle = "Printers, scanner and the shop's own details",
+            onBack = { onEvent(SettingsUiEvent.Back) },
+        )
 
         Section(
             title = "Receipt printer",

@@ -29,7 +29,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alsoug.keswa.core.designsystem.EmptyState
 import com.alsoug.keswa.core.designsystem.KeswaTheme
+import com.alsoug.keswa.core.designsystem.ScreenHeader
 import com.alsoug.keswa.features.catalog.presentation.components.CategoryTree
 import com.alsoug.keswa.features.catalog.presentation.model.CategoryNodeUiModel
 import com.alsoug.keswa.features.catalog.presentation.model.ProductUiModel
@@ -82,6 +84,11 @@ internal fun CatalogBrowserContent(
     Column(modifier = modifier.fillMaxSize()) {
         if (state.isLoading) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
 
+        ScreenHeader(
+            title = "Catalogue",
+            subtitle = "Products, colours and prices",
+        )
+
         Row(modifier = Modifier.fillMaxSize()) {
             Column(modifier = Modifier.width(280.dp).padding(12.dp)) {
                 Text("Categories", style = MaterialTheme.typography.titleSmall)
@@ -111,13 +118,10 @@ internal fun CatalogBrowserContent(
                     modifier = Modifier.fillMaxWidth(),
                 )
                 if (state.isEmpty) {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(
-                            "No products in this category yet.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
+                    EmptyState(
+                        title = "Nothing in this category",
+                        hint = "Add a product, or pick another category on the left",
+                    )
                 } else {
                     ProductList(
                         products = state.products,

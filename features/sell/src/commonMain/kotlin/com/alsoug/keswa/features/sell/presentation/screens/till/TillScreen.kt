@@ -44,6 +44,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alsoug.keswa.core.designsystem.EmptyState
 import com.alsoug.keswa.core.designsystem.FigureLargeStyle
 import com.alsoug.keswa.core.designsystem.FigureStyle
 import com.alsoug.keswa.core.designsystem.KeswaTheme
@@ -181,7 +182,7 @@ private fun SearchResults(results: List<SellableItem>, onEvent: (TillUiEvent) ->
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                Text(item.price?.format() ?: "no price", style = MaterialTheme.typography.bodyMedium)
+                Text(item.price?.format() ?: "no price", style = FigureStyle)
             }
         }
     }
@@ -190,21 +191,11 @@ private fun SearchResults(results: List<SellableItem>, onEvent: (TillUiEvent) ->
 @Composable
 private fun CartLines(state: TillUiState, onEvent: (TillUiEvent) -> Unit, modifier: Modifier) {
     if (state.basket.isEmpty) {
-        Box(modifier = modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    "Scan to start",
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Text(
-                    "Or type a SKU or a name and press Search",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = KeswaTheme.semantics.muted,
-                    modifier = Modifier.padding(top = 2.dp),
-                )
-            }
-        }
+        EmptyState(
+            title = "Scan to start",
+            hint = "Or type a SKU or a name and press Search",
+            modifier = modifier,
+        )
         return
     }
 

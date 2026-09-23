@@ -350,14 +350,16 @@ private fun Swatch(hex: String) {
 
 @Composable
 private fun EmptyPanel(message: String, modifier: Modifier) {
-    Box(modifier = modifier.fillMaxWidth().height(120.dp), contentAlignment = Alignment.Center) {
-        // A stated empty state, never a broken axis or a NaN. Every new install sees this first.
-        Text(
-            message,
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-    }
+    // A stated empty state, never a broken axis or a NaN. Every new install sees this first —
+    // which is also why it no longer reserves the chart's full height: a sentence floating in the
+    // middle of 120dp of nothing made a shop's first morning look like a page that had failed to
+    // load. It takes the room it needs and the panel closes up around it.
+    Text(
+        message,
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = modifier.fillMaxWidth().padding(vertical = 4.dp),
+    )
 }
 
 private fun androidx.compose.ui.graphics.drawscope.DrawScope.drawGrid(colour: Color, size: Size) {
