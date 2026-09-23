@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.wholesale.presentation.screens.customers
 
+import com.alsoug.keswa.core.designsystem.Message
 import com.alsoug.keswa.core.domain.model.Ageing
 import com.alsoug.keswa.core.domain.model.Customer
 import com.alsoug.keswa.core.domain.model.LedgerEntry
@@ -61,6 +62,6 @@ sealed interface CustomersNavigation {
 }
 
 sealed interface CustomersUiEffect {
-    data class ShowError(val message: String) : CustomersUiEffect
-    data class ShowMessage(val message: String) : CustomersUiEffect
+    data class ShowError(val message: Message) : CustomersUiEffect
+    data class ShowMessage(val message: Message) : CustomersUiEffect
 }

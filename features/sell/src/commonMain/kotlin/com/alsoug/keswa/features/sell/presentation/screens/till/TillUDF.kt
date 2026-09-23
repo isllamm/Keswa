@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.sell.presentation.screens.till
 
+import com.alsoug.keswa.core.designsystem.Message
 import com.alsoug.keswa.core.domain.model.HeldSale
 import com.alsoug.keswa.core.domain.model.Permission
 import com.alsoug.keswa.core.domain.model.SellableItem
@@ -99,8 +100,8 @@ sealed interface TillNavigation {
 }
 
 sealed interface TillUiEffect {
-    data class ShowError(val message: String) : TillUiEffect
-    data class ShowMessage(val message: String) : TillUiEffect
+    data class ShowError(val message: Message) : TillUiEffect
+    data class ShowMessage(val message: Message) : TillUiEffect
     /** Persistent enough to need acknowledging: the shop just sold stock it does not have. */
-    data class StockWarning(val message: String) : TillUiEffect
+    data class StockWarning(val message: Message) : TillUiEffect
 }

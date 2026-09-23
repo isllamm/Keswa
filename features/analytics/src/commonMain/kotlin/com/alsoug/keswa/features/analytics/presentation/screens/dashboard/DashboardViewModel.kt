@@ -3,6 +3,7 @@ package com.alsoug.keswa.features.analytics.presentation.screens.dashboard
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alsoug.keswa.core.coroutines.DispatcherProvider
+import com.alsoug.keswa.core.designsystem.message
 import com.alsoug.keswa.core.domain.model.AnalyticsPeriod
 import com.alsoug.keswa.core.domain.model.BusyHours
 import com.alsoug.keswa.core.domain.model.Permission
@@ -105,6 +106,6 @@ class DashboardViewModel(
 
     private suspend fun fail(cause: Throwable) {
         _state.update { it.copy(isLoading = false) }
-        _effect.emit(DashboardUiEffect.ShowError(cause.message ?: "Could not load the numbers"))
+        _effect.emit(DashboardUiEffect.ShowError(message { it.couldNotLoadNumbers }))
     }
 }

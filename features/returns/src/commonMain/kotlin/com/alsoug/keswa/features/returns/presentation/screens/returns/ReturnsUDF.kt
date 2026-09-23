@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.returns.presentation.screens.returns
 
+import com.alsoug.keswa.core.designsystem.Message
 import com.alsoug.keswa.core.domain.model.ReturnCondition
 import com.alsoug.keswa.core.domain.model.SaleReturn
 import com.alsoug.keswa.core.domain.model.TenderMethod
@@ -82,6 +83,6 @@ sealed interface ReturnsNavigation {
 }
 
 sealed interface ReturnsUiEffect {
-    data class ShowError(val message: String) : ReturnsUiEffect
-    data class ShowMessage(val message: String) : ReturnsUiEffect
+    data class ShowError(val message: Message) : ReturnsUiEffect
+    data class ShowMessage(val message: Message) : ReturnsUiEffect
 }

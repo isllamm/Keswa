@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.settings.presentation.screens.settings
 
+import com.alsoug.keswa.core.designsystem.Message
 import com.alsoug.keswa.core.domain.model.ShopSettings
 
 data class SettingsUiState(
@@ -25,6 +26,6 @@ sealed interface SettingsNavigation {
 }
 
 sealed interface SettingsUiEffect {
-    data class ShowMessage(val message: String) : SettingsUiEffect
-    data class ShowError(val message: String) : SettingsUiEffect
+    data class ShowMessage(val message: Message) : SettingsUiEffect
+    data class ShowError(val message: Message) : SettingsUiEffect
 }

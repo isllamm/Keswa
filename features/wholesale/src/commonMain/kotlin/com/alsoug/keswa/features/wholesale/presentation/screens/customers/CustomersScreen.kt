@@ -36,6 +36,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alsoug.keswa.core.designsystem.EmptyState
 import com.alsoug.keswa.core.designsystem.KeswaTheme
 import com.alsoug.keswa.core.designsystem.ScreenHeader
+import com.alsoug.keswa.core.designsystem.resolve
 import com.alsoug.keswa.core.domain.model.Ageing
 import com.alsoug.keswa.core.domain.model.Customer
 import com.alsoug.keswa.core.domain.model.LedgerEntry
@@ -52,6 +53,7 @@ fun CustomersScreen(
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val strings = KeswaTheme.strings
 
     LaunchedEffect(Unit) { viewModel.onEvent(CustomersUiEvent.Load) }
 
@@ -66,8 +68,8 @@ fun CustomersScreen(
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
-                is CustomersUiEffect.ShowError -> onMessage(effect.message)
-                is CustomersUiEffect.ShowMessage -> onMessage(effect.message)
+                is CustomersUiEffect.ShowError -> onMessage(effect.message.resolve(strings))
+                is CustomersUiEffect.ShowMessage -> onMessage(effect.message.resolve(strings))
             }
         }
     }

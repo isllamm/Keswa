@@ -3,6 +3,7 @@ package com.alsoug.keswa.features.auth.presentation.screens.signin
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alsoug.keswa.core.coroutines.DispatcherProvider
+import com.alsoug.keswa.core.designsystem.message
 import com.alsoug.keswa.features.auth.domain.usecase.BootstrapFirstAdminUseCase
 import com.alsoug.keswa.features.auth.domain.usecase.ChangeOwnSecretUseCase
 import com.alsoug.keswa.features.auth.domain.usecase.ListSellersUseCase
@@ -112,11 +113,11 @@ class SignInViewModel(
             is SignInResult.MustChangeSecret -> _state.update { it.copy(mustChangeFor = result.user) }
             is SignInResult.Locked -> {
                 _state.update { it.copy(lockedUntilMillis = result.untilMillis) }
-                _effect.emit(SignInUiEffect.ShowError("Too many attempts — locked for a few minutes"))
+                _effect.emit(SignInUiEffect.ShowError(message { it.tooManyAttempts }))
             }
             // One message for both failure modes: naming which half was wrong turns this screen
             // into a way to discover who works here.
-            SignInResult.BadCredentials -> _effect.emit(SignInUiEffect.ShowError("Incorrect details"))
+            SignInResult.BadCredentials -> _effect.emit(SignInUiEffect.ShowError(message { it.incorrectDetails }))
         }
     }
 
@@ -143,7 +144,7 @@ class SignInViewModel(
             changeSecret(user.id, secret).fold(
                 onSuccess = {
                     _state.update { it.copy(mustChangeFor = null) }
-                    _effect.emit(SignInUiEffect.ShowMessage("Updated — sign in with your new details"))
+                    _effect.emit(SignInUiEffect.ShowMessage(message { it.updatedSignInAgain }))
                 },
                 onFailure = { fail(it) },
             )
@@ -153,6 +154,6 @@ class SignInViewModel(
 
     private suspend fun fail(cause: Throwable) {
         _state.update { it.copy(isLoading = false) }
-        _effect.emit(SignInUiEffect.ShowError(cause.message ?: "Sign-in failed"))
+        _effect.emit(SignInUiEffect.ShowError(message { it.signInFailed }))
     }
 }

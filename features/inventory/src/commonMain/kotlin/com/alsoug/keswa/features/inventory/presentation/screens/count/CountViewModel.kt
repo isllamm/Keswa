@@ -3,6 +3,8 @@ package com.alsoug.keswa.features.inventory.presentation.screens.count
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alsoug.keswa.core.coroutines.DispatcherProvider
+import com.alsoug.keswa.core.designsystem.Message
+import com.alsoug.keswa.core.designsystem.message
 import com.alsoug.keswa.core.domain.model.StockCount
 import com.alsoug.keswa.features.inventory.domain.usecase.CountVariantUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.CurrentCountUseCase
@@ -89,13 +91,13 @@ class CountViewModel(
 
     private fun scan(barcode: String) {
         val location = locationId ?: return
-        if (_state.value.count == null) return reject("Start a count first")
+        if (_state.value.count == null) return reject(message { it.startACountFirst })
 
         viewModelScope.launch(dispatchers.io) {
             find.byBarcode(barcode, location).fold(
                 onSuccess = { item ->
                     if (item == null) {
-                        _effect.emit(CountUiEffect.ShowError("Not in the catalogue: $barcode"))
+                        _effect.emit(CountUiEffect.ShowError(message { it.notInCatalogue(barcode) }))
                     } else {
                         _state.update {
                             it.copy(
@@ -118,7 +120,7 @@ class CountViewModel(
         val countId = _state.value.count?.id ?: return
         val variantId = _state.value.pendingVariantId ?: return
         val counted = _state.value.countedEntry.toIntOrNull()
-            ?: return reject("That is not a quantity")
+            ?: return reject(message { it.notAQuantity })
 
         viewModelScope.launch(dispatchers.io) {
             countVariant(countId, variantId, counted).fold(
@@ -145,7 +147,7 @@ class CountViewModel(
                     val off = count.discrepancies.size
                     _effect.emit(
                         CountUiEffect.ShowMessage(
-                            if (off == 0) "Everything matched" else "$off line(s) did not match",
+                            message { if (off == 0) it.everythingMatched else it.linesDidNotMatch(off) },
                         ),
                     )
                 },
@@ -184,12 +186,12 @@ class CountViewModel(
         _state.update { it.copy(count = count, lines = lines) }
     }
 
-    private fun reject(message: String) {
+    private fun reject(message: Message) {
         viewModelScope.launch { _effect.emit(CountUiEffect.ShowError(message)) }
     }
 
     private suspend fun fail(cause: Throwable) {
         _state.update { it.copy(isLoading = false, isPosting = false) }
-        _effect.emit(CountUiEffect.ShowError(cause.message ?: "Something went wrong"))
+        _effect.emit(CountUiEffect.ShowError(message { it.somethingWentWrong }))
     }
 }

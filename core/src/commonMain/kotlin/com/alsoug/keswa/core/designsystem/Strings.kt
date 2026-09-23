@@ -299,6 +299,73 @@ interface Strings {
     /** On a basket line: the price before an override, and a short-stock warning. */
     fun wasPrice(price: String): String
     fun onlyInStock(onHand: Int): String
+
+    // Messages — what a screen says back after somebody has done something.
+    val somethingWentWrong: String
+    val notAnAmount: String
+    val notAQuantity: String
+    val notANumberOfDays: String
+    val incorrectDetails: String
+    val accountCannotApprove: String
+    val tooManyAttempts: String
+    val settingsSaved: String
+    val sentToPrinter: String
+    val enterPrinterAddressFirst: String
+    val couldNotCloseShift: String
+    val saleVoided: String
+    val tenderMoreThanZero: String
+    val nothingToSell: String
+    val customerIsCashOnly: String
+    val pickCustomerBeforeCredit: String
+    val updatedSignInAgain: String
+    val signInFailed: String
+    val colourAlreadyStocked: String
+    val productNotFound: String
+    val colourNotFound: String
+    val colourRetired: String
+    val barcodeAttached: String
+    val barcodeAlreadyInUse: String
+    val notValidEanThirteen: String
+    val priceSet: String
+    val noRetailPriceList: String
+    val categoryAdded: String
+    val pickACategoryFirst: String
+    val startACountFirst: String
+    val everythingMatched: String
+    val startADeliveryFirst: String
+    val noLabelPrinterConfigured: String
+    val labelPrinterSilent: String
+    val noSaleWithThatReceipt: String
+    val saleAlreadyVoided: String
+    val everythingCameBack: String
+    val refundSavedPrinterSilent: String
+    val nothingSelectedToReturn: String
+    val couldNotLoadNumbers: String
+    val heldConfirmation: String
+    val shiftOpened: String
+    val changeNotAllowed: String
+
+    fun notInCatalogue(term: String): String
+    fun hasNoPriceYet(sku: String): String
+    fun skuCreated(sku: String): String
+    fun adjustedBy(quantity: Int): String
+    fun receivedPieces(pieces: Int): String
+    fun tagsSent(tags: Int): String
+    fun tagsSentSomeSkipped(tags: Int, skipped: Int): String
+    fun drawerDiffersBy(amount: String): String
+    fun importedSummary(skus: Int, pieces: Int): String
+    fun linesDidNotMatch(lines: Int): String
+    fun refundedReturn(amount: String, number: Long): String
+    fun onlyLeftToReturn(description: String, returnable: Int): String
+    fun shortBy(amount: String): String
+    fun overCreditLimitBy(amount: String): String
+    fun salePrinted(number: Long?): String
+    fun saleNoPrinter(number: Long?): String
+    fun salePrinterSilent(number: Long?): String
+    fun linesNoLongerSellable(lines: Int): String
+    fun printerDidNotAnswer(detail: String): String
+    fun paymentReceived(amount: String): String
+    fun soldBelowStock(sku: String, sold: Int, onHand: Int): String
 }
 
 object EnglishStrings : Strings {
@@ -572,6 +639,71 @@ object EnglishStrings : Strings {
     override fun newSecretAtLeast(minimum: Int) = "New — at least $minimum characters"
     override fun wasPrice(price: String) = "was $price"
     override fun onlyInStock(onHand: Int) = "only $onHand in stock"
+    override val somethingWentWrong = "Something went wrong"
+    override val notAnAmount = "That is not an amount"
+    override val notAQuantity = "That is not a quantity"
+    override val notANumberOfDays = "That is not a number of days"
+    override val incorrectDetails = "Incorrect details"
+    override val accountCannotApprove = "That account cannot approve this"
+    override val tooManyAttempts = "Too many attempts — locked for a few minutes"
+    override val settingsSaved = "Settings saved"
+    override val sentToPrinter = "Sent to printer"
+    override val enterPrinterAddressFirst = "Enter the printer address first"
+    override val couldNotCloseShift = "Could not close the shift"
+    override val saleVoided = "Sale voided"
+    override val tenderMoreThanZero = "A tender must be more than zero"
+    override val nothingToSell = "Nothing to sell"
+    override val customerIsCashOnly = "This customer is cash only"
+    override val pickCustomerBeforeCredit = "Pick a customer before selling on account"
+    override val updatedSignInAgain = "Updated — sign in with your new details"
+    override val signInFailed = "Sign-in failed"
+    override val colourAlreadyStocked = "That colour is already stocked"
+    override val productNotFound = "Product not found"
+    override val colourNotFound = "Colour not found"
+    override val colourRetired = "Colour retired"
+    override val barcodeAttached = "Barcode attached"
+    override val barcodeAlreadyInUse = "That barcode is already in use"
+    override val notValidEanThirteen = "Not a valid EAN-13"
+    override val priceSet = "Price set"
+    override val noRetailPriceList = "No retail price list"
+    override val categoryAdded = "Category added"
+    override val pickACategoryFirst = "Pick a category first"
+    override val startACountFirst = "Start a count first"
+    override val everythingMatched = "Everything matched"
+    override val startADeliveryFirst = "Start a delivery first"
+    override val noLabelPrinterConfigured = "No label printer configured"
+    override val labelPrinterSilent = "The label printer did not answer"
+    override val noSaleWithThatReceipt = "No sale with that receipt"
+    override val saleAlreadyVoided = "That sale was voided — already reversed"
+    override val everythingCameBack = "Everything on that receipt has come back"
+    override val refundSavedPrinterSilent = "Refund saved, but the printer did not answer"
+    override val nothingSelectedToReturn = "Nothing selected to return"
+    override val couldNotLoadNumbers = "Could not load the numbers"
+    override val heldConfirmation = "Held"
+    override val shiftOpened = "Shift open"
+    override val changeNotAllowed = "That change is not allowed"
+    override fun notInCatalogue(term: String) = "Not in the catalogue: $term"
+    override fun hasNoPriceYet(sku: String) = "$sku has no price yet"
+    override fun skuCreated(sku: String) = "SKU $sku created"
+    override fun adjustedBy(quantity: Int) = "Adjusted by $quantity"
+    override fun receivedPieces(pieces: Int) = "Received $pieces pieces"
+    override fun tagsSent(tags: Int) = "$tags tags sent"
+    override fun tagsSentSomeSkipped(tags: Int, skipped: Int) = "$tags tags sent; $skipped have no barcode"
+    override fun drawerDiffersBy(amount: String) = "Drawer differs by $amount"
+    override fun importedSummary(skus: Int, pieces: Int) = "$skus SKUs, $pieces pieces"
+    override fun linesDidNotMatch(lines: Int) = "$lines line(s) did not match"
+    override fun refundedReturn(amount: String, number: Long) = "Refunded $amount · return #$number"
+    override fun onlyLeftToReturn(description: String, returnable: Int) = "$description: only $returnable left to return"
+    override fun shortBy(amount: String) = "Short by $amount"
+    override fun overCreditLimitBy(amount: String) = "Over the credit limit by $amount — needs an approval"
+    override fun salePrinted(number: Long?) = "Sale #$number"
+    override fun saleNoPrinter(number: Long?) = "Sale #$number — no printer configured"
+    override fun salePrinterSilent(number: Long?) = "Sale #$number saved, but the printer did not answer"
+    override fun linesNoLongerSellable(lines: Int) = "$lines line(s) no longer sellable"
+    override fun printerDidNotAnswer(detail: String) = "Printer did not answer — $detail"
+    override fun paymentReceived(amount: String) = "Received $amount"
+    override fun soldBelowStock(sku: String, sold: Int, onHand: Int) =
+        "$sku: sold $sold, stock said $onHand"
 }
 
 /**
@@ -845,6 +977,71 @@ object ArabicStrings : Strings {
     override fun newSecretAtLeast(minimum: Int) = "الجديد — $minimum أحرف على الأقل"
     override fun wasPrice(price: String) = "كان $price"
     override fun onlyInStock(onHand: Int) = "المتاح $onHand فقط"
+    override val somethingWentWrong = "حدث خطأ ما"
+    override val notAnAmount = "هذا ليس مبلغًا"
+    override val notAQuantity = "هذه ليست كمية"
+    override val notANumberOfDays = "هذا ليس عدد أيام"
+    override val incorrectDetails = "بيانات غير صحيحة"
+    override val accountCannotApprove = "هذا الحساب لا يملك صلاحية الموافقة"
+    override val tooManyAttempts = "محاولات كثيرة — مقفل لبضع دقائق"
+    override val settingsSaved = "تم حفظ الإعدادات"
+    override val sentToPrinter = "أُرسل إلى الطابعة"
+    override val enterPrinterAddressFirst = "أدخل عنوان الطابعة أولًا"
+    override val couldNotCloseShift = "تعذّر إقفال الوردية"
+    override val saleVoided = "تم إلغاء الفاتورة"
+    override val tenderMoreThanZero = "المبلغ المدفوع يجب أن يزيد عن صفر"
+    override val nothingToSell = "لا يوجد ما يُباع"
+    override val customerIsCashOnly = "هذا العميل نقدي فقط"
+    override val pickCustomerBeforeCredit = "اختر عميلًا قبل البيع على الحساب"
+    override val updatedSignInAgain = "تم التحديث — سجّل الدخول ببياناتك الجديدة"
+    override val signInFailed = "فشل تسجيل الدخول"
+    override val colourAlreadyStocked = "هذا اللون موجود بالفعل"
+    override val productNotFound = "المنتج غير موجود"
+    override val colourNotFound = "اللون غير موجود"
+    override val colourRetired = "تم إيقاف اللون"
+    override val barcodeAttached = "تم إرفاق الباركود"
+    override val barcodeAlreadyInUse = "هذا الباركود مستخدم بالفعل"
+    override val notValidEanThirteen = "باركود EAN-13 غير صالح"
+    override val priceSet = "تم ضبط السعر"
+    override val noRetailPriceList = "لا توجد قائمة أسعار تجزئة"
+    override val categoryAdded = "تمت إضافة القسم"
+    override val pickACategoryFirst = "اختر قسمًا أولًا"
+    override val startACountFirst = "ابدأ جردًا أولًا"
+    override val everythingMatched = "كل شيء مطابق"
+    override val startADeliveryFirst = "ابدأ استلامًا أولًا"
+    override val noLabelPrinterConfigured = "لم تُضبط طابعة تيكيت"
+    override val labelPrinterSilent = "طابعة التيكيت لم تستجب"
+    override val noSaleWithThatReceipt = "لا توجد فاتورة بهذا الإيصال"
+    override val saleAlreadyVoided = "هذه الفاتورة ملغاة — وعُكست بالفعل"
+    override val everythingCameBack = "كل ما في هذا الإيصال قد رُدّ"
+    override val refundSavedPrinterSilent = "حُفظ الاسترداد، لكن الطابعة لم تستجب"
+    override val nothingSelectedToReturn = "لم يُحدد شيء للإرجاع"
+    override val couldNotLoadNumbers = "تعذّر تحميل الأرقام"
+    override val heldConfirmation = "تم التعليق"
+    override val shiftOpened = "تم فتح الوردية"
+    override val changeNotAllowed = "هذا التغيير غير مسموح"
+    override fun notInCatalogue(term: String) = "غير موجود في الأصناف: $term"
+    override fun hasNoPriceYet(sku: String) = "$sku بدون سعر بعد"
+    override fun skuCreated(sku: String) = "تم إنشاء كود الصنف $sku"
+    override fun adjustedBy(quantity: Int) = "تمت التسوية بمقدار $quantity"
+    override fun receivedPieces(pieces: Int) = "تم استلام $pieces قطعة"
+    override fun tagsSent(tags: Int) = "أُرسل $tags تيكيت"
+    override fun tagsSentSomeSkipped(tags: Int, skipped: Int) = "أُرسل $tags تيكيت؛ $skipped بدون باركود"
+    override fun drawerDiffersBy(amount: String) = "الدرج مختلف بمقدار $amount"
+    override fun importedSummary(skus: Int, pieces: Int) = "$skus كود صنف، $pieces قطعة"
+    override fun linesDidNotMatch(lines: Int) = "$lines سطر غير مطابق"
+    override fun refundedReturn(amount: String, number: Long) = "تم رد $amount · مرتجع رقم $number"
+    override fun onlyLeftToReturn(description: String, returnable: Int) = "$description: المتبقي للإرجاع $returnable فقط"
+    override fun shortBy(amount: String) = "ناقص $amount"
+    override fun overCreditLimitBy(amount: String) = "تجاوز حد الائتمان بمقدار $amount — يلزم موافقة"
+    override fun salePrinted(number: Long?) = "فاتورة رقم $number"
+    override fun saleNoPrinter(number: Long?) = "فاتورة رقم $number — لم تُضبط طابعة"
+    override fun salePrinterSilent(number: Long?) = "حُفظت الفاتورة رقم $number، لكن الطابعة لم تستجب"
+    override fun linesNoLongerSellable(lines: Int) = "$lines سطر لم يعد قابلًا للبيع"
+    override fun printerDidNotAnswer(detail: String) = "الطابعة لم تستجب — $detail"
+    override fun paymentReceived(amount: String) = "تم تحصيل $amount"
+    override fun soldBelowStock(sku: String, sold: Int, onHand: Int) =
+        "$sku: بيع $sold، والرصيد المسجل $onHand"
 }
 
 fun stringsFor(language: KeswaLanguage): Strings =

@@ -26,6 +26,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alsoug.keswa.core.designsystem.EmptyState
 import com.alsoug.keswa.core.designsystem.KeswaTheme
 import com.alsoug.keswa.core.designsystem.ScreenHeader
+import com.alsoug.keswa.core.designsystem.resolve
 import com.alsoug.keswa.core.domain.model.Shift
 import com.alsoug.keswa.core.domain.model.ZReport
 import com.alsoug.keswa.core.domain.money.Money
@@ -39,6 +40,7 @@ fun ShiftScreen(
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val strings = KeswaTheme.strings
 
     LaunchedEffect(Unit) { viewModel.onEvent(ShiftUiEvent.Load) }
 
@@ -53,8 +55,8 @@ fun ShiftScreen(
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
-                is ShiftUiEffect.ShowError -> onMessage(effect.message)
-                is ShiftUiEffect.ShowMessage -> onMessage(effect.message)
+                is ShiftUiEffect.ShowError -> onMessage(effect.message.resolve(strings))
+                is ShiftUiEffect.ShowMessage -> onMessage(effect.message.resolve(strings))
             }
         }
     }

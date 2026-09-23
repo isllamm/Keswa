@@ -3,6 +3,8 @@ package com.alsoug.keswa.features.wholesale.presentation.screens.customers
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alsoug.keswa.core.coroutines.DispatcherProvider
+import com.alsoug.keswa.core.designsystem.Message
+import com.alsoug.keswa.core.designsystem.message
 import com.alsoug.keswa.core.domain.model.Customer
 import com.alsoug.keswa.core.domain.money.Money
 import com.alsoug.keswa.core.domain.repository.IReceivablesRepository
@@ -116,13 +118,13 @@ class CustomersViewModel(
 
     private fun pay() {
         val customer = _state.value.selected ?: return
-        val amount = Money.parse(_state.value.paymentEntry) ?: return reject("That is not an amount")
+        val amount = Money.parse(_state.value.paymentEntry) ?: return reject(message { it.notAnAmount })
 
         viewModelScope.launch(dispatchers.io) {
             takePayment(customer.id, amount, _state.value.paymentNote).fold(
                 onSuccess = {
                     _state.update { it.copy(paymentEntry = "", paymentNote = "") }
-                    _effect.emit(CustomersUiEffect.ShowMessage("Received ${amount.format()}"))
+                    _effect.emit(CustomersUiEffect.ShowMessage(message { it.paymentReceived(amount.format()) }))
                     select(customer.id)
                     load()
                 },
@@ -134,8 +136,8 @@ class CustomersViewModel(
     private fun create() {
         val current = _state.value
         val limit = Money.parse(current.newLimit.ifBlank { "0" })
-            ?: return reject("That is not an amount")
-        val terms = current.newTerms.toIntOrNull() ?: return reject("That is not a number of days")
+            ?: return reject(message { it.notAnAmount })
+        val terms = current.newTerms.toIntOrNull() ?: return reject(message { it.notANumberOfDays })
 
         viewModelScope.launch(dispatchers.io) {
             createCustomer(
@@ -167,12 +169,12 @@ class CustomersViewModel(
         )
     }
 
-    private fun reject(message: String) {
+    private fun reject(message: Message) {
         viewModelScope.launch { _effect.emit(CustomersUiEffect.ShowError(message)) }
     }
 
     private suspend fun fail(cause: Throwable) {
         _state.update { it.copy(isLoading = false) }
-        _effect.emit(CustomersUiEffect.ShowError(cause.message ?: "Something went wrong"))
+        _effect.emit(CustomersUiEffect.ShowError(message { it.somethingWentWrong }))
     }
 }

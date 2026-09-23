@@ -3,6 +3,7 @@ package com.alsoug.keswa.features.catalog.presentation.screens.producteditor
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alsoug.keswa.core.coroutines.DispatcherProvider
+import com.alsoug.keswa.core.designsystem.message
 import com.alsoug.keswa.core.domain.repository.IColourRepository
 import com.alsoug.keswa.core.domain.repository.IProductRepository
 import com.alsoug.keswa.core.domain.repository.IVariantRepository
@@ -114,16 +115,16 @@ class ProductEditorViewModel(
                     when (result) {
                         is AddColourResult.Added -> {
                             _effect.emit(
-                                ProductEditorUiEffect.ShowMessage("SKU ${result.variant.sku} created"),
+                                ProductEditorUiEffect.ShowMessage(message { it.skuCreated(result.variant.sku) }),
                             )
                             load(id)
                         }
                         AddColourResult.AlreadyStocked ->
-                            _effect.emit(ProductEditorUiEffect.ShowError("That colour is already stocked"))
+                            _effect.emit(ProductEditorUiEffect.ShowError(message { it.colourAlreadyStocked }))
                         AddColourResult.ProductNotFound ->
-                            _effect.emit(ProductEditorUiEffect.ShowError("Product not found"))
+                            _effect.emit(ProductEditorUiEffect.ShowError(message { it.productNotFound }))
                         AddColourResult.ColourNotFound ->
-                            _effect.emit(ProductEditorUiEffect.ShowError("Colour not found"))
+                            _effect.emit(ProductEditorUiEffect.ShowError(message { it.colourNotFound }))
                     }
                 },
                 onFailure = { fail(it) },
@@ -138,13 +139,13 @@ class ProductEditorViewModel(
                 onSuccess = { result ->
                     when (result) {
                         RemoveColourResult.Removed -> {
-                            _effect.emit(ProductEditorUiEffect.ShowMessage("Colour retired"))
+                            _effect.emit(ProductEditorUiEffect.ShowMessage(message { it.colourRetired }))
                             load(id)
                         }
                         is RemoveColourResult.HasStock ->
                             _effect.emit(ProductEditorUiEffect.BlockedByStock(result.onHand))
                         RemoveColourResult.NotFound ->
-                            _effect.emit(ProductEditorUiEffect.ShowError("Colour not found"))
+                            _effect.emit(ProductEditorUiEffect.ShowError(message { it.colourNotFound }))
                     }
                 },
                 onFailure = { fail(it) },
@@ -159,15 +160,15 @@ class ProductEditorViewModel(
                 onSuccess = { result ->
                     when (result) {
                         AssignBarcodeResult.Assigned -> {
-                            _effect.emit(ProductEditorUiEffect.ShowMessage("Barcode attached"))
+                            _effect.emit(ProductEditorUiEffect.ShowMessage(message { it.barcodeAttached }))
                             load(id)
                         }
                         AssignBarcodeResult.AlreadyInUse ->
-                            _effect.emit(ProductEditorUiEffect.ShowError("That barcode is already in use"))
+                            _effect.emit(ProductEditorUiEffect.ShowError(message { it.barcodeAlreadyInUse }))
                         AssignBarcodeResult.NotAnEan13 ->
-                            _effect.emit(ProductEditorUiEffect.ShowError("Not a valid EAN-13"))
+                            _effect.emit(ProductEditorUiEffect.ShowError(message { it.notValidEanThirteen }))
                         AssignBarcodeResult.VariantNotFound ->
-                            _effect.emit(ProductEditorUiEffect.ShowError("Colour not found"))
+                            _effect.emit(ProductEditorUiEffect.ShowError(message { it.colourNotFound }))
                     }
                 },
                 onFailure = { fail(it) },
@@ -182,13 +183,13 @@ class ProductEditorViewModel(
                 onSuccess = { result ->
                     when (result) {
                         SetPriceResult.Saved -> {
-                            _effect.emit(ProductEditorUiEffect.ShowMessage("Price set"))
+                            _effect.emit(ProductEditorUiEffect.ShowMessage(message { it.priceSet }))
                             load(id)
                         }
                         SetPriceResult.NotAnAmount ->
-                            _effect.emit(ProductEditorUiEffect.ShowError("That is not an amount"))
+                            _effect.emit(ProductEditorUiEffect.ShowError(message { it.notAnAmount }))
                         SetPriceResult.NoPriceList ->
-                            _effect.emit(ProductEditorUiEffect.ShowError("No retail price list"))
+                            _effect.emit(ProductEditorUiEffect.ShowError(message { it.noRetailPriceList }))
                     }
                 },
                 onFailure = { fail(it) },
@@ -198,6 +199,6 @@ class ProductEditorViewModel(
 
     private suspend fun fail(cause: Throwable) {
         _state.update { it.copy(isLoading = false) }
-        _effect.emit(ProductEditorUiEffect.ShowError(cause.message ?: "Something went wrong"))
+        _effect.emit(ProductEditorUiEffect.ShowError(message { it.somethingWentWrong }))
     }
 }

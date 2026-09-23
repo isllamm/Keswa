@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.analytics.presentation.screens.dashboard
 
+import com.alsoug.keswa.core.designsystem.Message
 import com.alsoug.keswa.core.domain.model.AnalyticsPeriod
 import com.alsoug.keswa.core.domain.model.BusyHours
 import com.alsoug.keswa.core.domain.model.ColourBucket
@@ -42,5 +43,5 @@ sealed interface DashboardNavigation {
 }
 
 sealed interface DashboardUiEffect {
-    data class ShowError(val message: String) : DashboardUiEffect
+    data class ShowError(val message: Message) : DashboardUiEffect
 }

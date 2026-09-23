@@ -1,6 +1,8 @@
 package com.alsoug.keswa.features.catalog.presentation
 
 import com.alsoug.keswa.core.coroutines.DispatcherProvider
+import com.alsoug.keswa.core.designsystem.EnglishStrings
+import com.alsoug.keswa.core.designsystem.resolve
 import com.alsoug.keswa.core.domain.money.Money
 import com.alsoug.keswa.features.catalog.domain.usecase.AddColourToProductUseCase
 import com.alsoug.keswa.features.catalog.domain.usecase.AssignSupplierBarcodeUseCase
@@ -116,7 +118,7 @@ class ProductEditorViewModelTest {
 
         // The confirmation is an effect, not a flag in state (ADR-030)
         val message = assertIs<ProductEditorUiEffect.ShowMessage>(effects.single())
-        assertTrue(message.message.contains("OXF-NAV"))
+        assertTrue(message.message.resolve(EnglishStrings).contains("OXF-NAV"))
     }
 
     @Test
@@ -159,6 +161,6 @@ class ProductEditorViewModelTest {
         advanceUntilIdle()
 
         val error = assertIs<ProductEditorUiEffect.ShowError>(next.await())
-        assertTrue(error.message.contains("EAN-13"))
+        assertTrue(error.message.resolve(EnglishStrings).contains("EAN-13"))
     }
 }

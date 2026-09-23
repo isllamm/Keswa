@@ -40,6 +40,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alsoug.keswa.core.designsystem.EmptyState
 import com.alsoug.keswa.core.designsystem.KeswaTheme
 import com.alsoug.keswa.core.designsystem.ScreenHeader
+import com.alsoug.keswa.core.designsystem.resolve
 import com.alsoug.keswa.core.domain.model.ReturnCondition
 import com.alsoug.keswa.core.domain.model.TenderMethod
 import com.alsoug.keswa.core.domain.money.Money
@@ -54,6 +55,7 @@ fun ReturnsScreen(
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val strings = KeswaTheme.strings
 
     LaunchedEffect(Unit) { viewModel.onEvent(ReturnsUiEvent.Load) }
 
@@ -68,8 +70,8 @@ fun ReturnsScreen(
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
-                is ReturnsUiEffect.ShowError -> onMessage(effect.message)
-                is ReturnsUiEffect.ShowMessage -> onMessage(effect.message)
+                is ReturnsUiEffect.ShowError -> onMessage(effect.message.resolve(strings))
+                is ReturnsUiEffect.ShowMessage -> onMessage(effect.message.resolve(strings))
             }
         }
     }

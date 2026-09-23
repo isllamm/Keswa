@@ -3,6 +3,7 @@ package com.alsoug.keswa.features.catalog.presentation.screens.catalogbrowser
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alsoug.keswa.core.coroutines.DispatcherProvider
+import com.alsoug.keswa.core.designsystem.message
 import com.alsoug.keswa.core.domain.model.Category
 import com.alsoug.keswa.features.catalog.domain.usecase.CreateCategoryUseCase
 import com.alsoug.keswa.features.catalog.domain.usecase.CreateProductUseCase
@@ -121,7 +122,7 @@ class CatalogBrowserViewModel(
         viewModelScope.launch(dispatchers.io) {
             createCategory(parentId, event.name, event.nameAr).fold(
                 onSuccess = {
-                    _effect.emit(CatalogBrowserUiEffect.ShowMessage("Category added"))
+                    _effect.emit(CatalogBrowserUiEffect.ShowMessage(message { it.categoryAdded }))
                     load()
                 },
                 onFailure = { fail(it) },
@@ -141,7 +142,7 @@ class CatalogBrowserViewModel(
     private fun addProduct(name: String, nameAr: String) {
         val categoryId = _state.value.selectedCategoryId ?: run {
             viewModelScope.launch {
-                _effect.emit(CatalogBrowserUiEffect.ShowError("Pick a category first"))
+                _effect.emit(CatalogBrowserUiEffect.ShowError(message { it.pickACategoryFirst }))
             }
             return
         }
@@ -164,7 +165,7 @@ class CatalogBrowserViewModel(
 
     private suspend fun fail(cause: Throwable) {
         _state.update { it.copy(isLoading = false) }
-        _effect.emit(CatalogBrowserUiEffect.ShowError(cause.message ?: "Something went wrong"))
+        _effect.emit(CatalogBrowserUiEffect.ShowError(message { it.somethingWentWrong }))
     }
 
     /** A node has children when some other node's path sits directly beneath its own. */

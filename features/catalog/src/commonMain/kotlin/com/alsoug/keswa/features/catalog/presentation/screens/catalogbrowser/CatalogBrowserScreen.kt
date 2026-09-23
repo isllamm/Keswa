@@ -32,6 +32,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alsoug.keswa.core.designsystem.EmptyState
 import com.alsoug.keswa.core.designsystem.KeswaTheme
 import com.alsoug.keswa.core.designsystem.ScreenHeader
+import com.alsoug.keswa.core.designsystem.resolve
 import com.alsoug.keswa.features.catalog.presentation.components.CategoryTree
 import com.alsoug.keswa.features.catalog.presentation.model.CategoryNodeUiModel
 import com.alsoug.keswa.features.catalog.presentation.model.ProductUiModel
@@ -48,6 +49,7 @@ fun CatalogBrowserScreen(
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val strings = KeswaTheme.strings
 
     LaunchedEffect(Unit) { viewModel.onEvent(CatalogBrowserUiEvent.Load) }
 
@@ -62,8 +64,8 @@ fun CatalogBrowserScreen(
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
-                is CatalogBrowserUiEffect.ShowError -> onMessage(effect.message)
-                is CatalogBrowserUiEffect.ShowMessage -> onMessage(effect.message)
+                is CatalogBrowserUiEffect.ShowError -> onMessage(effect.message.resolve(strings))
+                is CatalogBrowserUiEffect.ShowMessage -> onMessage(effect.message.resolve(strings))
             }
         }
     }

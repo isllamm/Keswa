@@ -3,6 +3,8 @@ package com.alsoug.keswa.features.inventory.presentation.screens.receiving
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alsoug.keswa.core.coroutines.DispatcherProvider
+import com.alsoug.keswa.core.designsystem.Message
+import com.alsoug.keswa.core.designsystem.message
 import com.alsoug.keswa.core.domain.model.StockReceipt
 import com.alsoug.keswa.core.domain.money.Money
 import com.alsoug.keswa.features.inventory.domain.usecase.AddReceiptLineUseCase
@@ -100,13 +102,13 @@ class ReceivingViewModel(
     private fun scan(barcode: String) {
         val location = locationId ?: return
         if (_state.value.receipt == null) {
-            return reject("Start a delivery first")
+            return reject(message { it.startADeliveryFirst })
         }
         viewModelScope.launch(dispatchers.io) {
             find.byBarcode(barcode, location).fold(
                 onSuccess = { item ->
                     if (item == null) {
-                        _effect.emit(ReceivingUiEffect.ShowError("Not in the catalogue: $barcode"))
+                        _effect.emit(ReceivingUiEffect.ShowError(message { it.notInCatalogue(barcode) }))
                     } else {
                         // The last cost is offered as the default, because a repeat order at the
                         // same price is the common case and retyping it is where mistakes come from.
@@ -129,8 +131,8 @@ class ReceivingViewModel(
         val receiptId = _state.value.receipt?.id ?: return
         val item = _state.value.pendingItem ?: return
         val quantity = _state.value.quantityEntry.toIntOrNull()
-            ?: return reject("That is not a quantity")
-        val cost = Money.parse(_state.value.costEntry) ?: return reject("That is not an amount")
+            ?: return reject(message { it.notAQuantity })
+        val cost = Money.parse(_state.value.costEntry) ?: return reject(message { it.notAnAmount })
 
         viewModelScope.launch(dispatchers.io) {
             addLine(receiptId, item.variantId, quantity, cost).fold(
@@ -166,7 +168,7 @@ class ReceivingViewModel(
                         )
                     }
                     _effect.emit(
-                        ReceivingUiEffect.ShowMessage("Received ${posted.receipt.pieceCount} pieces"),
+                        ReceivingUiEffect.ShowMessage(message { it.receivedPieces(posted.receipt.pieceCount) }),
                     )
                 },
                 onFailure = { fail(it) },
@@ -196,16 +198,16 @@ class ReceivingViewModel(
                 onSuccess = { result ->
                     when (result) {
                         is LabelRunResult.Printed ->
-                            _effect.emit(ReceivingUiEffect.ShowMessage("${result.tags} tags sent"))
+                            _effect.emit(ReceivingUiEffect.ShowMessage(message { it.tagsSent(result.tags) }))
                         LabelRunResult.NoPrinter ->
-                            _effect.emit(ReceivingUiEffect.ShowError("No label printer configured"))
+                            _effect.emit(ReceivingUiEffect.ShowError(message { it.noLabelPrinterConfigured }))
                         is LabelRunResult.Unreachable ->
-                            _effect.emit(ReceivingUiEffect.ShowError("The label printer did not answer"))
+                            _effect.emit(ReceivingUiEffect.ShowError(message { it.labelPrinterSilent }))
                         // Named rather than skipped silently: a tag with no barcode cannot be
                         // scanned at the till, which is the only reason it exists.
                         is LabelRunResult.Incomplete -> _effect.emit(
                             ReceivingUiEffect.ShowError(
-                                "${result.tags} tags sent; ${result.skipped.size} have no barcode",
+                                message { it.tagsSentSomeSkipped(result.tags, result.skipped.size) },
                             ),
                         )
                     }
@@ -241,12 +243,12 @@ class ReceivingViewModel(
         _state.update { it.copy(receipt = receipt, lines = lines) }
     }
 
-    private fun reject(message: String) {
+    private fun reject(message: Message) {
         viewModelScope.launch { _effect.emit(ReceivingUiEffect.ShowError(message)) }
     }
 
     private suspend fun fail(cause: Throwable) {
         _state.update { it.copy(isLoading = false, isPosting = false) }
-        _effect.emit(ReceivingUiEffect.ShowError(cause.message ?: "Something went wrong"))
+        _effect.emit(ReceivingUiEffect.ShowError(message { it.somethingWentWrong }))
     }
 }

@@ -58,6 +58,14 @@ class StringsTest {
         assertTrue(arabic.chooseNewSecret(isPin = true) != english.chooseNewSecret(isPin = true))
         assertTrue(arabic.chooseNewSecret(isPin = false) != english.chooseNewSecret(isPin = false))
 
+        assertTrue(arabic.notInCatalogue("X") != english.notInCatalogue("X"))
+        assertTrue(arabic.shortBy("1.00") != english.shortBy("1.00"))
+        assertTrue(arabic.salePrinted(1) != english.salePrinted(1))
+        assertTrue(arabic.receivedPieces(3) != english.receivedPieces(3))
+        assertTrue(arabic.printerDidNotAnswer("x") != english.printerDidNotAnswer("x"))
+        assertTrue(arabic.paymentReceived("1.00") != english.paymentReceived("1.00"))
+        assertTrue(arabic.soldBelowStock("S", 1, 0) != english.soldBelowStock("S", 1, 0))
+
         // And the value itself still appears, in both.
         assertTrue("42" in arabic.importRows(42))
         assertTrue("42" in english.importRows(42))

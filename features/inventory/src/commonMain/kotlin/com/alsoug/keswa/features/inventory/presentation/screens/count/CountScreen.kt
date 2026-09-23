@@ -34,6 +34,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alsoug.keswa.core.designsystem.EmptyState
 import com.alsoug.keswa.core.designsystem.KeswaTheme
 import com.alsoug.keswa.core.designsystem.ScreenHeader
+import com.alsoug.keswa.core.designsystem.resolve
 import com.alsoug.keswa.core.domain.model.DocumentStatus
 import com.alsoug.keswa.core.domain.model.StockCount
 import org.jetbrains.compose.ui.tooling.preview.Preview
@@ -46,6 +47,7 @@ fun CountScreen(
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val strings = KeswaTheme.strings
 
     LaunchedEffect(Unit) { viewModel.onEvent(CountUiEvent.Load) }
 
@@ -60,8 +62,8 @@ fun CountScreen(
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
-                is CountUiEffect.ShowError -> onMessage(effect.message)
-                is CountUiEffect.ShowMessage -> onMessage(effect.message)
+                is CountUiEffect.ShowError -> onMessage(effect.message.resolve(strings))
+                is CountUiEffect.ShowMessage -> onMessage(effect.message.resolve(strings))
             }
         }
     }

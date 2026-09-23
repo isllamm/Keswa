@@ -3,6 +3,7 @@ package com.alsoug.keswa.features.inventory.presentation.screens.importer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alsoug.keswa.core.coroutines.DispatcherProvider
+import com.alsoug.keswa.core.designsystem.message
 import com.alsoug.keswa.features.inventory.domain.usecase.ApplyCatalogueImportUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.ImportResult
 import com.alsoug.keswa.features.inventory.domain.usecase.ParseCatalogueImportUseCase
@@ -83,7 +84,7 @@ class ImportViewModel(
                     _state.update { it.copy(isApplying = false, summary = summary) }
                     _effect.emit(
                         ImportUiEffect.ShowMessage(
-                            "${summary.variantsCreated} SKUs, ${summary.piecesReceived} pieces",
+                            message { it.importedSummary(summary.variantsCreated, summary.piecesReceived) },
                         ),
                     )
                 },
@@ -94,6 +95,6 @@ class ImportViewModel(
 
     private suspend fun fail(cause: Throwable) {
         _state.update { it.copy(isLoading = false, isApplying = false) }
-        _effect.emit(ImportUiEffect.ShowError(cause.message ?: "Something went wrong"))
+        _effect.emit(ImportUiEffect.ShowError(message { it.somethingWentWrong }))
     }
 }
