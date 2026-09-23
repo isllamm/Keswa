@@ -16,6 +16,15 @@ data class ShopSettings(
     val shopNameAr: String = "كسوة",
     val addressLine: String = "",
     /**
+     * The language the staff read the app in — `en` or `ar`.
+     *
+     * A shop setting, not a machine one. A till in Cairo on an English Windows install still has
+     * Arabic staff standing at it, so following the operating system would be following the wrong
+     * thing. The catalogue's own `nameAr` fields are unaffected either way: a product is named by
+     * the shop.
+     */
+    val languageCode: String = "en",
+    /**
      * VAT rate in basis points, **zero by default**.
      *
      * Most small shops are not registered, and printing a VAT line when you are not registered is

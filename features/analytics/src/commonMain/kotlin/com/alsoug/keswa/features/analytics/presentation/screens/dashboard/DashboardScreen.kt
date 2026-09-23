@@ -33,9 +33,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alsoug.keswa.core.designsystem.EmptyState
-import com.alsoug.keswa.core.designsystem.FigureLargeStyle
-import com.alsoug.keswa.core.designsystem.FigureStyle
 import com.alsoug.keswa.core.designsystem.KeswaTheme
+import com.alsoug.keswa.core.designsystem.localisedName
 import com.alsoug.keswa.core.designsystem.Panel
 import com.alsoug.keswa.core.designsystem.ScreenHeader
 import com.alsoug.keswa.core.designsystem.StatTile
@@ -97,14 +96,14 @@ internal fun DashboardContent(
         // No back arrow. The navigation is persistent now, so "back" had no answer — it went to
         // the till, which is a destination, not a return. The period picker belongs up here
         // instead, because one filter scopes every panel below it.
-        ScreenHeader(title = "Numbers", subtitle = "How the shop is doing") {
+        ScreenHeader(title = KeswaTheme.strings.numbers, subtitle = KeswaTheme.strings.numbersSubtitle) {
             if (state.isPermitted) PeriodPicker(state.period, onEvent)
         }
 
         if (!state.isPermitted) {
             EmptyState(
-                title = "These figures are for the owner",
-                hint = "Ask an admin to sign in if you need them",
+                title = KeswaTheme.strings.forTheOwner,
+                hint = KeswaTheme.strings.forTheOwnerHint,
             )
             return
         }
@@ -114,23 +113,22 @@ internal fun DashboardContent(
         ) {
             state.kpis?.let { Headline(it, state.showsCost) }
 
-            Panel("Revenue") { TrendLine(state.trend) }
+            Panel(KeswaTheme.strings.revenue) { TrendLine(state.trend) }
 
-            Panel("Colour performance") {
+            Panel(KeswaTheme.strings.colourPerformance) {
                 Text(
-                    "Sold against what is still on the rail. Cash tied up in the wrong colours is " +
-                        "next season's buying decision.",
+                    KeswaTheme.strings.colourPerformanceNote,
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 ColourPerformanceChart(state.colours, modifier = Modifier.padding(top = 8.dp))
             }
 
-            Panel("Sell-through") { SellThrough(state.sellThrough) }
+            Panel(KeswaTheme.strings.sellThrough) { SellThrough(state.sellThrough) }
 
-            Panel("Busy hours") { BusyHoursHeatmap(state.busyHours) }
+            Panel(KeswaTheme.strings.busyHours) { BusyHoursHeatmap(state.busyHours) }
 
-            Panel("Top movers") { Movers(state.movers, state.showsCost) }
+            Panel(KeswaTheme.strings.topMovers) { Movers(state.movers, state.showsCost) }
         }
     }
 }
@@ -148,11 +146,12 @@ private fun PeriodPicker(period: AnalyticsPeriod, onEvent: (DashboardUiEvent) ->
     }
 }
 
+@Composable
 private fun AnalyticsPeriod.label(): String = when (this) {
-    AnalyticsPeriod.TODAY -> "Today"
-    AnalyticsPeriod.WEEK -> "7 days"
-    AnalyticsPeriod.MONTH -> "30 days"
-    AnalyticsPeriod.QUARTER -> "90 days"
+    AnalyticsPeriod.TODAY -> KeswaTheme.strings.today
+    AnalyticsPeriod.WEEK -> KeswaTheme.strings.sevenDays
+    AnalyticsPeriod.MONTH -> KeswaTheme.strings.thirtyDays
+    AnalyticsPeriod.QUARTER -> KeswaTheme.strings.ninetyDays
 }
 
 @Composable
@@ -161,7 +160,7 @@ private fun Headline(kpis: HeadlineKpis, showsCost: Boolean) {
         // The one number the owner opens the app for.
         Text(kpis.netRevenue.format(), style = MaterialTheme.typography.displaySmall)
         Text(
-            "net of ${kpis.refunded.format()} refunded",
+            "${KeswaTheme.strings.netOf} ${kpis.refunded.format()}",
             style = MaterialTheme.typography.labelSmall,
             color = KeswaTheme.semantics.muted,
         )
@@ -170,20 +169,20 @@ private fun Headline(kpis: HeadlineKpis, showsCost: Boolean) {
             modifier = Modifier.fillMaxWidth().padding(top = 14.dp),
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            StatTile("Sales", "${kpis.transactions}", modifier = Modifier.weight(1f))
-            StatTile("Basket", kpis.averageBasket?.format() ?: "—", modifier = Modifier.weight(1f))
-            StatTile("Units", "${kpis.units}", modifier = Modifier.weight(1f))
+            StatTile(KeswaTheme.strings.sales, "${kpis.transactions}", modifier = Modifier.weight(1f))
+            StatTile(KeswaTheme.strings.basket, kpis.averageBasket?.format() ?: "—", modifier = Modifier.weight(1f))
+            StatTile(KeswaTheme.strings.units, "${kpis.units}", modifier = Modifier.weight(1f))
             // A first-class KPI in clothing, not a footnote: fit is guesswork, so a shop with no
             // returns is a shop nobody is trying things on in.
             StatTile(
-                label = "Returns",
+                label = KeswaTheme.strings.returnRate,
                 value = kpis.returnRateBasisPoints?.asPercent() ?: "—",
                 accent = KeswaTheme.semantics.warning,
                 modifier = Modifier.weight(1f),
             )
             if (showsCost) {
                 StatTile(
-                    label = "Margin",
+                    label = KeswaTheme.strings.margin,
                     value = kpis.marginBasisPoints?.asPercent() ?: "—",
                     accent = KeswaTheme.semantics.good,
                     modifier = Modifier.weight(1f),
@@ -197,7 +196,7 @@ private fun Headline(kpis: HeadlineKpis, showsCost: Boolean) {
 private fun SellThrough(rows: List<SellThroughRowModel>) {
     if (rows.isEmpty()) {
         Text(
-            "Nothing received yet",
+            KeswaTheme.strings.nothingReceived,
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -205,7 +204,7 @@ private fun SellThrough(rows: List<SellThroughRowModel>) {
     }
 
     Text(
-        "Against a 70% season target. Below it late in a season means discount now, not in January.",
+        KeswaTheme.strings.sellThroughNote,
         style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
     )
@@ -215,7 +214,7 @@ private fun SellThrough(rows: List<SellThroughRowModel>) {
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
-                Text(row.name, style = MaterialTheme.typography.bodyMedium)
+                Text(localisedName(row.name, row.nameAr), style = MaterialTheme.typography.bodyMedium)
                 Text(
                     row.basisPoints?.asPercent() ?: "—",
                     style = MaterialTheme.typography.bodyMedium,
@@ -234,7 +233,7 @@ private fun SellThrough(rows: List<SellThroughRowModel>) {
 private fun Movers(movers: List<Mover>, showsCost: Boolean) {
     if (movers.isEmpty()) {
         Text(
-            "Nothing has sold yet",
+            KeswaTheme.strings.nothingHasSold,
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -254,20 +253,20 @@ private fun Movers(movers: List<Mover>, showsCost: Boolean) {
                 )
                 Text(
                     buildString {
-                        append("${mover.sold} sold")
-                        mover.sellThroughBasisPoints?.let { append(" · ${it.asPercent()} through") }
-                        append(" · ${mover.onHand} left")
+                        append("${mover.sold} ${KeswaTheme.strings.soldSuffix}")
+                        mover.sellThroughBasisPoints?.let { append(" · ${it.asPercent()} ${KeswaTheme.strings.throughSuffix}") }
+                        append(" · ${mover.onHand} ${KeswaTheme.strings.leftSuffix}")
                     },
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             Column(horizontalAlignment = Alignment.End) {
-                Text(mover.revenue.format(), style = FigureStyle)
+                Text(mover.revenue.format(), style = KeswaTheme.figure)
                 if (showsCost) {
                     mover.margin?.let {
                         Text(
-                            "margin ${it.format()}",
+                            "${KeswaTheme.strings.marginPrefix} ${it.format()}",
                             style = MaterialTheme.typography.labelSmall,
                             color = KeswaTheme.semantics.muted,
                         )

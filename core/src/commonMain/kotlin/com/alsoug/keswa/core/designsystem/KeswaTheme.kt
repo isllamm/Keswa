@@ -11,6 +11,8 @@ import androidx.compose.runtime.Immutable
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 
 /**
@@ -177,19 +179,45 @@ private val KeswaShapes = Shapes(
 )
 
 private val LocalSemantics = staticCompositionLocalOf { LightSemantics }
+private val LocalStrings = staticCompositionLocalOf<Strings> { EnglishStrings }
+private val LocalLanguage = staticCompositionLocalOf { KeswaLanguage.ENGLISH }
+private val LocalFigure = staticCompositionLocalOf<TextStyle> {
+    error("no figure style: something is drawing outside KeswaTheme")
+}
+private val LocalFigureLarge = staticCompositionLocalOf<TextStyle> {
+    error("no figure style: something is drawing outside KeswaTheme")
+}
 
 /**
  * The app's theme. Wrap everything in it — including previews, or a preview lies about what ships.
+ *
+ * [language] decides three things at once, and they belong together: the words, the script's own
+ * typeface, and the reading direction. Setting any one without the others is how an app ends up
+ * with Arabic text laid out left to right, or a right-to-left layout still reading "Take payment".
+ *
+ * `LayoutDirection` is provided here rather than left to the platform, because the shop chooses the
+ * language — not the machine. A till in Cairo running an English Windows install still has Arabic
+ * staff standing at it.
  */
 @Composable
 fun KeswaTheme(
     dark: Boolean = isSystemInDarkTheme(),
+    language: KeswaLanguage = KeswaLanguage.ENGLISH,
     content: @Composable () -> Unit,
 ) {
-    CompositionLocalProvider(LocalSemantics provides if (dark) DarkSemantics else LightSemantics) {
+    val family = if (language == KeswaLanguage.ARABIC) plexSansArabic() else plexSans()
+
+    CompositionLocalProvider(
+        LocalSemantics provides if (dark) DarkSemantics else LightSemantics,
+        LocalStrings provides stringsFor(language),
+        LocalLanguage provides language,
+        LocalFigure provides figureStyle(family),
+        LocalFigureLarge provides figureLargeStyle(family),
+        LocalLayoutDirection provides language.layoutDirection,
+    ) {
         MaterialTheme(
             colorScheme = if (dark) DarkColours else LightColours,
-            typography = KeswaTypography,
+            typography = keswaTypography(family),
             shapes = KeswaShapes,
             content = content,
         )
@@ -199,4 +227,19 @@ fun KeswaTheme(
 object KeswaTheme {
     val semantics: KeswaSemantics
         @Composable @ReadOnlyComposable get() = LocalSemantics.current
+
+    /** Every word the interface says. */
+    val strings: Strings
+        @Composable @ReadOnlyComposable get() = LocalStrings.current
+
+    val language: KeswaLanguage
+        @Composable @ReadOnlyComposable get() = LocalLanguage.current
+
+    /** Tabular. Money, quantities, anything compared down a column. */
+    val figure: TextStyle
+        @Composable @ReadOnlyComposable get() = LocalFigure.current
+
+    /** Tabular, and the size of the one number a screen is about. */
+    val figureLarge: TextStyle
+        @Composable @ReadOnlyComposable get() = LocalFigureLarge.current
 }

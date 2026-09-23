@@ -72,16 +72,16 @@ internal fun ShiftContent(
         if (state.isLoading) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
 
         ScreenHeader(
-            title = "Shift",
-            subtitle = "Float, takings, and the count that closes it",
+            title = KeswaTheme.strings.shift,
+            subtitle = KeswaTheme.strings.shiftSubtitle,
         )
 
         Column(modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp)) {
             when {
                 state.report != null -> ReportCard(state.report)
                 state.shift == null -> EmptyState(
-                    title = "No shift is open",
-                    hint = "Open one at the till to start counting takings against a float",
+                    title = KeswaTheme.strings.noShiftOpen,
+                    hint = KeswaTheme.strings.noShiftOpenHint,
                 )
                 else -> CountForm(state, onEvent)
             }

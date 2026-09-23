@@ -26,7 +26,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.alsoug.keswa.core.designsystem.FigureStyle
 import com.alsoug.keswa.core.designsystem.KeswaTheme
 import com.alsoug.keswa.core.designsystem.ScreenHeader
 import com.alsoug.keswa.core.domain.money.Money
@@ -79,8 +78,8 @@ internal fun ImportContent(
         }
 
         ScreenHeader(
-            title = "Import catalogue",
-            subtitle = "A supplier's spreadsheet, validated as a whole",
+            title = KeswaTheme.strings.importCatalogue,
+            subtitle = KeswaTheme.strings.importCatalogueHint,
             onBack = onBack,
         )
         Text(
@@ -174,7 +173,7 @@ private fun ColumnScope.Preview(state: ImportUiState) {
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                Text(row.price.format(), style = FigureStyle)
+                Text(row.price.format(), style = KeswaTheme.figure)
             }
             HorizontalDivider()
         }

@@ -34,8 +34,6 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alsoug.keswa.core.designsystem.EmptyState
-import com.alsoug.keswa.core.designsystem.FigureLargeStyle
-import com.alsoug.keswa.core.designsystem.FigureStyle
 import com.alsoug.keswa.core.designsystem.KeswaTheme
 import com.alsoug.keswa.core.designsystem.ScreenHeader
 import com.alsoug.keswa.core.domain.model.Ageing
@@ -87,8 +85,8 @@ internal fun CustomersContent(
         if (state.isLoading) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
 
         ScreenHeader(
-            title = "Customers",
-            subtitle = "Accounts, terms, and what is owed",
+            title = KeswaTheme.strings.customers,
+            subtitle = KeswaTheme.strings.customersSubtitle,
         )
 
         Row(modifier = Modifier.fillMaxSize()) {
@@ -114,8 +112,8 @@ internal fun CustomersContent(
             Column(modifier = Modifier.width(360.dp).padding(12.dp)) {
                 if (state.selected == null) {
                     EmptyState(
-                        title = "Pick a customer",
-                        hint = "Their balance, ageing and history are all on one panel",
+                        title = KeswaTheme.strings.pickACustomer,
+                        hint = KeswaTheme.strings.pickACustomerHint,
                     )
                 } else {
                     Account(state, onEvent)
@@ -194,7 +192,7 @@ private fun ColumnScope.Account(state: CustomersUiState, onEvent: (CustomersUiEv
         TextButton(onClick = { onEvent(CustomersUiEvent.Deselect) }) { Text("✕") }
     }
 
-    Text(state.balance.format(), style = FigureLargeStyle)
+    Text(state.balance.format(), style = KeswaTheme.figureLarge)
     Text(
         if (state.isCashOnly) {
             "Cash only — nobody has set a limit"
@@ -262,7 +260,7 @@ private fun ColumnScope.Account(state: CustomersUiState, onEvent: (CustomersUiEv
                         )
                     }
                 }
-                Text(entry.amount.format(), style = FigureStyle)
+                Text(entry.amount.format(), style = KeswaTheme.figure)
             }
             HorizontalDivider()
         }
@@ -292,7 +290,7 @@ private fun AgeingRow(label: String, amount: Money) {
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(label, style = MaterialTheme.typography.labelMedium)
-        Text(amount.format(), style = FigureStyle)
+        Text(amount.format(), style = KeswaTheme.figure)
     }
 }
 

@@ -78,8 +78,8 @@ internal fun AdjustContent(
         if (state.isLoading) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
 
         ScreenHeader(
-            title = "Adjust stock",
-            subtitle = "Damage, theft, a sample given away",
+            title = KeswaTheme.strings.adjust,
+            subtitle = KeswaTheme.strings.adjustHint,
             onBack = onBack,
         )
         Text(

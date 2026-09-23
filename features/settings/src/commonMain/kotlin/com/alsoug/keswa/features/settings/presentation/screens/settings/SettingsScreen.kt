@@ -70,8 +70,8 @@ internal fun SettingsContent(
         if (state.isLoading || state.isBusy) LinearProgressIndicator(Modifier.fillMaxWidth())
 
         ScreenHeader(
-            title = "Settings",
-            subtitle = "Printers, scanner and the shop's own details",
+            title = KeswaTheme.strings.settings,
+            subtitle = KeswaTheme.strings.settingsSubtitle,
             onBack = { onEvent(SettingsUiEvent.Back) },
         )
 

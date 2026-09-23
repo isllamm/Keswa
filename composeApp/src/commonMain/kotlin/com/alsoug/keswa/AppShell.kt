@@ -25,7 +25,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.alsoug.keswa.core.designsystem.KeswaLanguage
 import com.alsoug.keswa.core.designsystem.KeswaTheme
+import com.alsoug.keswa.core.designsystem.Strings
 
 /**
  * Where the app can go, and what each one is for.
@@ -35,18 +37,18 @@ import com.alsoug.keswa.core.designsystem.KeswaTheme
  */
 internal data class Destination(
     val route: Route,
-    val label: String,
-    val hint: String,
+    val label: (Strings) -> String,
+    val hint: (Strings) -> String,
 )
 
 internal val DESTINATIONS = listOf(
-    Destination(Route.Till, "Till", "Scan, charge, print"),
-    Destination(Route.Returns, "Returns", "Refunds and exchanges"),
-    Destination(Route.Stockroom, "Stockroom", "Receiving, counts, adjustments"),
-    Destination(Route.Catalogue, "Catalogue", "Products, colours, prices"),
-    Destination(Route.Customers, "Customers", "Accounts and what is owed"),
-    Destination(Route.ShiftClose, "Shift", "Float, takings, close"),
-    Destination(Route.Dashboard, "Numbers", "What the shop is doing"),
+    Destination(Route.Till, { it.till }, { it.tillHint }),
+    Destination(Route.Returns, { it.returns }, { it.returnsHint }),
+    Destination(Route.Stockroom, { it.stockroom }, { it.stockroomHint }),
+    Destination(Route.Catalogue, { it.catalogue }, { it.catalogueHint }),
+    Destination(Route.Customers, { it.customers }, { it.customersHint }),
+    Destination(Route.ShiftClose, { it.shift }, { it.shiftHint }),
+    Destination(Route.Dashboard, { it.numbers }, { it.numbersHint }),
 )
 
 /**
@@ -64,9 +66,12 @@ internal fun NavigationSidebar(
     role: String,
     onNavigate: (Route) -> Unit,
     onSignOut: () -> Unit,
+    language: KeswaLanguage,
+    onLanguage: (KeswaLanguage) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val semantics = KeswaTheme.semantics
+    val strings = KeswaTheme.strings
     Row(modifier = modifier.fillMaxHeight()) {
         Column(
             modifier = Modifier
@@ -76,7 +81,7 @@ internal fun NavigationSidebar(
                 .padding(vertical = 14.dp),
         ) {
             Text(
-                "Keswa",
+                strings.appName,
                 style = MaterialTheme.typography.titleLarge,
                 modifier = Modifier.padding(start = 16.dp, bottom = 12.dp),
             )
@@ -105,13 +110,14 @@ internal fun NavigationSidebar(
                 // label out of line with the name above it, and this is a footer, not an action
                 // anybody should be able to hit by accident.
                 Text(
-                    "Sign out",
+                    strings.signOut,
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier
                         .padding(top = 6.dp)
                         .clickable(onClick = onSignOut),
                 )
+                LanguageSwitch(language, onLanguage, Modifier.padding(top = 10.dp))
             }
         }
         VerticalDivider(color = semantics.grid)
@@ -125,6 +131,7 @@ private fun SidebarItem(
     onClick: () -> Unit,
 ) {
     val semantics = KeswaTheme.semantics
+    val strings = KeswaTheme.strings
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -146,7 +153,7 @@ private fun SidebarItem(
         )
         Column(Modifier.padding(start = 13.dp, end = 12.dp)) {
             Text(
-                destination.label,
+                destination.label(strings),
                 style = MaterialTheme.typography.titleSmall,
                 fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
                 color = if (selected) {
@@ -156,7 +163,7 @@ private fun SidebarItem(
                 },
             )
             Text(
-                destination.hint,
+                destination.hint(strings),
                 style = MaterialTheme.typography.labelSmall,
                 color = semantics.muted,
             )
@@ -175,9 +182,12 @@ private fun SidebarItem(
 internal fun NavigationStrip(
     current: Route,
     onNavigate: (Route) -> Unit,
+    language: KeswaLanguage,
+    onLanguage: (KeswaLanguage) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val semantics = KeswaTheme.semantics
+    val strings = KeswaTheme.strings
     Column(modifier = modifier.fillMaxWidth().background(semantics.sunk)) {
         Row(
             modifier = Modifier
@@ -189,7 +199,7 @@ internal fun NavigationStrip(
             DESTINATIONS.forEach { destination ->
                 val selected = current.belongsTo(destination.route)
                 Text(
-                    destination.label,
+                    destination.label(strings),
                     style = MaterialTheme.typography.titleSmall,
                     fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
                     color = if (selected) {
@@ -210,6 +220,7 @@ internal fun NavigationStrip(
                         .padding(horizontal = 12.dp, vertical = 7.dp),
                 )
             }
+            LanguageSwitch(language, onLanguage, Modifier.padding(start = 8.dp))
         }
         HorizontalDivider(color = semantics.grid)
     }
@@ -228,6 +239,38 @@ private fun Route.belongsTo(destination: Route): Boolean = when {
         this == Route.Receiving || this == Route.StockCount ||
             this == Route.Adjust || this == Route.Import || this == Route.Settings
     else -> false
+}
+
+/**
+ * Two words, one of them in its own script.
+ *
+ * Deliberately not a flag, and not a globe icon. A flag says country when the question is language
+ * — Arabic is not Egypt's alone — and a globe says "settings about the world" to someone who has
+ * never seen the convention. Each language written in itself is the one label that needs no prior
+ * knowledge to read.
+ */
+@Composable
+private fun LanguageSwitch(
+    language: KeswaLanguage,
+    onLanguage: (KeswaLanguage) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(modifier = modifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        KeswaLanguage.entries.forEach { candidate ->
+            val selected = candidate == language
+            Text(
+                candidate.endonym,
+                style = MaterialTheme.typography.labelMedium,
+                fontWeight = if (selected) FontWeight.SemiBold else FontWeight.Normal,
+                color = if (selected) {
+                    MaterialTheme.colorScheme.onSurface
+                } else {
+                    KeswaTheme.semantics.muted
+                },
+                modifier = Modifier.clickable { onLanguage(candidate) },
+            )
+        }
+    }
 }
 
 internal val SIDEBAR_WIDTH = 188.dp

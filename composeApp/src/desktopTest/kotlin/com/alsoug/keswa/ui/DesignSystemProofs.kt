@@ -29,8 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.alsoug.keswa.core.designsystem.FigureLargeStyle
-import com.alsoug.keswa.core.designsystem.FigureStyle
+import com.alsoug.keswa.core.designsystem.KeswaLanguage
 import com.alsoug.keswa.core.designsystem.KeswaTheme
 import com.alsoug.keswa.core.domain.money.Money
 import kotlin.test.Test
@@ -52,13 +51,8 @@ class DesignSystemProofs {
         UiProof.render("design-system-dark", width = 1180, height = 860) {
             KeswaTheme(dark = true) { Gallery("Dark") }
         }
-    }
-
-    /** What every screen wore before this branch: Material's baseline, on cool grey. */
-    @Test
-    fun `the baseline it replaces`() {
-        UiProof.render("design-system-before", width = 1180, height = 860) {
-            MaterialTheme { Gallery("Material baseline — what shipped through Phase 9") }
+        UiProof.render("design-system-arabic", width = 1180, height = 860) {
+            KeswaTheme(dark = false, language = KeswaLanguage.ARABIC) { Gallery("عربي") }
         }
     }
 }
@@ -68,7 +62,7 @@ private fun Gallery(label: String) {
     Surface(color = MaterialTheme.colorScheme.background, modifier = Modifier.fillMaxSize()) {
         Column(Modifier.padding(28.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
             Column {
-                Text("Keswa", style = MaterialTheme.typography.headlineMedium)
+                Text(KeswaTheme.strings.appName, style = MaterialTheme.typography.headlineMedium)
                 Text(
                     label,
                     style = MaterialTheme.typography.labelMedium,
@@ -128,8 +122,8 @@ private fun TypeScale(modifier: Modifier) = Panel("Type", modifier) {
         )
         Spacer(Modifier.height(6.dp))
         // The point of the whole type file: 1s and 7s the same width, so a column lines up.
-        Text("1,117.70", style = FigureLargeStyle)
-        Text("1,117.70", style = FigureStyle, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text("1,117.70", style = KeswaTheme.figureLarge)
+        Text("1,117.70", style = KeswaTheme.figure, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
@@ -177,7 +171,7 @@ private fun Totals(modifier: Modifier) = Panel("Basket", modifier) {
         ).forEach { (name, amount) ->
             Row(Modifier.fillMaxWidth().padding(vertical = 5.dp)) {
                 Text(name, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-                Text(amount.format(), style = FigureStyle, textAlign = TextAlign.End)
+                Text(amount.format(), style = KeswaTheme.figure, textAlign = TextAlign.End)
             }
             HorizontalDivider(color = KeswaTheme.semantics.hair)
         }
@@ -188,7 +182,7 @@ private fun Totals(modifier: Modifier) = Panel("Basket", modifier) {
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text("Total", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-            Text(Money.ofPiastres(120_850).format(), style = FigureLargeStyle)
+            Text(Money.ofPiastres(120_850).format(), style = KeswaTheme.figureLarge)
         }
     }
 }
@@ -219,7 +213,7 @@ private fun Tiles(modifier: Modifier) = Panel("Today", modifier) {
                     )
                 }
                 Spacer(Modifier.height(4.dp))
-                Text(value, style = FigureLargeStyle, color = MaterialTheme.colorScheme.onSurface)
+                Text(value, style = KeswaTheme.figureLarge, color = MaterialTheme.colorScheme.onSurface)
             }
         }
     }

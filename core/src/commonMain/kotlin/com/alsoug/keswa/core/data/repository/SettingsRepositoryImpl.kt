@@ -23,6 +23,7 @@ class SettingsRepositoryImpl(
             shopName = stored[SHOP_NAME] ?: defaults.shopName,
             shopNameAr = stored[SHOP_NAME_AR] ?: defaults.shopNameAr,
             addressLine = stored[SHOP_ADDRESS] ?: defaults.addressLine,
+            languageCode = stored[LANGUAGE] ?: defaults.languageCode,
             vatBasisPoints = stored[VAT_BASIS_POINTS]?.toIntOrNull() ?: defaults.vatBasisPoints,
             returnWindowDays = stored[RETURN_WINDOW]?.toIntOrNull() ?: defaults.returnWindowDays,
             allowNoReceiptReturns = stored[NO_RECEIPT_RETURNS]?.toBooleanStrictOrNull()
@@ -45,6 +46,7 @@ class SettingsRepositoryImpl(
                 AppSettingEntity(SHOP_NAME, settings.shopName),
                 AppSettingEntity(SHOP_NAME_AR, settings.shopNameAr),
                 AppSettingEntity(SHOP_ADDRESS, settings.addressLine),
+                AppSettingEntity(LANGUAGE, settings.languageCode),
                 AppSettingEntity(VAT_BASIS_POINTS, settings.vatBasisPoints.toString()),
                 AppSettingEntity(RETURN_WINDOW, settings.returnWindowDays.toString()),
                 AppSettingEntity(NO_RECEIPT_RETURNS, settings.allowNoReceiptReturns.toString()),
@@ -65,6 +67,7 @@ class SettingsRepositoryImpl(
         const val SHOP_NAME = "shop.name"
         const val SHOP_NAME_AR = "shop.nameAr"
         const val SHOP_ADDRESS = "shop.address"
+        const val LANGUAGE = "shop.language"
         const val VAT_BASIS_POINTS = "shop.vatBasisPoints"
         const val RETURN_WINDOW = "shop.returnWindowDays"
         const val NO_RECEIPT_RETURNS = "shop.allowNoReceiptReturns"

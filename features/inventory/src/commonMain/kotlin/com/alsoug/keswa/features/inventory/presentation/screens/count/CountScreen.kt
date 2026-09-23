@@ -82,8 +82,8 @@ internal fun CountContent(
         }
 
         ScreenHeader(
-            title = "Stock count",
-            subtitle = "Blind — the expected figure comes after",
+            title = KeswaTheme.strings.stockCount,
+            subtitle = KeswaTheme.strings.stockCountHint,
             onBack = onBack,
         )
 
@@ -184,8 +184,8 @@ private fun PostedCount(state: CountUiState) {
 
         if (state.lines.isEmpty()) {
             EmptyState(
-                title = "Nothing counted yet",
-                hint = "Scan a garment to add it. The expected figure is shown after you post.",
+                title = KeswaTheme.strings.nothingCounted,
+                hint = KeswaTheme.strings.nothingCountedHint,
             )
             return
         }

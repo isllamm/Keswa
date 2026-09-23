@@ -135,7 +135,7 @@ fun StatTile(
             )
         }
         Spacer(Modifier.height(4.dp))
-        Text(value, style = FigureLargeStyle)
+        Text(value, style = KeswaTheme.figureLarge)
     }
 }
 
@@ -183,7 +183,7 @@ fun Figure(
 ) {
     Text(
         value,
-        style = if (large) FigureLargeStyle else FigureStyle,
+        style = if (large) KeswaTheme.figureLarge else KeswaTheme.figure,
         textAlign = TextAlign.End,
         color = color,
         modifier = modifier,

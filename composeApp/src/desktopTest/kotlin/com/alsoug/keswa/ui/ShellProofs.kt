@@ -16,8 +16,7 @@ import androidx.compose.ui.unit.dp
 import com.alsoug.keswa.NavigationSidebar
 import com.alsoug.keswa.NavigationStrip
 import com.alsoug.keswa.Route
-import com.alsoug.keswa.core.designsystem.FigureLargeStyle
-import com.alsoug.keswa.core.designsystem.FigureStyle
+import com.alsoug.keswa.core.designsystem.KeswaLanguage
 import com.alsoug.keswa.core.designsystem.KeswaTheme
 import com.alsoug.keswa.core.domain.money.Money
 import kotlin.test.Test
@@ -26,6 +25,28 @@ import kotlin.test.Test
  * The app shell — what replaced seven `TextButton`s in a top bar.
  */
 class ShellProofs {
+
+    @Test
+    fun `the shell in Arabic, right to left`() {
+        UiProof.render("shell-arabic", width = 1280, height = 720) {
+            KeswaTheme(dark = false, language = KeswaLanguage.ARABIC) {
+                Surface(color = MaterialTheme.colorScheme.background) {
+                    Row(Modifier.fillMaxSize()) {
+                        NavigationSidebar(
+                            current = Route.Till,
+                            operator = "إسلام",
+                            role = "مدير",
+                            onNavigate = {},
+                            onSignOut = {},
+                            language = KeswaLanguage.ARABIC,
+                            onLanguage = {},
+                        )
+                        StandInTill(Modifier.weight(1f))
+                    }
+                }
+            }
+        }
+    }
 
     @Test
     fun `the shell, wide and compact`() {
@@ -39,6 +60,8 @@ class ShellProofs {
                             role = "admin",
                             onNavigate = {},
                             onSignOut = {},
+                            language = KeswaLanguage.ENGLISH,
+                            onLanguage = {},
                         )
                         StandInTill(Modifier.weight(1f))
                     }
@@ -56,6 +79,8 @@ class ShellProofs {
                             role = "admin",
                             onNavigate = {},
                             onSignOut = {},
+                            language = KeswaLanguage.ENGLISH,
+                            onLanguage = {},
                         )
                         StandInTill(Modifier.weight(1f))
                     }
@@ -68,7 +93,12 @@ class ShellProofs {
             KeswaTheme(dark = false) {
                 Surface(color = MaterialTheme.colorScheme.background) {
                     Column(Modifier.fillMaxSize()) {
-                        NavigationStrip(current = Route.Stockroom, onNavigate = {})
+                        NavigationStrip(
+                            current = Route.Stockroom,
+                            onNavigate = {},
+                            language = KeswaLanguage.ENGLISH,
+                            onLanguage = {},
+                        )
                         StandInTill(Modifier.weight(1f))
                     }
                 }
@@ -102,7 +132,7 @@ private fun StandInTill(modifier: Modifier = Modifier) {
                     .padding(horizontal = 12.dp, vertical = 10.dp),
             ) {
                 Text(name, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-                Text(amount.format(), style = FigureStyle)
+                Text(amount.format(), style = KeswaTheme.figure)
             }
         }
         Row(
@@ -111,7 +141,7 @@ private fun StandInTill(modifier: Modifier = Modifier) {
                 .padding(horizontal = 12.dp, vertical = 12.dp),
         ) {
             Text("Total", style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-            Text(Money.ofPiastres(110_900).format(), style = FigureLargeStyle)
+            Text(Money.ofPiastres(110_900).format(), style = KeswaTheme.figureLarge)
         }
     }
 }
