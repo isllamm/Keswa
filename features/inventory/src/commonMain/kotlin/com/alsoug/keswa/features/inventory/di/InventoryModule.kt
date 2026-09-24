@@ -7,12 +7,14 @@ import com.alsoug.keswa.features.inventory.domain.usecase.CountVariantUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.CurrentCountUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.DiscardCountUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.DiscardReceiptUseCase
+import com.alsoug.keswa.features.inventory.domain.usecase.EnsureVariantBarcodeUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.FindStockItemUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.GetReceiptUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.ParseCatalogueImportUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.PostCountUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.PostReceiptUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.PrintHangTagsUseCase
+import com.alsoug.keswa.features.inventory.domain.usecase.PrintSingleVariantLabelUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.RecentCountsUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.RecentReceiptsUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.RemoveReceiptLineUseCase
@@ -34,8 +36,11 @@ val inventoryModule = module {
     factory { ResolveStockLocationUseCase(get()) }
     factory { FindStockItemUseCase(get(), get()) { now() } }
 
+    factory { EnsureVariantBarcodeUseCase(get()) }
+    factory { PrintSingleVariantLabelUseCase(get(), get(), get(), get(), get(), get()) { now() } }
+
     factory { StartReceiptUseCase(get(), get(), get()) { now() } }
-    factory { AddReceiptLineUseCase(get(), get(), get()) }
+    factory { AddReceiptLineUseCase(get(), get(), get(), get()) }
     factory { RemoveReceiptLineUseCase(get(), get()) }
     factory { PostReceiptUseCase(get(), get()) { now() } }
     factory { DiscardReceiptUseCase(get(), get()) }
@@ -62,10 +67,12 @@ val inventoryModule = module {
 
     // Presentation Layer
     factory {
-        ReceivingViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get())
+        ReceivingViewModel(
+            get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(), get(),
+        )
     }
     factory { CountViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
-    factory { AdjustViewModel(get(), get(), get(), get(), get()) }
+    factory { AdjustViewModel(get(), get(), get(), get(), get(), get(), get(), get()) }
     factory { ImportViewModel(get(), get(), get(), get()) }
 }
 

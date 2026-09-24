@@ -15,6 +15,7 @@ data class ReceiptLineUiModel(
     val quantity: Int,
     val unitCost: Money,
     val lineTotal: Money,
+    val barcode: String? = null,
 )
 
 data class ReceivingUiState(
@@ -61,6 +62,8 @@ sealed interface ReceivingUiEvent {
     data object Post : ReceivingUiEvent
     data object Discard : ReceivingUiEvent
     data object PrintTags : ReceivingUiEvent
+    data class GenerateBarcode(val variantId: String) : ReceivingUiEvent
+    data class PrintVariantTag(val variantId: String) : ReceivingUiEvent
     data class Open(val receiptId: String) : ReceivingUiEvent
 }
 
