@@ -6,11 +6,15 @@ import com.alsoug.keswa.core.platform.LogLevel
 import com.alsoug.keswa.di.APPLICATION_SCOPE
 import com.alsoug.keswa.di.initKoin
 import com.alsoug.keswa.features.catalog.domain.usecase.SeedShopUseCase
+import androidx.compose.ui.graphics.painter.BitmapPainter
+import androidx.compose.ui.res.loadImageBitmap
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import org.jetbrains.compose.resources.decodeToImageBitmap
 import org.koin.core.qualifier.named
+import java.io.InputStream
 
 fun main() {
     // Koin 4 wires the Compose context from startKoin itself — no KoinContext wrapper needed.
@@ -24,9 +28,16 @@ fun main() {
     )
 
     application {
+        val iconBitmap = Thread.currentThread()
+            .contextClassLoader
+            .getResourceAsStream("icon.png")
+            ?.buffered()
+            ?.use { it.readAllBytes().decodeToImageBitmap() }
+
         Window(
             onCloseRequest = ::exitApplication,
             title = "Keswa",
+            icon = iconBitmap?.let { BitmapPainter(it) },
         ) {
             App()
         }

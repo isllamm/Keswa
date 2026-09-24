@@ -18,7 +18,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -85,7 +84,7 @@ fun App(
     // Read once at start, then held here. The shop changes its language about as often as it
     // changes its name, so observing a flow for it would be machinery for an event that does not
     // happen — and the toggle updates this directly.
-    var language by remember { mutableStateOf(KeswaLanguage.ENGLISH) }
+    var language by remember { mutableStateOf(KeswaLanguage.ARABIC) }
     LaunchedEffect(Unit) {
         settings.get().onSuccess { language = KeswaLanguage.ofCode(it.languageCode) }
     }

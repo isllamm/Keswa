@@ -6,6 +6,7 @@
 
     <application
         android:name=".KeswaApplication"
+        android:icon="@mipmap/ic_launcher"
         android:label="Keswa"
         android:supportsRtl="true"
         android:theme="@style/Theme.Keswa">

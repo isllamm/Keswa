@@ -180,7 +180,7 @@ private val KeswaShapes = Shapes(
 
 private val LocalSemantics = staticCompositionLocalOf { LightSemantics }
 private val LocalStrings = staticCompositionLocalOf<Strings> { EnglishStrings }
-private val LocalLanguage = staticCompositionLocalOf { KeswaLanguage.ENGLISH }
+private val LocalLanguage = staticCompositionLocalOf { KeswaLanguage.ARABIC }
 private val LocalFigure = staticCompositionLocalOf<TextStyle> {
     error("no figure style: something is drawing outside KeswaTheme")
 }
@@ -202,7 +202,7 @@ private val LocalFigureLarge = staticCompositionLocalOf<TextStyle> {
 @Composable
 fun KeswaTheme(
     dark: Boolean = isSystemInDarkTheme(),
-    language: KeswaLanguage = KeswaLanguage.ENGLISH,
+    language: KeswaLanguage = KeswaLanguage.ARABIC,
     content: @Composable () -> Unit,
 ) {
     val family = if (language == KeswaLanguage.ARABIC) plexSansArabic() else plexSans()
