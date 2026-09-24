@@ -194,13 +194,23 @@ private fun Lines(
                         line.description.ifBlank { line.sku },
                         style = MaterialTheme.typography.bodyMedium,
                     )
+                    val barcodeText = if (line.barcode != null) " · 🏷️ ${line.barcode}" else ""
                     Text(
-                        "${line.sku} · ${line.quantity} × ${line.unitCost.format()}",
+                        "${line.sku}$barcodeText · ${line.quantity} × ${line.unitCost.format()}",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
                 Text(line.lineTotal.format(), style = KeswaTheme.figure)
+                if (line.barcode == null) {
+                    TextButton(onClick = { onEvent(ReceivingUiEvent.GenerateBarcode(line.variantId)) }) {
+                        Text("Gen Code")
+                    }
+                } else {
+                    TextButton(onClick = { onEvent(ReceivingUiEvent.PrintVariantTag(line.variantId)) }) {
+                        Text("🖨️ Label")
+                    }
+                }
                 if (state.isDraft) {
                     TextButton(onClick = { onEvent(ReceivingUiEvent.RemoveLine(line.lineId)) }) {
                         Text("✕")

@@ -9,6 +9,7 @@ data class AdjustUiState(
     val isLoading: Boolean = false,
     val scanEntry: String = "",
     val item: SellableItem? = null,
+    val barcode: String? = null,
     val quantityEntry: String = "",
     val reason: MovementReason = MovementReason.DAMAGE,
     val note: String = "",
@@ -32,6 +33,8 @@ sealed interface AdjustUiEvent {
     data class QuantityChanged(val value: String) : AdjustUiEvent
     data class ReasonChanged(val reason: MovementReason) : AdjustUiEvent
     data class NoteChanged(val value: String) : AdjustUiEvent
+    data object GenerateBarcode : AdjustUiEvent
+    data object PrintLabel : AdjustUiEvent
     data object Apply : AdjustUiEvent
     data object Clear : AdjustUiEvent
 }
