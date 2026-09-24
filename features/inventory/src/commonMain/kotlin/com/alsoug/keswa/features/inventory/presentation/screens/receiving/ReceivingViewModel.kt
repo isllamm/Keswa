@@ -26,6 +26,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+import com.alsoug.keswa.core.domain.repository.IVariantRepository
+import com.alsoug.keswa.features.inventory.domain.usecase.EnsureVariantBarcodeUseCase
+import com.alsoug.keswa.features.inventory.domain.usecase.PrintSingleVariantLabelUseCase
+
 class ReceivingViewModel(
     private val resolveLocation: ResolveStockLocationUseCase,
     private val find: FindStockItemUseCase,
@@ -37,6 +41,9 @@ class ReceivingViewModel(
     private val getReceipt: GetReceiptUseCase,
     private val recentReceipts: RecentReceiptsUseCase,
     private val printTags: PrintHangTagsUseCase,
+    private val variants: IVariantRepository,
+    private val ensureBarcode: EnsureVariantBarcodeUseCase,
+    private val printSingleLabel: PrintSingleVariantLabelUseCase,
     private val dispatchers: DispatcherProvider,
 ) : ViewModel() {
 
@@ -68,6 +75,8 @@ class ReceivingViewModel(
             ReceivingUiEvent.Post -> post()
             ReceivingUiEvent.Discard -> discard()
             ReceivingUiEvent.PrintTags -> print()
+            is ReceivingUiEvent.GenerateBarcode -> generateBarcode(event.variantId)
+            is ReceivingUiEvent.PrintVariantTag -> printSingleVariant(event.variantId)
             is ReceivingUiEvent.Open -> open(event.receiptId)
         }
     }
@@ -191,6 +200,41 @@ class ReceivingViewModel(
         }
     }
 
+    private fun generateBarcode(variantId: String) {
+        viewModelScope.launch(dispatchers.io) {
+            ensureBarcode(variantId).fold(
+                onSuccess = { code ->
+                    _state.value.receipt?.let { show(it) }
+                    _effect.emit(ReceivingUiEffect.ShowMessage(message { it.barcodeAttached }))
+                },
+                onFailure = { fail(it) },
+            )
+        }
+    }
+
+    private fun printSingleVariant(variantId: String) {
+        viewModelScope.launch(dispatchers.io) {
+            printSingleLabel(variantId, 1).fold(
+                onSuccess = { result ->
+                    when (result) {
+                        is LabelRunResult.Printed ->
+                            _effect.emit(ReceivingUiEffect.ShowMessage(message { it.tagsSent(result.tags) }))
+                        LabelRunResult.NoPrinter ->
+                            _effect.emit(ReceivingUiEffect.ShowError(message { it.noLabelPrinterConfigured }))
+                        is LabelRunResult.Unreachable ->
+                            _effect.emit(ReceivingUiEffect.ShowError(message { it.labelPrinterSilent }))
+                        is LabelRunResult.Incomplete -> _effect.emit(
+                            ReceivingUiEffect.ShowError(
+                                message { it.tagsSentSomeSkipped(result.tags, result.skipped.size) },
+                            ),
+                        )
+                    }
+                },
+                onFailure = { fail(it) },
+            )
+        }
+    }
+
     private fun print() {
         val receiptId = _state.value.receipt?.id ?: return
         viewModelScope.launch(dispatchers.io) {
@@ -230,6 +274,10 @@ class ReceivingViewModel(
         val location = locationId
         val lines = receipt.lines.map { line ->
             val item = location?.let { find.byVariantId(line.variantId, it).getOrNull() }
+            val barcode = variants.barcodesFor(line.variantId).getOrNull()
+                ?.firstOrNull { it.isPrimary }?.barcode
+                ?: variants.barcodesFor(line.variantId).getOrNull()?.firstOrNull()?.barcode
+
             ReceiptLineUiModel(
                 lineId = line.id,
                 variantId = line.variantId,
@@ -238,6 +286,7 @@ class ReceivingViewModel(
                 quantity = line.quantity,
                 unitCost = line.unitCost,
                 lineTotal = line.lineTotal,
+                barcode = barcode,
             )
         }
         _state.update { it.copy(receipt = receipt, lines = lines) }

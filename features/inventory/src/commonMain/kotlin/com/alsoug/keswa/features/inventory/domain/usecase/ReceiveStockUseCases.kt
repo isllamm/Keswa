@@ -60,6 +60,7 @@ class AddReceiptLineUseCase(
     private val receipts: IStockReceiptRepository,
     private val sessions: ISessionManager,
     private val ids: IdGenerator,
+    private val ensureBarcode: EnsureVariantBarcodeUseCase? = null,
 ) {
     suspend operator fun invoke(
         receiptId: String,
@@ -68,6 +69,7 @@ class AddReceiptLineUseCase(
         unitCost: Money,
     ): Result<StockReceipt> = runCatching {
         sessions.require(Permission.RECEIVE_STOCK)
+        ensureBarcode?.invoke(variantId)?.getOrThrow()
         receipts.putLine(ids.newId(), receiptId, variantId, quantity, unitCost).getOrThrow()
     }
 }

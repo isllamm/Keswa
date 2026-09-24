@@ -111,11 +111,27 @@ private fun Form(item: SellableItem, state: AdjustUiState, onEvent: (AdjustUiEve
     Card(modifier = Modifier.widthIn(max = 520.dp).fillMaxWidth().padding(top = 12.dp)) {
         Column(modifier = Modifier.padding(12.dp)) {
             Text(item.description, style = MaterialTheme.typography.titleSmall)
+            val barcodeText = if (state.barcode != null) " · 🏷️ ${state.barcode}" else ""
             Text(
-                "${item.sku} · ${item.onHand} on hand",
+                "${item.sku}$barcodeText · ${item.onHand} on hand",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(top = 4.dp),
+            ) {
+                if (state.barcode == null) {
+                    TextButton(onClick = { onEvent(AdjustUiEvent.GenerateBarcode) }) {
+                        Text("Gen Barcode")
+                    }
+                } else {
+                    TextButton(onClick = { onEvent(AdjustUiEvent.PrintLabel) }) {
+                        Text("🖨️ Print Label")
+                    }
+                }
+            }
 
             OutlinedTextField(
                 value = state.quantityEntry,
