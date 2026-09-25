@@ -112,6 +112,8 @@ data class Mover(
     val onHand: Int,
     val received: Int,
     val cogs: Money? = null,
+    val productNameAr: String? = null,
+    val colourNameAr: String? = null,
 ) {
     val sellThroughBasisPoints: Int?
         get() = if (received > 0) ((sold.toLong() * 10_000) / received).toInt() else null

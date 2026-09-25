@@ -1,6 +1,9 @@
 package com.alsoug.keswa.core.designsystem
 
 import androidx.compose.runtime.Immutable
+import com.alsoug.keswa.core.domain.model.LedgerEntryType
+import com.alsoug.keswa.core.domain.model.MovementReason
+import com.alsoug.keswa.core.domain.model.Permission
 
 /**
  * Every word the interface says, in one place, per language.
@@ -282,6 +285,31 @@ interface Strings {
     val allReturned: String
     val outsideWindowAdmin: String
     val adminCanTakeBack: String
+    val generateBarcode: String
+    val printLabel: String
+    val gapMm: String
+    val each: String
+    val soldLabel: String
+    val conditionSellable: String
+    val conditionDamaged: String
+    val salesCountLabel: String
+    val voidedSales: String
+    val grossSales: String
+    val discountsLabel: String
+    val netSales: String
+    val floatLabel: String
+    val cashLabel: String
+    val cardLabel: String
+    val returnsLabel: String
+    val countedLabel: String
+    val balanced: String
+    val onAccount: String
+    val oneToThirtyDays: String
+    val thirtyOneToSixtyDays: String
+    val outstanding: String
+    val change: String
+    val draft: String
+    val approved: String
 
     /**
      * The handful of labels that carry a value inside them.
@@ -299,6 +327,29 @@ interface Strings {
     /** On a basket line: the price before an override, and a short-stock warning. */
     fun wasPrice(price: String): String
     fun onlyInStock(onHand: Int): String
+
+    fun importedProducts(count: Int): String
+    fun importedVariants(count: Int): String
+    fun importedPieces(count: Int): String
+    fun coloursCount(count: Int): String
+    fun totalOnHand(count: Int): String
+    fun countSummary(lines: Int, discrepancies: Int): String
+    fun countedVsExpected(counted: Int, expected: Int?): String
+    fun alreadyReturned(count: Int): String
+    fun customerTerms(limit: String, terms: Int): String
+    fun availableCredit(available: String, limit: String): String
+    fun differenceAmount(amount: String): String
+    fun salesOutsideShift(count: Int): String
+    fun ledgerEntryType(type: LedgerEntryType): String
+    fun receiptDaysAgo(receiptNumber: Long, daysSince: Long): String
+    fun outsideReturnWindow(days: Int): String
+    fun inStock(count: Int): String
+    fun blockedByStock(onHand: Int): String
+    fun importLineProblem(lineNumber: Int, message: String): String
+    fun importPreviewSummary(rows: Int, pieces: Int): String
+    fun importRowDetail(sku: String, cost: String, quantity: Int): String
+    fun movementReason(reason: MovementReason): String
+    fun permissionNeeded(permission: Permission): String
 
     // Messages — what a screen says back after somebody has done something.
     val somethingWentWrong: String
@@ -631,6 +682,31 @@ object EnglishStrings : Strings {
     override val allReturned = "all returned"
     override val outsideWindowAdmin = "Outside the window, so an admin has to say yes — and it goes on the record."
     override val adminCanTakeBack = "An admin can take this back outside the window."
+    override val generateBarcode = "Gen barcode"
+    override val printLabel = "🖨️ Print label"
+    override val gapMm = "Gap mm"
+    override val each = "each"
+    override val soldLabel = "sold"
+    override val conditionSellable = "Sellable"
+    override val conditionDamaged = "Damaged"
+    override val salesCountLabel = "Sales"
+    override val voidedSales = "Voided"
+    override val grossSales = "Gross"
+    override val discountsLabel = "Discounts"
+    override val netSales = "Net"
+    override val floatLabel = "Float"
+    override val cashLabel = "Cash"
+    override val cardLabel = "Card"
+    override val returnsLabel = "Returns"
+    override val countedLabel = "Counted"
+    override val balanced = "Balanced"
+    override val onAccount = "On account"
+    override val oneToThirtyDays = "1–30 days"
+    override val thirtyOneToSixtyDays = "31–60 days"
+    override val outstanding = "Outstanding"
+    override val change = "Change"
+    override val draft = "Draft"
+    override val approved = "Approved."
 
     override fun importRows(count: Int) = "Import $count rows"
     override fun takeAmount(amount: String) = "Take $amount"
@@ -639,6 +715,48 @@ object EnglishStrings : Strings {
     override fun newSecretAtLeast(minimum: Int) = "New — at least $minimum characters"
     override fun wasPrice(price: String) = "was $price"
     override fun onlyInStock(onHand: Int) = "only $onHand in stock"
+
+    override fun importedProducts(count: Int) = "$count products"
+    override fun importedVariants(count: Int) = "$count SKUs"
+    override fun importedPieces(count: Int) = "$count pieces received"
+    override fun coloursCount(count: Int) = if (count == 1) "1 colour" else "$count colours"
+    override fun totalOnHand(count: Int) = "On hand: $count"
+    override fun countSummary(lines: Int, discrepancies: Int) = "$lines line(s), $discrepancies did not match"
+    override fun countedVsExpected(counted: Int, expected: Int?) = "counted $counted · expected ${expected ?: "—"}"
+    override fun alreadyReturned(count: Int) = "$count already returned"
+    override fun customerTerms(limit: String, terms: Int) = "limit $limit · net $terms"
+    override fun availableCredit(available: String, limit: String) = "$available of $limit still available"
+    override fun differenceAmount(amount: String) = "Difference $amount"
+    override fun salesOutsideShift(count: Int) = "$count sale(s) were rung up outside any shift"
+    override fun ledgerEntryType(type: LedgerEntryType) = when (type) {
+        LedgerEntryType.INVOICE -> "Invoice"
+        LedgerEntryType.PAYMENT -> "Payment"
+        LedgerEntryType.CREDIT_NOTE -> "Credit note"
+        LedgerEntryType.ADJUSTMENT -> "Adjustment"
+    }
+    override fun receiptDaysAgo(receiptNumber: Long, daysSince: Long) = "Receipt #$receiptNumber · $daysSince days ago"
+    override fun outsideReturnWindow(days: Int) = "Outside the $days-day window"
+    override fun inStock(count: Int) = "$count in stock"
+    override fun blockedByStock(onHand: Int) = "$onHand still in stock — sell or adjust them first"
+    override fun importLineProblem(lineNumber: Int, message: String) = "Line $lineNumber: $message"
+    override fun importPreviewSummary(rows: Int, pieces: Int) = "$rows rows, $pieces pieces"
+    override fun importRowDetail(sku: String, cost: String, quantity: Int) = "$sku · cost $cost · $quantity pcs"
+    override fun movementReason(reason: MovementReason) = when (reason) {
+        MovementReason.SALE -> "Sale"
+        MovementReason.RETURN -> "Return"
+        MovementReason.RECEIPT -> "Receipt"
+        MovementReason.ADJUSTMENT -> "Adjustment"
+        MovementReason.TRANSFER_IN -> "Transfer in"
+        MovementReason.TRANSFER_OUT -> "Transfer out"
+        MovementReason.COUNT -> "Count"
+        MovementReason.DAMAGE -> "Damage"
+    }
+    override fun permissionNeeded(permission: Permission) = when (permission) {
+        Permission.DISCOUNT_LINE -> "This needs approval for discounts."
+        Permission.OVERRIDE_PRICE -> "This needs approval for price overrides."
+        Permission.VOID_SALE -> "This needs approval to void a sale."
+        else -> "This needs ${permission.name.lowercase().replace('_', ' ')}."
+    }
     override val somethingWentWrong = "Something went wrong"
     override val notAnAmount = "That is not an amount"
     override val notAQuantity = "That is not a quantity"
@@ -969,6 +1087,31 @@ object ArabicStrings : Strings {
     override val allReturned = "رُدّ بالكامل"
     override val outsideWindowAdmin = "خارج المدة المسموحة، فيلزم موافقة مدير — وتُسجَّل الموافقة."
     override val adminCanTakeBack = "يستطيع المدير قبول هذا خارج المدة المسموحة."
+    override val generateBarcode = "توليد باركود"
+    override val printLabel = "🖨️ طباعة ملصق"
+    override val gapMm = "المسافة مم"
+    override val each = "للقطعة"
+    override val soldLabel = "تم بيع"
+    override val conditionSellable = "صالح للبيع"
+    override val conditionDamaged = "تالف"
+    override val salesCountLabel = "المبيعات"
+    override val voidedSales = "الملغاة"
+    override val grossSales = "الإجمالي"
+    override val discountsLabel = "الخصومات"
+    override val netSales = "الصافي"
+    override val floatLabel = "العهدة"
+    override val cashLabel = "نقدًا"
+    override val cardLabel = "بطاقة"
+    override val returnsLabel = "المرتجعات"
+    override val countedLabel = "المعدود"
+    override val balanced = "متطابقة"
+    override val onAccount = "على الحساب"
+    override val oneToThirtyDays = "1–30 يومًا"
+    override val thirtyOneToSixtyDays = "31–60 يومًا"
+    override val outstanding = "المتبقي"
+    override val change = "الباقي"
+    override val draft = "مسودة"
+    override val approved = "تمت الموافقة."
 
     override fun importRows(count: Int) = "استيراد $count صفًا"
     override fun takeAmount(amount: String) = "تحصيل $amount"
@@ -977,6 +1120,53 @@ object ArabicStrings : Strings {
     override fun newSecretAtLeast(minimum: Int) = "الجديد — $minimum أحرف على الأقل"
     override fun wasPrice(price: String) = "كان $price"
     override fun onlyInStock(onHand: Int) = "المتاح $onHand فقط"
+
+    override fun importedProducts(count: Int) = "$count منتج"
+    override fun importedVariants(count: Int) = "$count صنف"
+    override fun importedPieces(count: Int) = "$count قطعة مستلمة"
+    override fun coloursCount(count: Int) = when (count) {
+        1 -> "لون واحد"
+        2 -> "لونان"
+        in 3..10 -> "$count ألوان"
+        else -> "$count لونًا"
+    }
+    override fun totalOnHand(count: Int) = "المتبقي: $count"
+    override fun countSummary(lines: Int, discrepancies: Int) = "$lines سطر، لم يتطابق منها $discrepancies"
+    override fun countedVsExpected(counted: Int, expected: Int?) = "المعدود $counted · المتوقع ${expected ?: "—"}"
+    override fun alreadyReturned(count: Int) = "$count تم إرجاعها بالفعل"
+    override fun customerTerms(limit: String, terms: Int) = "الحد $limit · الأجل $terms يومًا"
+    override fun availableCredit(available: String, limit: String) = "$available من $limit متاح"
+    override fun differenceAmount(amount: String) = "فارق $amount"
+    override fun salesOutsideShift(count: Int) = "$count عملية بيع تم تسجيلها خارج أي وردية"
+    override fun ledgerEntryType(type: LedgerEntryType) = when (type) {
+        LedgerEntryType.INVOICE -> "فاتورة"
+        LedgerEntryType.PAYMENT -> "دفعة"
+        LedgerEntryType.CREDIT_NOTE -> "إشعار دائن"
+        LedgerEntryType.ADJUSTMENT -> "تسوية"
+    }
+    override fun receiptDaysAgo(receiptNumber: Long, daysSince: Long) = "إيصال رقم #$receiptNumber · منذ $daysSince يوم"
+    override fun outsideReturnWindow(days: Int) = "خارج نافذة الإرجاع ($days يوم)"
+    override fun inStock(count: Int) = "$count في المخزن"
+    override fun blockedByStock(onHand: Int) = "$onHand ما زالت في المخزن — يجب بيعها أو تسويتها أولًا"
+    override fun importLineProblem(lineNumber: Int, message: String) = "السطر $lineNumber: $message"
+    override fun importPreviewSummary(rows: Int, pieces: Int) = "$rows صفوف، $pieces قطعة"
+    override fun importRowDetail(sku: String, cost: String, quantity: Int) = "$sku · التكلفة $cost · $quantity قطعة"
+    override fun movementReason(reason: MovementReason) = when (reason) {
+        MovementReason.SALE -> "بيع"
+        MovementReason.RETURN -> "مرتجع"
+        MovementReason.RECEIPT -> "استلام"
+        MovementReason.ADJUSTMENT -> "تسوية"
+        MovementReason.TRANSFER_IN -> "تحويل وارد"
+        MovementReason.TRANSFER_OUT -> "تحويل صادر"
+        MovementReason.COUNT -> "جرد"
+        MovementReason.DAMAGE -> "تالف"
+    }
+    override fun permissionNeeded(permission: Permission) = when (permission) {
+        Permission.DISCOUNT_LINE -> "هذا الإجراء يتطلب موافقة على تطبيق الخصم."
+        Permission.OVERRIDE_PRICE -> "هذا الإجراء يتطلب موافقة على تعديل السعر."
+        Permission.VOID_SALE -> "هذا الإجراء يتطلب موافقة على إلغاء البيع."
+        else -> "هذا الإجراء يتطلب إذن صلاحية."
+    }
     override val somethingWentWrong = "حدث خطأ ما"
     override val notAnAmount = "هذا ليس مبلغًا"
     override val notAQuantity = "هذه ليست كمية"

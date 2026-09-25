@@ -6,17 +6,18 @@ import com.alsoug.keswa.core.platform.LogLevel
 import com.alsoug.keswa.di.APPLICATION_SCOPE
 import com.alsoug.keswa.di.initKoin
 import com.alsoug.keswa.features.catalog.domain.usecase.SeedShopUseCase
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.res.loadImageBitmap
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import org.jetbrains.compose.resources.decodeToImageBitmap
 import org.koin.core.qualifier.named
-import java.io.InputStream
 
 fun main() {
+    setDesktopAppIcon()
+
     // Koin 4 wires the Compose context from startKoin itself — no KoinContext wrapper needed.
     val koin = initKoin().koin
 
@@ -28,19 +29,41 @@ fun main() {
     )
 
     application {
-        val iconBitmap = Thread.currentThread()
-            .contextClassLoader
-            .getResourceAsStream("icon.png")
-            ?.buffered()
-            ?.use { it.readAllBytes().decodeToImageBitmap() }
+        val iconPainter = remember {
+            try {
+                val stream = Thread.currentThread().contextClassLoader.getResourceAsStream("icon.png")
+                    ?: Unit.javaClass.getResourceAsStream("/icon.png")
+                stream?.buffered()?.use { BitmapPainter(loadImageBitmap(it)) }
+            } catch (_: Throwable) {
+                null
+            }
+        }
 
         Window(
             onCloseRequest = ::exitApplication,
             title = "Keswa",
-            icon = iconBitmap?.let { BitmapPainter(it) },
+            icon = iconPainter,
         ) {
             App()
         }
+    }
+}
+
+private fun setDesktopAppIcon() {
+    try {
+        if (java.awt.Taskbar.isTaskbarSupported()) {
+            val taskbar = java.awt.Taskbar.getTaskbar()
+            if (taskbar.isSupported(java.awt.Taskbar.Feature.ICON_IMAGE)) {
+                val stream = Thread.currentThread().contextClassLoader.getResourceAsStream("icon.png")
+                    ?: Unit.javaClass.getResourceAsStream("/icon.png")
+                if (stream != null) {
+                    val image = javax.imageio.ImageIO.read(stream)
+                    taskbar.iconImage = image
+                }
+            }
+        }
+    } catch (_: Throwable) {
+        // Ignored on environments where Taskbar is unsupported
     }
 }
 

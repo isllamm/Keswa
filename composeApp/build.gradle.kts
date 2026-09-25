@@ -82,13 +82,26 @@ android {
 compose.desktop {
     application {
         mainClass = "com.alsoug.keswa.MainKt"
+        if (System.getProperty("os.name").contains("Mac", ignoreCase = true)) {
+            jvmArgs += listOf(
+                "-Dapple.awt.application.appearance=system",
+                "-Xdock:name=Keswa",
+                "-Xdock:icon=${project.file("src/desktopMain/resources/icon.png").absolutePath}",
+            )
+        }
 
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
+            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Exe, TargetFormat.Deb)
             packageName = "Keswa"
             packageVersion = "1.0.0"
             macOS {
                 iconFile.set(project.file("icon.icns"))
+                bundleID = "com.alsoug.keswa"
+            }
+            windows {
+                iconFile.set(project.file("icon.ico"))
+                menuGroup = "Keswa"
+                upgradeUuid = "2a1835fb-f7b2-4d10-85f2-95fbe5b84742"
             }
         }
     }

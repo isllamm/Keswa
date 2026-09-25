@@ -12,6 +12,7 @@ data class ReceiptLineUiModel(
     val variantId: String,
     val sku: String,
     val description: String,
+    val descriptionAr: String = "",
     val quantity: Int,
     val unitCost: Money,
     val lineTotal: Money,

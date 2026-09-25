@@ -34,6 +34,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alsoug.keswa.core.designsystem.EmptyState
 import com.alsoug.keswa.core.designsystem.KeswaTheme
 import com.alsoug.keswa.core.designsystem.ScreenHeader
+import com.alsoug.keswa.core.designsystem.localisedName
 import com.alsoug.keswa.core.designsystem.resolve
 import com.alsoug.keswa.core.domain.model.DocumentStatus
 import com.alsoug.keswa.core.domain.model.StockCount
@@ -136,7 +137,7 @@ private fun ColumnScope.OpenCount(state: CountUiState, onEvent: (CountUiEvent) -
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        line.description.ifBlank { line.sku },
+                        localisedName(line.description, line.descriptionAr).ifBlank { line.sku },
                         style = MaterialTheme.typography.bodyMedium,
                     )
                     Text(
@@ -174,7 +175,7 @@ private fun PostedCount(state: CountUiState) {
             Column(modifier = Modifier.padding(12.dp)) {
                 Text(KeswaTheme.strings.counted, style = MaterialTheme.typography.titleSmall)
                 Text(
-                    "${state.lines.size} line(s), ${state.discrepancies.size} did not match",
+                    KeswaTheme.strings.countSummary(state.lines.size, state.discrepancies.size),
                     style = MaterialTheme.typography.bodyMedium,
                 )
             }
@@ -199,11 +200,11 @@ private fun PostedCount(state: CountUiState) {
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            line.description.ifBlank { line.sku },
+                            localisedName(line.description, line.descriptionAr).ifBlank { line.sku },
                             style = MaterialTheme.typography.bodyMedium,
                         )
                         Text(
-                            "counted ${line.counted} · expected ${line.expected ?: "—"}",
+                            KeswaTheme.strings.countedVsExpected(line.counted, line.expected),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

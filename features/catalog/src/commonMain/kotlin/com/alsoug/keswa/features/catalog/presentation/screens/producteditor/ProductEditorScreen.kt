@@ -31,6 +31,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alsoug.keswa.core.designsystem.KeswaTheme
 import com.alsoug.keswa.core.designsystem.ScreenHeader
+import com.alsoug.keswa.core.designsystem.localisedName
 import com.alsoug.keswa.core.designsystem.resolve
 import com.alsoug.keswa.core.domain.model.Colour
 import com.alsoug.keswa.core.domain.money.Money
@@ -66,7 +67,7 @@ fun ProductEditorScreen(
                 is ProductEditorUiEffect.ShowError -> onMessage(effect.message.resolve(strings))
                 is ProductEditorUiEffect.ShowMessage -> onMessage(effect.message.resolve(strings))
                 is ProductEditorUiEffect.BlockedByStock ->
-                    onMessage("${effect.onHand} still in stock — sell or adjust them first")
+                    onMessage(strings.blockedByStock(effect.onHand))
             }
         }
     }
@@ -106,7 +107,7 @@ internal fun ProductEditorContent(
         }
 
         Text(
-            "On hand: ${state.totalOnHand}",
+            KeswaTheme.strings.totalOnHand(state.totalOnHand),
             style = MaterialTheme.typography.titleSmall,
             modifier = Modifier.padding(top = 12.dp),
         )
@@ -121,7 +122,7 @@ internal fun ProductEditorContent(
                 state.addableColours.take(6).forEach { colour ->
                     AssistChip(
                         onClick = { onEvent(ProductEditorUiEvent.AddColour(colour.id)) },
-                        label = { Text(colour.name) },
+                        label = { Text(localisedName(colour.name, colour.nameAr)) },
                         leadingIcon = { ColourSwatch(colour.hex, size = 12) },
                     )
                 }

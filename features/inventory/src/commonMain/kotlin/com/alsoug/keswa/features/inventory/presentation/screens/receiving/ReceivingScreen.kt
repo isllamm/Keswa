@@ -38,6 +38,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alsoug.keswa.core.designsystem.EmptyState
 import com.alsoug.keswa.core.designsystem.KeswaTheme
 import com.alsoug.keswa.core.designsystem.ScreenHeader
+import com.alsoug.keswa.core.designsystem.localisedName
 import com.alsoug.keswa.core.designsystem.resolve
 import com.alsoug.keswa.core.domain.model.DocumentStatus
 import com.alsoug.keswa.core.domain.model.StockReceipt
@@ -191,7 +192,7 @@ private fun Lines(
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        line.description.ifBlank { line.sku },
+                        localisedName(line.description, line.descriptionAr).ifBlank { line.sku },
                         style = MaterialTheme.typography.bodyMedium,
                     )
                     val barcodeText = if (line.barcode != null) " · 🏷️ ${line.barcode}" else ""
@@ -204,11 +205,11 @@ private fun Lines(
                 Text(line.lineTotal.format(), style = KeswaTheme.figure)
                 if (line.barcode == null) {
                     TextButton(onClick = { onEvent(ReceivingUiEvent.GenerateBarcode(line.variantId)) }) {
-                        Text("Gen Code")
+                        Text(KeswaTheme.strings.generateBarcode)
                     }
                 } else {
                     TextButton(onClick = { onEvent(ReceivingUiEvent.PrintVariantTag(line.variantId)) }) {
-                        Text("🖨️ Label")
+                        Text(KeswaTheme.strings.printLabel)
                     }
                 }
                 if (state.isDraft) {
@@ -309,7 +310,7 @@ private fun Recent(state: ReceivingUiState, onEvent: (ReceivingUiEvent) -> Unit)
             ) {
                 Text(receipt.reference, style = MaterialTheme.typography.bodyMedium)
                 Text(
-                    if (receipt.isDraft) "draft" else receipt.totalCost.format(),
+                    if (receipt.isDraft) KeswaTheme.strings.draft else receipt.totalCost.format(),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

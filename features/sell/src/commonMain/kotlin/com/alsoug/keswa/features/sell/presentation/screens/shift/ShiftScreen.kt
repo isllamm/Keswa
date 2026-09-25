@@ -130,29 +130,29 @@ private fun ReportCard(report: ZReport) {
     Card(modifier = Modifier.widthIn(max = 480.dp).padding(top = 12.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(KeswaTheme.strings.zReport, style = MaterialTheme.typography.titleMedium)
-            ReportRow("Sales", "${report.saleCount}")
-            ReportRow("Voided", "${report.voidedCount}")
+            ReportRow(KeswaTheme.strings.salesCountLabel, "${report.saleCount}")
+            ReportRow(KeswaTheme.strings.voidedSales, "${report.voidedCount}")
             HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
-            ReportRow("Gross", report.grossSales.format())
-            ReportRow("Discounts", report.discounts.format())
-            if (!report.tax.isZero) ReportRow("VAT", report.tax.format())
-            ReportRow("Net", report.netSales.format())
+            ReportRow(KeswaTheme.strings.grossSales, report.grossSales.format())
+            ReportRow(KeswaTheme.strings.discountsLabel, report.discounts.format())
+            if (!report.tax.isZero) ReportRow(KeswaTheme.strings.vat, report.tax.format())
+            ReportRow(KeswaTheme.strings.netSales, report.netSales.format())
             HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
-            ReportRow("Float", report.shift.openingFloat.format())
-            ReportRow("Cash", report.cashTaken.format())
-            ReportRow("Card", report.cardTaken.format())
+            ReportRow(KeswaTheme.strings.floatLabel, report.shift.openingFloat.format())
+            ReportRow(KeswaTheme.strings.cashLabel, report.cashTaken.format())
+            ReportRow(KeswaTheme.strings.cardLabel, report.cardTaken.format())
             ReportRow(KeswaTheme.strings.changeGiven, report.changeGiven.format())
             if (report.returnCount > 0) {
-                ReportRow("Returns", "${report.returnCount}")
+                ReportRow(KeswaTheme.strings.returnsLabel, "${report.returnCount}")
                 // Cash refunds genuinely leave the drawer; card refunds never touch it.
                 ReportRow(KeswaTheme.strings.refundedInCash, report.cashRefunded.format())
             }
             HorizontalDivider(modifier = Modifier.padding(vertical = 6.dp))
             ReportRow(KeswaTheme.strings.expectedInDrawer, report.expectedCash.format())
-            ReportRow("Counted", report.countedCash?.format() ?: "—")
+            ReportRow(KeswaTheme.strings.countedLabel, report.countedCash?.format() ?: "—")
             report.difference?.let { difference ->
                 Text(
-                    if (difference.isZero) "Balanced" else "Difference ${difference.format()}",
+                    if (difference.isZero) KeswaTheme.strings.balanced else KeswaTheme.strings.differenceAmount(difference.format()),
                     style = MaterialTheme.typography.titleSmall,
                     color = if (difference.isZero) {
                         MaterialTheme.colorScheme.onSurface
@@ -164,7 +164,7 @@ private fun ReportCard(report: ZReport) {
             }
             if (report.salesOutsideShift > 0) {
                 Text(
-                    "${report.salesOutsideShift} sale(s) were rung up outside any shift",
+                    KeswaTheme.strings.salesOutsideShift(report.salesOutsideShift),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.error,
                     modifier = Modifier.padding(top = 8.dp),

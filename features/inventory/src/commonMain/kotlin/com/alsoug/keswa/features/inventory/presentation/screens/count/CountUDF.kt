@@ -14,6 +14,7 @@ data class CountLineUiModel(
     val variantId: String,
     val sku: String,
     val description: String,
+    val descriptionAr: String = "",
     val counted: Int,
     val expected: Int? = null,
     val variance: Int? = null,

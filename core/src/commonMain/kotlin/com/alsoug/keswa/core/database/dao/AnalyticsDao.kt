@@ -46,6 +46,8 @@ data class MoverRow(
     val cogsPiastres: Long,
     val onHandQuantity: Int,
     val receivedQuantity: Int,
+    val productNameAr: String? = null,
+    val colourNameAr: String? = null,
 )
 
 data class HeadlineRow(
@@ -188,6 +190,7 @@ interface AnalyticsDao {
     @Query(
         """
         SELECT v.id AS variantId, v.sku AS sku, p.name AS productName, c.name AS colourName,
+               p.nameAr AS productNameAr, c.nameAr AS colourNameAr,
                COALESCE(SUM(l.quantity), 0) AS soldQuantity,
                COALESCE(SUM(l.lineTotalPiastres), 0) AS revenuePiastres,
                COALESCE(SUM(l.unitCostPiastres * l.quantity), 0) AS cogsPiastres,

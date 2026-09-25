@@ -283,6 +283,7 @@ class ReceivingViewModel(
                 variantId = line.variantId,
                 sku = item?.sku ?: line.variantId,
                 description = item?.description.orEmpty(),
+                descriptionAr = item?.descriptionAr.orEmpty(),
                 quantity = line.quantity,
                 unitCost = line.unitCost,
                 lineTotal = line.lineTotal,

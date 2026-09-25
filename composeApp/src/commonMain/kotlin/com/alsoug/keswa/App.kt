@@ -286,17 +286,18 @@ private fun StockroomHub(
     onSettings: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val strings = KeswaTheme.strings
     val entries = listOf(
-        Triple(Route.Receiving, "Receiving", "Book in a delivery, and let it set the cost"),
-        Triple(Route.StockCount, "Stock count", "Blind — the expected figure comes after"),
-        Triple(Route.Adjust, "Adjust", "Damage, loss, anything a document cannot explain"),
-        Triple(Route.Import, "Import catalogue", "A supplier's spreadsheet, validated as a whole"),
+        Triple(Route.Receiving, strings.receiving, strings.receivingHint),
+        Triple(Route.StockCount, strings.stockCount, strings.stockCountHint),
+        Triple(Route.Adjust, strings.adjust, strings.adjustHint),
+        Triple(Route.Import, strings.importCatalogue, strings.importCatalogueHint),
     )
 
     Column(modifier = modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 12.dp)) {
-        Text("Stockroom", style = MaterialTheme.typography.headlineSmall)
+        Text(strings.stockroom, style = MaterialTheme.typography.headlineSmall)
         Text(
-            "Everything that is not selling",
+            strings.stockroomSubtitle,
             style = MaterialTheme.typography.bodySmall,
             color = KeswaTheme.semantics.muted,
         )
@@ -329,7 +330,7 @@ private fun StockroomHub(
 
         Spacer(Modifier.height(20.dp))
         Text(
-            "Printers and scanner",
+            strings.printersAndScanner,
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.primary,
             modifier = Modifier.clickable(onClick = onSettings),

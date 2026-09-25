@@ -132,12 +132,12 @@ private fun Lookup(state: ReturnsUiState, onEvent: (ReturnsUiEvent) -> Unit) {
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
-                "Receipt #${state.receiptNumber} · ${state.daysSince} days ago",
+                KeswaTheme.strings.receiptDaysAgo(state.receiptNumber, state.daysSince),
                 style = MaterialTheme.typography.labelMedium,
             )
             if (!state.isInsidePolicy) {
                 Text(
-                    "Outside the ${state.returnWindowDays}-day window",
+                    KeswaTheme.strings.outsideReturnWindow(state.returnWindowDays),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.error,
                 )
@@ -175,9 +175,9 @@ private fun Lines(
                         Text(line.description, style = MaterialTheme.typography.bodyMedium)
                         Text(
                             buildString {
-                                append("${line.unitPrice.format()} each · sold ${line.soldQuantity}")
+                                append("${line.unitPrice.format()} ${KeswaTheme.strings.each} · ${KeswaTheme.strings.soldLabel} ${line.soldQuantity}")
                                 if (line.alreadyReturned > 0) {
-                                    append(" · ${line.alreadyReturned} already back")
+                                    append(" · ${KeswaTheme.strings.alreadyReturned(line.alreadyReturned)}")
                                 }
                             },
                             style = MaterialTheme.typography.labelSmall,
@@ -231,7 +231,10 @@ private fun Lines(
                                 },
                                 label = {
                                     Text(
-                                        condition.name.lowercase().replaceFirstChar { it.uppercase() },
+                                        when (condition) {
+                                            ReturnCondition.SELLABLE -> KeswaTheme.strings.conditionSellable
+                                            ReturnCondition.DAMAGED -> KeswaTheme.strings.conditionDamaged
+                                        },
                                     )
                                 },
                             )
@@ -281,7 +284,7 @@ private fun ColumnScope.Summary(state: ReturnsUiState, onEvent: (ReturnsUiEvent)
                 Text(KeswaTheme.strings.needsAnApproval, style = MaterialTheme.typography.titleSmall)
                 Text(
                     if (state.approvedByUserId != null) {
-                        "Approved."
+                        KeswaTheme.strings.approved
                     } else {
                         KeswaTheme.strings.outsideWindowAdmin
                     },

@@ -114,7 +114,7 @@ internal fun SettingsContent(
                 NumberField(KeswaTheme.strings.heightMm, settings.labelHeightMm) {
                     onEvent(SettingsUiEvent.Edit(settings.copy(labelHeightMm = it)))
                 }
-                NumberField("Gap mm", settings.labelGapMm) {
+                NumberField(KeswaTheme.strings.gapMm, settings.labelGapMm) {
                     onEvent(SettingsUiEvent.Edit(settings.copy(labelGapMm = it)))
                 }
             }

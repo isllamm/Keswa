@@ -65,6 +65,28 @@ class StringsTest {
         assertTrue(arabic.printerDidNotAnswer("x") != english.printerDidNotAnswer("x"))
         assertTrue(arabic.paymentReceived("1.00") != english.paymentReceived("1.00"))
         assertTrue(arabic.soldBelowStock("S", 1, 0) != english.soldBelowStock("S", 1, 0))
+        assertTrue(arabic.importedProducts(5) != english.importedProducts(5))
+        assertTrue(arabic.importedVariants(5) != english.importedVariants(5))
+        assertTrue(arabic.importedPieces(5) != english.importedPieces(5))
+        assertTrue(arabic.coloursCount(3) != english.coloursCount(3))
+        assertTrue(arabic.totalOnHand(10) != english.totalOnHand(10))
+        assertTrue(arabic.countSummary(5, 2) != english.countSummary(5, 2))
+        assertTrue(arabic.countedVsExpected(5, 4) != english.countedVsExpected(5, 4))
+        assertTrue(arabic.alreadyReturned(2) != english.alreadyReturned(2))
+        assertTrue(arabic.customerTerms("100", 30) != english.customerTerms("100", 30))
+        assertTrue(arabic.availableCredit("50", "100") != english.availableCredit("50", "100"))
+        assertTrue(arabic.differenceAmount("10") != english.differenceAmount("10"))
+        assertTrue(arabic.salesOutsideShift(3) != english.salesOutsideShift(3))
+        assertTrue(arabic.ledgerEntryType(com.alsoug.keswa.core.domain.model.LedgerEntryType.INVOICE) != english.ledgerEntryType(com.alsoug.keswa.core.domain.model.LedgerEntryType.INVOICE))
+        assertTrue(arabic.receiptDaysAgo(123, 4) != english.receiptDaysAgo(123, 4))
+        assertTrue(arabic.outsideReturnWindow(14) != english.outsideReturnWindow(14))
+        assertTrue(arabic.inStock(5) != english.inStock(5))
+        assertTrue(arabic.blockedByStock(3) != english.blockedByStock(3))
+        assertTrue(arabic.importLineProblem(2, "bad") != english.importLineProblem(2, "bad"))
+        assertTrue(arabic.importPreviewSummary(10, 50) != english.importPreviewSummary(10, 50))
+        assertTrue(arabic.importRowDetail("SKU1", "10.00", 5) != english.importRowDetail("SKU1", "10.00", 5))
+        assertTrue(arabic.movementReason(com.alsoug.keswa.core.domain.model.MovementReason.RECEIPT) != english.movementReason(com.alsoug.keswa.core.domain.model.MovementReason.RECEIPT))
+        assertTrue(arabic.permissionNeeded(com.alsoug.keswa.core.domain.model.Permission.DISCOUNT_LINE) != english.permissionNeeded(com.alsoug.keswa.core.domain.model.Permission.DISCOUNT_LINE))
 
         // And the value itself still appears, in both.
         assertTrue("42" in arabic.importRows(42))
@@ -153,4 +175,12 @@ private val STRING_READERS: List<(Strings) -> String> = listOf(
     { it.cashOnlyNoLimit }, { it.takeAPayment }, { it.againstAccountNote },
     { it.accountHistory }, { it.notYetDue }, { it.overSixtyDays },
     { it.allReturned }, { it.outsideWindowAdmin }, { it.adminCanTakeBack },
+    { it.generateBarcode }, { it.printLabel }, { it.gapMm }, { it.each },
+    { it.soldLabel }, { it.conditionSellable }, { it.conditionDamaged },
+    { it.salesCountLabel }, { it.voidedSales }, { it.grossSales },
+    { it.discountsLabel }, { it.netSales }, { it.floatLabel },
+    { it.cashLabel }, { it.cardLabel }, { it.returnsLabel },
+    { it.countedLabel }, { it.balanced }, { it.onAccount },
+    { it.oneToThirtyDays }, { it.thirtyOneToSixtyDays },
+    { it.outstanding }, { it.change }, { it.draft }, { it.approved },
 )

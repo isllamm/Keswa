@@ -249,8 +249,10 @@ private fun Movers(movers: List<Mover>, showsCost: Boolean) {
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Column(modifier = Modifier.weight(1f)) {
+                val pName = localisedName(mover.productName, mover.productNameAr)
+                val cName = localisedName(mover.colourName, mover.colourNameAr)
                 Text(
-                    "${mover.productName} — ${mover.colourName}",
+                    "$pName — $cName",
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 Text(

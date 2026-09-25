@@ -181,7 +181,7 @@ private fun SearchResults(results: List<SellableItem>, onEvent: (TillUiEvent) ->
                         style = MaterialTheme.typography.bodyMedium,
                     )
                     Text(
-                        "${item.sku} · ${item.onHand} in stock",
+                        "${item.sku} · ${KeswaTheme.strings.inStock(item.onHand)}",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -354,7 +354,7 @@ private fun ShiftBanner(state: TillUiState, onEvent: (TillUiEvent) -> Unit) {
             } else {
                 Text(KeswaTheme.strings.shiftOpen, style = MaterialTheme.typography.titleSmall)
                 Text(
-                    "Float ${state.shift.openingFloat.format()}",
+                    "${KeswaTheme.strings.floatLabel} ${state.shift.openingFloat.format()}",
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -522,12 +522,17 @@ private fun TenderDialog(state: TillUiState, onEvent: (TillUiEvent) -> Unit) {
         text = {
             Column {
                 state.tenders.forEachIndexed { index, tender ->
+                    val tenderName = when (tender.method) {
+                        TenderMethod.CASH -> KeswaTheme.strings.cashLabel
+                        TenderMethod.CARD -> KeswaTheme.strings.cardLabel
+                        TenderMethod.CREDIT -> KeswaTheme.strings.onAccount
+                    }
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Text("${tender.method.name} ${tender.amount.format()}")
+                        Text("$tenderName ${tender.amount.format()}")
                         TextButton(onClick = { onEvent(TillUiEvent.RemoveTender(index)) }) { Text("✕") }
                     }
                 }
@@ -564,8 +569,8 @@ private fun TenderDialog(state: TillUiState, onEvent: (TillUiEvent) -> Unit) {
                 ) { Text(KeswaTheme.strings.addCard) }
 
                 HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                AmountRow("Outstanding", state.outstanding)
-                AmountRow("Change", state.change)
+                AmountRow(KeswaTheme.strings.outstanding, state.outstanding)
+                AmountRow(KeswaTheme.strings.change, state.change)
             }
         },
         confirmButton = {
@@ -591,7 +596,7 @@ private fun ApprovalDialog(pending: PendingApproval, onEvent: (TillUiEvent) -> U
         text = {
             Column {
                 Text(
-                    "This needs ${pending.permission.name.lowercase().replace('_', ' ')}.",
+                    KeswaTheme.strings.permissionNeeded(pending.permission),
                     style = MaterialTheme.typography.bodyMedium,
                 )
                 OutlinedTextField(

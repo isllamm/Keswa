@@ -30,6 +30,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alsoug.keswa.core.designsystem.KeswaTheme
 import com.alsoug.keswa.core.designsystem.ScreenHeader
+import com.alsoug.keswa.core.designsystem.localisedName
 import com.alsoug.keswa.core.designsystem.resolve
 import com.alsoug.keswa.core.domain.model.MovementReason
 import com.alsoug.keswa.core.domain.model.SellableItem
@@ -110,10 +111,10 @@ internal fun AdjustContent(
 private fun Form(item: SellableItem, state: AdjustUiState, onEvent: (AdjustUiEvent) -> Unit) {
     Card(modifier = Modifier.widthIn(max = 520.dp).fillMaxWidth().padding(top = 12.dp)) {
         Column(modifier = Modifier.padding(12.dp)) {
-            Text(item.description, style = MaterialTheme.typography.titleSmall)
+            Text(localisedName(item.description, item.descriptionAr), style = MaterialTheme.typography.titleSmall)
             val barcodeText = if (state.barcode != null) " · 🏷️ ${state.barcode}" else ""
             Text(
-                "${item.sku}$barcodeText · ${item.onHand} on hand",
+                "${item.sku}$barcodeText · ${item.onHand} ${KeswaTheme.strings.onHandLegend}",
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -124,11 +125,11 @@ private fun Form(item: SellableItem, state: AdjustUiState, onEvent: (AdjustUiEve
             ) {
                 if (state.barcode == null) {
                     TextButton(onClick = { onEvent(AdjustUiEvent.GenerateBarcode) }) {
-                        Text("Gen Barcode")
+                        Text(KeswaTheme.strings.generateBarcode)
                     }
                 } else {
                     TextButton(onClick = { onEvent(AdjustUiEvent.PrintLabel) }) {
-                        Text("🖨️ Print Label")
+                        Text(KeswaTheme.strings.printLabel)
                     }
                 }
             }
@@ -194,7 +195,7 @@ private fun History(movements: List<StockMovement>, modifier: Modifier) {
                 ) {
                     Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            movement.reason.name.lowercase().replaceFirstChar { it.uppercase() },
+                            KeswaTheme.strings.movementReason(movement.reason),
                             style = MaterialTheme.typography.bodyMedium,
                         )
                         movement.note?.let {

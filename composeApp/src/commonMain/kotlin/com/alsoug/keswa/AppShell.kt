@@ -102,7 +102,11 @@ internal fun NavigationSidebar(
             Column(Modifier.padding(start = 16.dp, top = 10.dp, end = 12.dp)) {
                 Text(operator, style = MaterialTheme.typography.titleSmall)
                 Text(
-                    role.lowercase(),
+                    when (role.uppercase()) {
+                        "ADMIN" -> strings.admin
+                        "SELLER" -> strings.seller
+                        else -> role.lowercase()
+                    },
                     style = MaterialTheme.typography.labelSmall,
                     color = semantics.muted,
                 )

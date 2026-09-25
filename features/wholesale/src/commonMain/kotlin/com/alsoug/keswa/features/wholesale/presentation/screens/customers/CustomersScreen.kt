@@ -157,7 +157,10 @@ private fun CustomerList(
                     Text(row.customer.name, style = MaterialTheme.typography.bodyMedium)
                     Text(
                         if (row.customer.sellsOnAccount) {
-                            "limit ${row.customer.creditLimit.format()} · net ${row.customer.paymentTermsDays}"
+                            KeswaTheme.strings.customerTerms(
+                                row.customer.creditLimit.format(),
+                                row.customer.paymentTermsDays,
+                            )
                         } else {
                             KeswaTheme.strings.cashOnlyShort
                         },
@@ -199,7 +202,7 @@ private fun ColumnScope.Account(state: CustomersUiState, onEvent: (CustomersUiEv
         if (state.isCashOnly) {
             KeswaTheme.strings.cashOnlyNoLimit
         } else {
-            "${state.available.format()} of ${customer.creditLimit.format()} still available"
+            KeswaTheme.strings.availableCredit(state.available.format(), customer.creditLimit.format())
         },
         style = MaterialTheme.typography.labelSmall,
         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -250,8 +253,7 @@ private fun ColumnScope.Account(state: CustomersUiState, onEvent: (CustomersUiEv
             ) {
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
-                        entry.type.name.lowercase().replace('_', ' ')
-                            .replaceFirstChar { it.uppercase() },
+                        KeswaTheme.strings.ledgerEntryType(entry.type),
                         style = MaterialTheme.typography.bodyMedium,
                     )
                     entry.note?.let {
@@ -277,8 +279,8 @@ private fun AgeingCard(ageing: Ageing) {
         Column(modifier = Modifier.padding(12.dp)) {
             Text(KeswaTheme.strings.howOverdue, style = MaterialTheme.typography.titleSmall)
             AgeingRow(KeswaTheme.strings.notYetDue, ageing.current)
-            AgeingRow("1–30 days", ageing.thirtyDays)
-            AgeingRow("31–60 days", ageing.sixtyDays)
+            AgeingRow(KeswaTheme.strings.oneToThirtyDays, ageing.thirtyDays)
+            AgeingRow(KeswaTheme.strings.thirtyOneToSixtyDays, ageing.sixtyDays)
             AgeingRow(KeswaTheme.strings.overSixtyDays, ageing.ninetyDaysPlus)
         }
     }

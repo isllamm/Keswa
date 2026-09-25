@@ -154,7 +154,7 @@ private fun ProductList(
             ) {
                 Text(product.label, modifier = Modifier.weight(1f))
                 Text(
-                    "${product.colourCount} colours",
+                    KeswaTheme.strings.coloursCount(product.colourCount),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )

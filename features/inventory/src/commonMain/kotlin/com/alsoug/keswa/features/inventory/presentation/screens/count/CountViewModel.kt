@@ -178,6 +178,7 @@ class CountViewModel(
                 variantId = line.variantId,
                 sku = item?.sku ?: line.variantId,
                 description = item?.description.orEmpty(),
+                descriptionAr = item?.descriptionAr.orEmpty(),
                 counted = line.counted,
                 expected = line.expected,
                 variance = line.variance,

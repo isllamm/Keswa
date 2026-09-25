@@ -102,6 +102,8 @@ class AnalyticsRepositoryImpl(
                 onHand = it.onHandQuantity,
                 received = it.receivedQuantity,
                 cogs = if (withCost) Money.ofPiastres(it.cogsPiastres) else null,
+                productNameAr = it.productNameAr,
+                colourNameAr = it.colourNameAr,
             )
         }
     }

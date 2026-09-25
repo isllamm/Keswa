@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.alsoug.keswa.core.designsystem.KeswaTheme
 import com.alsoug.keswa.core.designsystem.ScreenHeader
+import com.alsoug.keswa.core.designsystem.localisedName
 import com.alsoug.keswa.core.designsystem.resolve
 import com.alsoug.keswa.core.domain.money.Money
 import com.alsoug.keswa.features.inventory.domain.usecase.ImportProblem
@@ -140,7 +141,7 @@ private fun ColumnScope.Problems(problems: List<ImportProblem>) {
     LazyColumn(modifier = Modifier.weight(1f).fillMaxWidth().padding(top = 6.dp)) {
         items(problems) { problem ->
             Text(
-                "Line ${problem.lineNumber}: ${problem.message}",
+                KeswaTheme.strings.importLineProblem(problem.lineNumber, problem.message),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.error,
                 modifier = Modifier.padding(vertical = 2.dp),
@@ -152,7 +153,7 @@ private fun ColumnScope.Problems(problems: List<ImportProblem>) {
 @Composable
 private fun ColumnScope.Preview(state: ImportUiState) {
     Text(
-        "${state.rows.size} rows, ${state.pieceCount} pieces",
+        KeswaTheme.strings.importPreviewSummary(state.rows.size, state.pieceCount),
         style = MaterialTheme.typography.titleSmall,
         modifier = Modifier.padding(top = 12.dp),
     )
@@ -163,12 +164,13 @@ private fun ColumnScope.Preview(state: ImportUiState) {
                 horizontalArrangement = Arrangement.SpaceBetween,
             ) {
                 Column(modifier = Modifier.weight(1f)) {
+                    val pName = localisedName(row.productName, row.productNameAr)
                     Text(
-                        "${row.productName} — ${row.colourName}",
+                        "$pName — ${row.colourName}",
                         style = MaterialTheme.typography.bodyMedium,
                     )
                     Text(
-                        "${row.sku} · cost ${row.cost.format()} · ${row.quantity} pcs",
+                        KeswaTheme.strings.importRowDetail(row.sku, row.cost.format(), row.quantity),
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -185,10 +187,10 @@ private fun Summary(summary: ImportSummary, onEvent: (ImportUiEvent) -> Unit) {
     Card(modifier = Modifier.fillMaxWidth().padding(top = 12.dp)) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(KeswaTheme.strings.imported, style = MaterialTheme.typography.titleSmall)
-            Text("${summary.productsCreated} products", style = MaterialTheme.typography.bodyMedium)
-            Text("${summary.variantsCreated} SKUs", style = MaterialTheme.typography.bodyMedium)
+            Text(KeswaTheme.strings.importedProducts(summary.productsCreated), style = MaterialTheme.typography.bodyMedium)
+            Text(KeswaTheme.strings.importedVariants(summary.variantsCreated), style = MaterialTheme.typography.bodyMedium)
             Text(
-                "${summary.piecesReceived} pieces received",
+                KeswaTheme.strings.importedPieces(summary.piecesReceived),
                 style = MaterialTheme.typography.bodyMedium,
             )
             Text(
