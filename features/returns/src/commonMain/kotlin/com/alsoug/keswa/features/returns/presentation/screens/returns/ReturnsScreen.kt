@@ -132,7 +132,7 @@ private fun Lookup(state: ReturnsUiState, onEvent: (ReturnsUiEvent) -> Unit) {
             horizontalArrangement = Arrangement.SpaceBetween,
         ) {
             Text(
-                KeswaTheme.strings.receiptDaysAgo(state.receiptNumber, state.daysSince),
+                state.receiptNumber?.let { KeswaTheme.strings.receiptDaysAgo(it, state.daysSince.toLong()) } ?: "",
                 style = MaterialTheme.typography.labelMedium,
             )
             if (!state.isInsidePolicy) {
