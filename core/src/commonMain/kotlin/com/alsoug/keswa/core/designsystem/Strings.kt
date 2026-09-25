@@ -1248,5 +1248,5 @@ fun stringsFor(language: KeswaLanguage): Strings =
  * Arabic should read in English, not disappear.
  */
 @androidx.compose.runtime.Composable
-fun localisedName(name: String, nameAr: String): String =
-    if (KeswaTheme.language == KeswaLanguage.ARABIC && nameAr.isNotBlank()) nameAr else name
+fun localisedName(name: String, nameAr: String?): String =
+    if (KeswaTheme.language == KeswaLanguage.ARABIC && !nameAr.isNullOrBlank()) nameAr else name
