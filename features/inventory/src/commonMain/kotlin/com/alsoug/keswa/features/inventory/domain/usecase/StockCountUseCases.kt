@@ -86,6 +86,16 @@ class RecentCountsUseCase(private val counts: IStockCountRepository) {
         counts.recent(locationId)
 }
 
+/** Cohesive facade grouping stock count operations to prevent constructor bloat. */
+data class StockCountUseCases(
+    val start: StartCountUseCase,
+    val countVariant: CountVariantUseCase,
+    val post: PostCountUseCase,
+    val discard: DiscardCountUseCase,
+    val current: CurrentCountUseCase,
+    val recent: RecentCountsUseCase,
+)
+
 /**
  * A one-off correction outside any document.
  *

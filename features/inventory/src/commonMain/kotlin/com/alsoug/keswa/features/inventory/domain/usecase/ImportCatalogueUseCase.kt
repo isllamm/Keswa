@@ -59,7 +59,8 @@ data class ImportSummary(
 class ParseCatalogueImportUseCase {
 
     operator fun invoke(text: String): ImportResult {
-        val lines = text.lineSequence()
+        val sanitized = text.removePrefix("\uFEFF")
+        val lines = sanitized.lineSequence()
             .map { it.trim() }
             .withIndex()
             .filter { (_, line) -> line.isNotEmpty() }
@@ -69,10 +70,13 @@ class ParseCatalogueImportUseCase {
             return ImportResult.Rejected(listOf(ImportProblem(0, "nothing to import")))
         }
 
+        val delimiter = detectDelimiter(lines.map { it.value })
+
         // A header is recognised by its first cell rather than by position, so a file that does not
         // have one still imports.
         val body = lines.filterNot { (_, line) ->
-            line.substringBefore(',').trim().equals("product", ignoreCase = true)
+            val firstCell = parseRow(line, delimiter).firstOrNull()?.trim().orEmpty()
+            firstCell.equals("product", ignoreCase = true) || firstCell.equals("المنتج", ignoreCase = true)
         }
 
         val rows = mutableListOf<ImportRow>()
@@ -80,17 +84,20 @@ class ParseCatalogueImportUseCase {
 
         body.forEach { (index, line) ->
             val lineNumber = index + 1
-            val cells = line.split(',').map { it.trim() }
+            val cells = parseRow(line, delimiter)
 
             if (cells.size < MINIMUM_COLUMNS) {
                 problems += ImportProblem(lineNumber, "expected $MINIMUM_COLUMNS columns, found ${cells.size}")
                 return@forEach
             }
 
-            val (productName, productNameAr, colourName, sku) = cells
-            val cost = Money.parse(cells[4])
-            val price = Money.parse(cells[5])
-            val quantity = cells.getOrNull(6)?.takeIf { it.isNotEmpty() }?.toIntOrNull() ?: 0
+            val productName = cells[0].trim()
+            val productNameAr = cells[1].trim()
+            val colourName = cells[2].trim()
+            val sku = cells[3].trim()
+            val cost = parseCleanMoney(cells[4])
+            val price = parseCleanMoney(cells[5])
+            val quantity = cells.getOrNull(6)?.trim()?.takeIf { it.isNotEmpty() }?.toIntOrNull() ?: 0
 
             when {
                 productName.isBlank() -> problems += ImportProblem(lineNumber, "product name is empty")
@@ -121,6 +128,59 @@ class ParseCatalogueImportUseCase {
         }
 
         return if (problems.isEmpty()) ImportResult.Parsed(rows) else ImportResult.Rejected(problems)
+    }
+
+    private fun detectDelimiter(lines: List<String>): Char {
+        val sample = lines.take(5)
+        val tabCount = sample.sumOf { it.count { ch -> ch == '\t' } }
+        val semicolonCount = sample.sumOf { it.count { ch -> ch == ';' } }
+        val commaCount = sample.sumOf { it.count { ch -> ch == ',' } }
+
+        return when {
+            tabCount > commaCount && tabCount >= 3 -> '\t'
+            semicolonCount > commaCount && semicolonCount >= 3 -> ';'
+            else -> ','
+        }
+    }
+
+    /** RFC 4180 compliant row parser supporting quoted strings and delimiters inside quotes. */
+    private fun parseRow(line: String, delimiter: Char): List<String> {
+        val cells = mutableListOf<String>()
+        val current = StringBuilder()
+        var inQuotes = false
+        var i = 0
+
+        while (i < line.length) {
+            val c = line[i]
+            when {
+                c == '"' -> {
+                    if (inQuotes && i + 1 < line.length && line[i + 1] == '"') {
+                        current.append('"')
+                        i++ // Skip escaped quote
+                    } else {
+                        inQuotes = !inQuotes
+                    }
+                }
+                c == delimiter && !inQuotes -> {
+                    cells.add(current.toString().trim())
+                    current.clear()
+                }
+                else -> {
+                    current.append(c)
+                }
+            }
+            i++
+        }
+        cells.add(current.toString().trim())
+        return cells
+    }
+
+    private fun parseCleanMoney(text: String): Money? {
+        val cleaned = text.trim()
+            .removePrefix("EGP").removePrefix("egp")
+            .removePrefix("LE").removePrefix("le")
+            .trim()
+        return Money.parse(cleaned)
     }
 
     private companion object {

@@ -122,3 +122,20 @@ class RecentReceiptsUseCase(private val receipts: IStockReceiptRepository) {
     suspend operator fun invoke(locationId: String): Result<List<StockReceipt>> =
         receipts.recent(locationId)
 }
+
+class ObserveDraftReceiptsUseCase(private val receipts: IStockReceiptRepository) {
+    operator fun invoke(locationId: String): kotlinx.coroutines.flow.Flow<List<StockReceipt>> =
+        receipts.observeDrafts(locationId)
+}
+
+/** Cohesive facade grouping all receiving use cases to prevent constructor bloat. */
+data class ReceivingUseCases(
+    val start: StartReceiptUseCase,
+    val addLine: AddReceiptLineUseCase,
+    val removeLine: RemoveReceiptLineUseCase,
+    val post: PostReceiptUseCase,
+    val discard: DiscardReceiptUseCase,
+    val getById: GetReceiptUseCase,
+    val recent: RecentReceiptsUseCase,
+    val observeDrafts: ObserveDraftReceiptsUseCase,
+)

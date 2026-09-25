@@ -22,9 +22,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -91,6 +94,13 @@ internal fun AdjustContent(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
 
+        val focus = remember { FocusRequester() }
+        LaunchedEffect(state.item) {
+            if (state.item == null) {
+                runCatching { focus.requestFocus() }
+            }
+        }
+
         OutlinedTextField(
             value = state.scanEntry,
             onValueChange = { onEvent(AdjustUiEvent.ScanEntryChanged(it)) },
@@ -98,7 +108,7 @@ internal fun AdjustContent(
             singleLine = true,
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { onEvent(AdjustUiEvent.Scanned(state.scanEntry)) }),
-            modifier = Modifier.widthIn(max = 520.dp).fillMaxWidth().padding(top = 8.dp),
+            modifier = Modifier.widthIn(max = 520.dp).fillMaxWidth().padding(top = 8.dp).focusRequester(focus),
         )
 
         state.item?.let { item -> Form(item, state, onEvent) }

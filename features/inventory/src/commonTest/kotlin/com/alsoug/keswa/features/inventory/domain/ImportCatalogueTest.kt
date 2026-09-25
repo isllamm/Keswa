@@ -132,4 +132,51 @@ class ImportCatalogueTest {
 
         assertEquals(2, assertIs<ImportResult.Parsed>(result).rows.size)
     }
+
+    @Test
+    fun `tab-separated text copied from Excel parses seamlessly`() {
+        val tsv = "product\tproductAr\tcolour\tsku\tcost\tprice\tquantity\n" +
+            "Denim Jacket\tجاكيت جينز\tIndigo\tKSW-JKT-001\t350\t550\t12"
+        val result = parse(tsv)
+
+        val rows = assertIs<ImportResult.Parsed>(result).rows
+        assertEquals(1, rows.size)
+        assertEquals("Denim Jacket", rows.single().productName)
+        assertEquals(Money.ofPounds(350), rows.single().cost)
+        assertEquals(12, rows.single().quantity)
+    }
+
+    @Test
+    fun `quoted fields containing commas parse without splitting the cell`() {
+        val csv = """
+            product,productAr,colour,sku,cost,price,quantity
+            "Shirt, Round Neck","قميص, رقبة دائرية",Navy,KSW-TSH-099,120,180,10
+        """.trimIndent()
+        val result = parse(csv)
+
+        val rows = assertIs<ImportResult.Parsed>(result).rows
+        assertEquals("Shirt, Round Neck", rows.single().productName)
+        assertEquals("قميص, رقبة دائرية", rows.single().productNameAr)
+    }
+
+    @Test
+    fun `Arabic header row is recognized and skipped`() {
+        val csv = """
+            المنتج,المنتج_عربي,اللون,الكود,التكلفة,السعر,الكمية
+            Oxford shirt,قميص,Blue,KSW-SHT-004-BL,240,380,5
+        """.trimIndent()
+        val result = parse(csv)
+
+        assertEquals(1, assertIs<ImportResult.Parsed>(result).rows.size)
+    }
+
+    @Test
+    fun `currency prefixes in cost and price are gracefully handled`() {
+        val csv = "Oxford shirt,قميص,Blue,KSW-SHT-004-BL,EGP 240,LE 380,5"
+        val result = parse(csv)
+
+        val row = assertIs<ImportResult.Parsed>(result).rows.single()
+        assertEquals(Money.ofPounds(240), row.cost)
+        assertEquals(Money.ofPounds(380), row.price)
+    }
 }

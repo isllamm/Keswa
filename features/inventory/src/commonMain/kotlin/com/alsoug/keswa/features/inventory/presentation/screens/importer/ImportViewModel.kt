@@ -95,6 +95,11 @@ class ImportViewModel(
 
     private suspend fun fail(cause: Throwable) {
         _state.update { it.copy(isLoading = false, isApplying = false) }
-        _effect.emit(ImportUiEffect.ShowError(message { it.somethingWentWrong }))
+        val msg = when (cause) {
+            is com.alsoug.keswa.features.inventory.domain.model.InventoryError ->
+                com.alsoug.keswa.core.designsystem.message { cause.resolveMessage(it) }
+            else -> com.alsoug.keswa.core.designsystem.message { it.somethingWentWrong }
+        }
+        _effect.emit(ImportUiEffect.ShowError(msg))
     }
 }

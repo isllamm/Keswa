@@ -6,13 +6,11 @@ import com.alsoug.keswa.core.coroutines.DispatcherProvider
 import com.alsoug.keswa.core.designsystem.Message
 import com.alsoug.keswa.core.designsystem.message
 import com.alsoug.keswa.core.domain.model.StockCount
-import com.alsoug.keswa.features.inventory.domain.usecase.CountVariantUseCase
-import com.alsoug.keswa.features.inventory.domain.usecase.CurrentCountUseCase
-import com.alsoug.keswa.features.inventory.domain.usecase.DiscardCountUseCase
+import com.alsoug.keswa.features.inventory.domain.model.InventoryError
+import com.alsoug.keswa.features.inventory.domain.usecase.EnrichCountLinesUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.FindStockItemUseCase
-import com.alsoug.keswa.features.inventory.domain.usecase.PostCountUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.ResolveStockLocationUseCase
-import com.alsoug.keswa.features.inventory.domain.usecase.StartCountUseCase
+import com.alsoug.keswa.features.inventory.domain.usecase.StockCountUseCases
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -31,11 +29,8 @@ import kotlinx.coroutines.launch
 class CountViewModel(
     private val resolveLocation: ResolveStockLocationUseCase,
     private val find: FindStockItemUseCase,
-    private val startCount: StartCountUseCase,
-    private val countVariant: CountVariantUseCase,
-    private val postCount: PostCountUseCase,
-    private val discardCount: DiscardCountUseCase,
-    private val currentCount: CurrentCountUseCase,
+    private val counts: StockCountUseCases,
+    private val enrichLines: EnrichCountLinesUseCase,
     private val dispatchers: DispatcherProvider,
 ) : ViewModel() {
 
@@ -73,7 +68,7 @@ class CountViewModel(
             resolveLocation().fold(
                 onSuccess = { resolved ->
                     locationId = resolved
-                    val open = currentCount(resolved).getOrNull()
+                    val open = counts.current(resolved).getOrNull()
                     _state.update { it.copy(isLoading = false) }
                     open?.let { show(it) }
                 },
@@ -85,7 +80,7 @@ class CountViewModel(
     private fun start() {
         val location = locationId ?: return
         viewModelScope.launch(dispatchers.io) {
-            startCount(location).fold(onSuccess = { show(it) }, onFailure = { fail(it) })
+            counts.start(location).fold(onSuccess = { show(it) }, onFailure = { fail(it) })
         }
     }
 
@@ -123,7 +118,7 @@ class CountViewModel(
             ?: return reject(message { it.notAQuantity })
 
         viewModelScope.launch(dispatchers.io) {
-            countVariant(countId, variantId, counted).fold(
+            counts.countVariant(countId, variantId, counted).fold(
                 onSuccess = { count ->
                     show(count)
                     _state.update {
@@ -140,7 +135,7 @@ class CountViewModel(
         val note = _state.value.note
         viewModelScope.launch(dispatchers.io) {
             _state.update { it.copy(isPosting = true) }
-            postCount(countId, note).fold(
+            counts.post(countId, note).fold(
                 onSuccess = { count ->
                     show(count)
                     _state.update { it.copy(isPosting = false) }
@@ -159,7 +154,7 @@ class CountViewModel(
     private fun discard() {
         val countId = _state.value.count?.id ?: return
         viewModelScope.launch(dispatchers.io) {
-            discardCount(countId).fold(
+            counts.discard(countId).fold(
                 onSuccess = {
                     _state.update { it.copy(count = null, lines = emptyList()) }
                     _navigation.emit(CountNavigation.Done)
@@ -170,20 +165,7 @@ class CountViewModel(
     }
 
     private suspend fun show(count: StockCount) {
-        val location = locationId
-        val lines = count.lines.map { line ->
-            val item = location?.let { find.byVariantId(line.variantId, it).getOrNull() }
-            CountLineUiModel(
-                lineId = line.id,
-                variantId = line.variantId,
-                sku = item?.sku ?: line.variantId,
-                description = item?.description.orEmpty(),
-                descriptionAr = item?.descriptionAr.orEmpty(),
-                counted = line.counted,
-                expected = line.expected,
-                variance = line.variance,
-            )
-        }
+        val lines = enrichLines(count.lines, locationId)
         _state.update { it.copy(count = count, lines = lines) }
     }
 
@@ -193,6 +175,10 @@ class CountViewModel(
 
     private suspend fun fail(cause: Throwable) {
         _state.update { it.copy(isLoading = false, isPosting = false) }
-        _effect.emit(CountUiEffect.ShowError(message { it.somethingWentWrong }))
+        val msg = when (cause) {
+            is InventoryError -> message { cause.resolveMessage(it) }
+            else -> message { it.somethingWentWrong }
+        }
+        _effect.emit(CountUiEffect.ShowError(msg))
     }
 }

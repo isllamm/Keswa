@@ -32,6 +32,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -148,6 +150,14 @@ private fun StartForm(state: ReceivingUiState, onEvent: (ReceivingUiEvent) -> Un
 
 @Composable
 private fun ScanBar(state: ReceivingUiState, onEvent: (ReceivingUiEvent) -> Unit) {
+    val focus = remember { FocusRequester() }
+
+    LaunchedEffect(state.pendingItem, state.lines.size) {
+        if (state.pendingItem == null) {
+            runCatching { focus.requestFocus() }
+        }
+    }
+
     OutlinedTextField(
         value = state.scanEntry,
         onValueChange = { onEvent(ReceivingUiEvent.ScanEntryChanged(it)) },
@@ -157,7 +167,7 @@ private fun ScanBar(state: ReceivingUiState, onEvent: (ReceivingUiEvent) -> Unit
         keyboardActions = KeyboardActions(
             onDone = { onEvent(ReceivingUiEvent.Scanned(state.scanEntry)) },
         ),
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier.fillMaxWidth().focusRequester(focus),
     )
 }
 

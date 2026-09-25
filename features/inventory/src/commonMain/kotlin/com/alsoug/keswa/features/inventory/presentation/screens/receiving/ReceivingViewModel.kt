@@ -7,17 +7,13 @@ import com.alsoug.keswa.core.designsystem.Message
 import com.alsoug.keswa.core.designsystem.message
 import com.alsoug.keswa.core.domain.model.StockReceipt
 import com.alsoug.keswa.core.domain.money.Money
-import com.alsoug.keswa.features.inventory.domain.usecase.AddReceiptLineUseCase
-import com.alsoug.keswa.features.inventory.domain.usecase.DiscardReceiptUseCase
+import com.alsoug.keswa.features.inventory.domain.model.InventoryError
+import com.alsoug.keswa.features.inventory.domain.usecase.EnrichReceiptLinesUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.FindStockItemUseCase
-import com.alsoug.keswa.features.inventory.domain.usecase.GetReceiptUseCase
+import com.alsoug.keswa.features.inventory.domain.usecase.InventoryLabelUseCases
 import com.alsoug.keswa.features.inventory.domain.usecase.LabelRunResult
-import com.alsoug.keswa.features.inventory.domain.usecase.PostReceiptUseCase
-import com.alsoug.keswa.features.inventory.domain.usecase.PrintHangTagsUseCase
-import com.alsoug.keswa.features.inventory.domain.usecase.RecentReceiptsUseCase
-import com.alsoug.keswa.features.inventory.domain.usecase.RemoveReceiptLineUseCase
+import com.alsoug.keswa.features.inventory.domain.usecase.ReceivingUseCases
 import com.alsoug.keswa.features.inventory.domain.usecase.ResolveStockLocationUseCase
-import com.alsoug.keswa.features.inventory.domain.usecase.StartReceiptUseCase
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -26,24 +22,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-import com.alsoug.keswa.core.domain.repository.IVariantRepository
-import com.alsoug.keswa.features.inventory.domain.usecase.EnsureVariantBarcodeUseCase
-import com.alsoug.keswa.features.inventory.domain.usecase.PrintSingleVariantLabelUseCase
-
 class ReceivingViewModel(
     private val resolveLocation: ResolveStockLocationUseCase,
     private val find: FindStockItemUseCase,
-    private val startReceipt: StartReceiptUseCase,
-    private val addLine: AddReceiptLineUseCase,
-    private val removeLine: RemoveReceiptLineUseCase,
-    private val postReceipt: PostReceiptUseCase,
-    private val discardReceipt: DiscardReceiptUseCase,
-    private val getReceipt: GetReceiptUseCase,
-    private val recentReceipts: RecentReceiptsUseCase,
-    private val printTags: PrintHangTagsUseCase,
-    private val variants: IVariantRepository,
-    private val ensureBarcode: EnsureVariantBarcodeUseCase,
-    private val printSingleLabel: PrintSingleVariantLabelUseCase,
+    private val receiving: ReceivingUseCases,
+    private val enrichLines: EnrichReceiptLinesUseCase,
+    private val labels: InventoryLabelUseCases,
     private val dispatchers: DispatcherProvider,
 ) : ViewModel() {
 
@@ -89,7 +73,7 @@ class ReceivingViewModel(
                     locationId = resolved
                     // Read before updating: `update` re-runs its block on contention, and this is
                     // a database call.
-                    val recent = recentReceipts(resolved).getOrElse { emptyList() }
+                    val recent = receiving.recent(resolved).getOrElse { emptyList() }
                     _state.update { it.copy(isLoading = false, recent = recent) }
                 },
                 onFailure = { fail(it) },
@@ -101,7 +85,7 @@ class ReceivingViewModel(
         val location = locationId ?: return
         val current = _state.value
         viewModelScope.launch(dispatchers.io) {
-            startReceipt(current.reference, current.supplierName, location).fold(
+            receiving.start(current.reference, current.supplierName, location).fold(
                 onSuccess = { receipt -> show(receipt) },
                 onFailure = { fail(it) },
             )
@@ -144,7 +128,7 @@ class ReceivingViewModel(
         val cost = Money.parse(_state.value.costEntry) ?: return reject(message { it.notAnAmount })
 
         viewModelScope.launch(dispatchers.io) {
-            addLine(receiptId, item.variantId, quantity, cost).fold(
+            receiving.addLine(receiptId, item.variantId, quantity, cost).fold(
                 onSuccess = { receipt ->
                     show(receipt)
                     _state.update { it.copy(pendingItem = null, quantityEntry = "", costEntry = "") }
@@ -157,7 +141,7 @@ class ReceivingViewModel(
     private fun remove(lineId: String) {
         val receiptId = _state.value.receipt?.id ?: return
         viewModelScope.launch(dispatchers.io) {
-            removeLine(receiptId, lineId).fold(onSuccess = { show(it) }, onFailure = { fail(it) })
+            receiving.removeLine(receiptId, lineId).fold(onSuccess = { show(it) }, onFailure = { fail(it) })
         }
     }
 
@@ -165,10 +149,10 @@ class ReceivingViewModel(
         val receiptId = _state.value.receipt?.id ?: return
         viewModelScope.launch(dispatchers.io) {
             _state.update { it.copy(isPosting = true) }
-            postReceipt(receiptId).fold(
+            receiving.post(receiptId).fold(
                 onSuccess = { posted ->
                     show(posted.receipt)
-                    val recent = locationId?.let { recentReceipts(it).getOrNull() }
+                    val recent = locationId?.let { receiving.recent(it).getOrNull() }
                     _state.update {
                         it.copy(
                             isPosting = false,
@@ -188,7 +172,7 @@ class ReceivingViewModel(
     private fun discard() {
         val receiptId = _state.value.receipt?.id ?: return
         viewModelScope.launch(dispatchers.io) {
-            discardReceipt(receiptId).fold(
+            receiving.discard(receiptId).fold(
                 onSuccess = {
                     _state.update {
                         it.copy(receipt = null, lines = emptyList(), costChanges = emptyList())
@@ -202,7 +186,7 @@ class ReceivingViewModel(
 
     private fun generateBarcode(variantId: String) {
         viewModelScope.launch(dispatchers.io) {
-            ensureBarcode(variantId).fold(
+            labels.ensureBarcode(variantId).fold(
                 onSuccess = { code ->
                     _state.value.receipt?.let { show(it) }
                     _effect.emit(ReceivingUiEffect.ShowMessage(message { it.barcodeAttached }))
@@ -214,7 +198,7 @@ class ReceivingViewModel(
 
     private fun printSingleVariant(variantId: String) {
         viewModelScope.launch(dispatchers.io) {
-            printSingleLabel(variantId, 1).fold(
+            labels.printSingleLabel(variantId, 1).fold(
                 onSuccess = { result ->
                     when (result) {
                         is LabelRunResult.Printed ->
@@ -238,7 +222,7 @@ class ReceivingViewModel(
     private fun print() {
         val receiptId = _state.value.receipt?.id ?: return
         viewModelScope.launch(dispatchers.io) {
-            printTags(receiptId).fold(
+            labels.printHangTags(receiptId).fold(
                 onSuccess = { result ->
                     when (result) {
                         is LabelRunResult.Printed ->
@@ -263,7 +247,7 @@ class ReceivingViewModel(
 
     private fun open(receiptId: String) {
         viewModelScope.launch(dispatchers.io) {
-            getReceipt(receiptId).fold(
+            receiving.getById(receiptId).fold(
                 onSuccess = { receipt -> receipt?.let { show(it) } },
                 onFailure = { fail(it) },
             )
@@ -271,25 +255,7 @@ class ReceivingViewModel(
     }
 
     private suspend fun show(receipt: StockReceipt) {
-        val location = locationId
-        val lines = receipt.lines.map { line ->
-            val item = location?.let { find.byVariantId(line.variantId, it).getOrNull() }
-            val barcode = variants.barcodesFor(line.variantId).getOrNull()
-                ?.firstOrNull { it.isPrimary }?.barcode
-                ?: variants.barcodesFor(line.variantId).getOrNull()?.firstOrNull()?.barcode
-
-            ReceiptLineUiModel(
-                lineId = line.id,
-                variantId = line.variantId,
-                sku = item?.sku ?: line.variantId,
-                description = item?.description.orEmpty(),
-                descriptionAr = item?.descriptionAr.orEmpty(),
-                quantity = line.quantity,
-                unitCost = line.unitCost,
-                lineTotal = line.lineTotal,
-                barcode = barcode,
-            )
-        }
+        val lines = enrichLines(receipt.lines, locationId)
         _state.update { it.copy(receipt = receipt, lines = lines) }
     }
 
@@ -299,6 +265,10 @@ class ReceivingViewModel(
 
     private suspend fun fail(cause: Throwable) {
         _state.update { it.copy(isLoading = false, isPosting = false) }
-        _effect.emit(ReceivingUiEffect.ShowError(message { it.somethingWentWrong }))
+        val msg = when (cause) {
+            is InventoryError -> message { cause.resolveMessage(it) }
+            else -> message { it.somethingWentWrong }
+        }
+        _effect.emit(ReceivingUiEffect.ShowError(msg))
     }
 }
