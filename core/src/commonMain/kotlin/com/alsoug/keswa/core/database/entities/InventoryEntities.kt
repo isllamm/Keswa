@@ -72,6 +72,13 @@ data class StockReceiptLineEntity(
     val quantity: Int,
     val unitCostPiastres: Long,
     val lineTotalPiastres: Long,
+    /**
+     * A retail price typed while receiving, applied when the receipt is posted.
+     *
+     * Null means "leave the price alone". Held here rather than written straight away, so a draft
+     * still changes nothing and a discarded one leaves no trace.
+     */
+    val sellPricePiastres: Long? = null,
 )
 
 /**

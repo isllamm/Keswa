@@ -12,6 +12,7 @@ import com.alsoug.keswa.core.domain.repository.IStockAdjustmentRepository
 import com.alsoug.keswa.core.domain.repository.IStockCountRepository
 import com.alsoug.keswa.core.domain.repository.IStockReceiptRepository
 import com.alsoug.keswa.core.domain.repository.PostedReceipt
+import com.alsoug.keswa.core.domain.repository.ReceiptLineInput
 import com.alsoug.keswa.core.error.Error
 import com.alsoug.keswa.core.session.ISessionManager
 import com.alsoug.keswa.core.session.InMemorySessionManager
@@ -64,6 +65,12 @@ class InventoryPermissionsTest {
             variantId: String,
             quantity: Int,
             unitCost: Money,
+            sellPrice: Money?,
+        ): Result<StockReceipt> = tripwire.boom()
+
+        override suspend fun putLines(
+            receiptId: String,
+            lines: List<ReceiptLineInput>,
         ): Result<StockReceipt> = tripwire.boom()
 
         override suspend fun removeLine(receiptId: String, lineId: String): Result<StockReceipt> =

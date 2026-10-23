@@ -161,6 +161,7 @@ val coreModule = module {
             get<KeswaDatabase>().stockReceiptDao(),
             get<KeswaDatabase>().variantDao(),
             get<KeswaDatabase>().stockLedgerDao(),
+            get<KeswaDatabase>().priceDao(),
             get(),
         ) { now() }
     }

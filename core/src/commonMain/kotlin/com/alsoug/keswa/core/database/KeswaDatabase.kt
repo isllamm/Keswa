@@ -100,7 +100,8 @@ import com.alsoug.keswa.core.database.entities.VariantEntity
         SyncControlEntity::class,
         SyncSupersededEntity::class,
     ],
-    version = 8, // 8: sync — outbox, cursor, control and superseded, plus the outbox triggers
+    version = 9, // 9: stock_receipt_line.sellPricePiastres — a price typed while receiving, applied on post
+    // 8: sync — outbox, cursor, control and superseded, plus the outbox triggers
     // 7: wholesale — customer, customer_ledger_entry, assortment packs; sale gained a customer
     // 6: added sale_return/_line
     // 5: added stock_receipt/_line, stock_count/_line; stock_movement gained cost and note

@@ -204,6 +204,7 @@ fun StockReceiptLineEntity.toDomain(): StockReceiptLine = StockReceiptLine(
     quantity = quantity,
     unitCost = Money.ofPiastres(unitCostPiastres),
     lineTotal = Money.ofPiastres(lineTotalPiastres),
+    sellPrice = sellPricePiastres?.let(Money::ofPiastres),
 )
 
 fun StockCountEntity.toDomain(lines: List<StockCountLine> = emptyList()): StockCount = StockCount(

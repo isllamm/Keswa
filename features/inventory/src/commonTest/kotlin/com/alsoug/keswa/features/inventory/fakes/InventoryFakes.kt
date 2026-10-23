@@ -37,6 +37,7 @@ import com.alsoug.keswa.core.domain.repository.IStockCountRepository
 import com.alsoug.keswa.core.domain.repository.IStockReceiptRepository
 import com.alsoug.keswa.core.domain.repository.IVariantRepository
 import com.alsoug.keswa.core.domain.repository.PostedReceipt
+import com.alsoug.keswa.core.domain.repository.ReceiptLineInput
 import com.alsoug.keswa.core.platform.IPrinterTransport
 import com.alsoug.keswa.core.platform.TransportFactory
 import com.alsoug.keswa.core.session.InMemorySessionManager
@@ -250,20 +251,36 @@ class FakeStockReceiptRepository : IStockReceiptRepository {
         variantId: String,
         quantity: Int,
         unitCost: Money,
+        sellPrice: Money?,
+    ): Result<StockReceipt> =
+        putLines(receiptId, listOf(ReceiptLineInput(id, variantId, quantity, unitCost, sellPrice)))
+
+    override suspend fun putLines(
+        receiptId: String,
+        lines: List<ReceiptLineInput>,
     ): Result<StockReceipt> {
         val receipt = receipts[receiptId] ?: return Result.failure(IllegalArgumentException("not found"))
-        val existingIndex = receipt.lines.indexOfFirst { it.variantId == variantId }
+        if (!receipt.isDraft) return Result.failure(IllegalArgumentException("already posted"))
         val updatedLines = receipt.lines.toMutableList()
-        val newLine = StockReceiptLine(
-            id = if (existingIndex >= 0) updatedLines[existingIndex].id else id,
-            receiptId = receiptId,
-            lineNumber = if (existingIndex >= 0) updatedLines[existingIndex].lineNumber else receipt.lines.size + 1,
-            variantId = variantId,
-            quantity = quantity,
-            unitCost = unitCost,
-            lineTotal = unitCost * quantity,
-        )
-        if (existingIndex >= 0) updatedLines[existingIndex] = newLine else updatedLines.add(newLine)
+        for (line in lines) {
+            if (line.quantity <= 0) return Result.failure(IllegalArgumentException("a receipt line must add stock"))
+            if (line.unitCost.isNegative) return Result.failure(IllegalArgumentException("a cost cannot be negative"))
+            if (line.sellPrice != null && line.sellPrice.isNegative) {
+                return Result.failure(IllegalArgumentException("a price cannot be negative"))
+            }
+            val existingIndex = updatedLines.indexOfFirst { it.variantId == line.variantId }
+            val newLine = StockReceiptLine(
+                id = if (existingIndex >= 0) updatedLines[existingIndex].id else line.id,
+                receiptId = receiptId,
+                lineNumber = if (existingIndex >= 0) updatedLines[existingIndex].lineNumber else updatedLines.size + 1,
+                variantId = line.variantId,
+                quantity = line.quantity,
+                unitCost = line.unitCost,
+                lineTotal = line.unitCost * line.quantity,
+                sellPrice = line.sellPrice,
+            )
+            if (existingIndex >= 0) updatedLines[existingIndex] = newLine else updatedLines.add(newLine)
+        }
         val updated = receipt.copy(lines = updatedLines)
         receipts[receiptId] = updated
         updateFlow()
