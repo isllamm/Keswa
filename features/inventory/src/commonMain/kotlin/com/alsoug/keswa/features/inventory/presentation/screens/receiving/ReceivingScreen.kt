@@ -2,7 +2,7 @@ package com.alsoug.keswa.features.inventory.presentation.screens.receiving
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -42,10 +42,14 @@ import com.alsoug.keswa.core.designsystem.KeswaTheme
 import com.alsoug.keswa.core.designsystem.ScreenHeader
 import com.alsoug.keswa.core.designsystem.localisedName
 import com.alsoug.keswa.core.designsystem.resolve
+import com.alsoug.keswa.core.domain.model.Category
 import com.alsoug.keswa.core.domain.model.DocumentStatus
+import com.alsoug.keswa.core.domain.model.SellableItem
 import com.alsoug.keswa.core.domain.model.StockReceipt
 import com.alsoug.keswa.core.domain.money.Money
 import com.alsoug.keswa.core.domain.repository.CostChange
+import com.alsoug.keswa.features.inventory.domain.usecase.EntryProblem
+import com.alsoug.keswa.features.inventory.presentation.components.CategoryPicker
 import org.jetbrains.compose.ui.tooling.preview.Preview
 
 /** ADR-012 — a humble view: renders state, forwards events, owns no business logic. */
@@ -88,35 +92,227 @@ internal fun ReceivingContent(
     onBack: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier.fillMaxSize()) {
-        if (state.isLoading || state.isPosting) {
-            LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+    // ADR-030: transient dialog / handheld picker visibility lives in remember.
+    var isHandheldPickerOpen by remember { mutableStateOf(false) }
+    var lineForLabels by remember { mutableStateOf<ReceiptLineUiModel?>(null) }
+    var labelCopiesEntry by remember { mutableStateOf("") }
+
+    // On handheld, when "Add to delivery" succeeds (lines grow and typed is cleared), close picker.
+    LaunchedEffect(state.lines.size, state.typed.isEmpty()) {
+        if (isHandheldPickerOpen && state.typed.isEmpty() && state.problems.isEmpty() && state.lines.isNotEmpty()) {
+            isHandheldPickerOpen = false
         }
+    }
 
-        ScreenHeader(
-            title = KeswaTheme.strings.receiving,
-            subtitle = KeswaTheme.strings.receivingHint,
-            onBack = onBack,
-        )
+    val openCopiesDialog: (ReceiptLineUiModel) -> Unit = { line ->
+        lineForLabels = line
+        labelCopiesEntry = line.quantity.toString()
+    }
 
-        Row(modifier = Modifier.fillMaxSize()) {
-            Column(modifier = Modifier.weight(1f).padding(12.dp)) {
-                if (state.receipt == null) StartForm(state, onEvent) else ScanBar(state, onEvent)
-                HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
-                Lines(state, onEvent, modifier = Modifier.weight(1f))
+    BoxWithConstraints(modifier = modifier.fillMaxSize()) {
+        val isWide = maxWidth >= WIDE_BREAKPOINT
+
+        if (!isWide && isHandheldPickerOpen && state.isDraft) {
+            Column(modifier = Modifier.fillMaxSize()) {
+                ScreenHeader(
+                    title = KeswaTheme.strings.pickFromCategories,
+                    subtitle = state.receipt?.reference.orEmpty(),
+                    onBack = { isHandheldPickerOpen = false },
+                )
+                PickerPane(
+                    state = state,
+                    onEvent = onEvent,
+                    modifier = Modifier.weight(1f).padding(12.dp),
+                )
             }
+        } else {
+            Column(modifier = Modifier.fillMaxSize()) {
+                if (state.isLoading || state.isPosting || state.isAddingLines) {
+                    LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
+                }
 
-            VerticalDivider()
+                ScreenHeader(
+                    title = KeswaTheme.strings.receiving,
+                    subtitle = KeswaTheme.strings.receivingHint,
+                    onBack = onBack,
+                )
 
-            Column(modifier = Modifier.width(320.dp).padding(12.dp)) {
-                Summary(state, onEvent)
-                if (state.costChanges.isNotEmpty()) CostChanges(state.costChanges)
-                if (state.recent.isNotEmpty()) Recent(state, onEvent)
+                if (isWide && state.isDraft) {
+                    Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp)) {
+                        ScanBar(state, onEvent)
+                    }
+                    HorizontalDivider()
+                    Row(modifier = Modifier.fillMaxSize()) {
+                        PickerPane(
+                            state = state,
+                            onEvent = onEvent,
+                            modifier = Modifier.weight(1.35f).padding(12.dp),
+                        )
+
+                        VerticalDivider()
+
+                        Lines(
+                            state = state,
+                            onEvent = onEvent,
+                            onPrintLineLabels = openCopiesDialog,
+                            modifier = Modifier.weight(1f).padding(12.dp),
+                        )
+
+                        VerticalDivider()
+
+                        Column(modifier = Modifier.width(280.dp).padding(12.dp)) {
+                            Summary(state, onEvent)
+                            if (state.costChanges.isNotEmpty()) CostChanges(state.costChanges)
+                            if (state.recent.isNotEmpty()) Recent(state, onEvent)
+                        }
+                    }
+                } else {
+                    Row(modifier = Modifier.fillMaxSize()) {
+                        Column(modifier = Modifier.weight(1f).padding(12.dp)) {
+                            if (state.receipt == null) {
+                                StartForm(state, onEvent)
+                            } else if (state.isDraft) {
+                                ScanBar(state, onEvent)
+                                OutlinedButton(
+                                    onClick = { isHandheldPickerOpen = true },
+                                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                                ) {
+                                    Text(KeswaTheme.strings.pickFromCategories)
+                                }
+                            }
+                            HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp))
+                            Lines(
+                                state = state,
+                                onEvent = onEvent,
+                                onPrintLineLabels = openCopiesDialog,
+                                modifier = Modifier.weight(1f),
+                            )
+                        }
+
+                        VerticalDivider()
+
+                        Column(modifier = Modifier.width(300.dp).padding(12.dp)) {
+                            Summary(state, onEvent)
+                            if (state.costChanges.isNotEmpty()) CostChanges(state.costChanges)
+                            if (state.recent.isNotEmpty()) Recent(state, onEvent)
+                        }
+                    }
+                }
             }
         }
     }
 
     state.pendingItem?.let { LineDialog(state, onEvent) }
+
+    lineForLabels?.let { line ->
+        PrintLineLabelsDialog(
+            line = line,
+            copiesEntry = labelCopiesEntry,
+            onCopiesChanged = { labelCopiesEntry = it },
+            onConfirm = {
+                val copies = labelCopiesEntry.trim().toIntOrNull() ?: line.quantity
+                onEvent(ReceivingUiEvent.PrintLineLabels(line.lineId, copies))
+                lineForLabels = null
+            },
+            onDismiss = { lineForLabels = null },
+        )
+    }
+}
+
+@Composable
+private fun PickerPane(
+    state: ReceivingUiState,
+    onEvent: (ReceivingUiEvent) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    CategoryPicker(
+        crumbs = state.crumbs,
+        subCategories = state.subCategories,
+        items = state.levelItems,
+        onGoUpTo = { onEvent(ReceivingUiEvent.GoUpTo(it)) },
+        onOpenCategory = { onEvent(ReceivingUiEvent.OpenCategory(it)) },
+        modifier = modifier,
+        footer = {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End),
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+            ) {
+                OutlinedButton(
+                    onClick = { onEvent(ReceivingUiEvent.ClearPicked) },
+                    enabled = state.typed.isNotEmpty() || state.problems.isNotEmpty(),
+                ) {
+                    Text(KeswaTheme.strings.clear)
+                }
+                Button(
+                    onClick = { onEvent(ReceivingUiEvent.AddPicked) },
+                    enabled = state.canAddLines,
+                ) {
+                    Text(KeswaTheme.strings.addToDelivery(state.typedCount))
+                }
+            }
+        },
+        rowFields = { item ->
+            val typed = state.typed[item.variantId]
+            val existingLine = state.receipt?.lines?.firstOrNull { it.variantId == item.variantId }
+            val quantityValue = typed?.quantity ?: existingLine?.quantity?.toString().orEmpty()
+            val costValue = typed?.cost ?: (existingLine?.unitCost ?: item.cost).format()
+            val priceValue = typed?.price ?: (existingLine?.sellPrice ?: item.price)?.format().orEmpty()
+            val problem = state.problems[item.variantId]
+
+            Column(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    OutlinedTextField(
+                        value = quantityValue,
+                        onValueChange = {
+                            onEvent(ReceivingUiEvent.PickQuantityChanged(item.variantId, it))
+                        },
+                        label = { Text(KeswaTheme.strings.quantity) },
+                        isError = problem == EntryProblem.NOT_A_QUANTITY,
+                        singleLine = true,
+                        modifier = Modifier.weight(0.8f),
+                    )
+                    OutlinedTextField(
+                        value = costValue,
+                        onValueChange = {
+                            onEvent(ReceivingUiEvent.PickCostChanged(item.variantId, it))
+                        },
+                        label = { Text(KeswaTheme.strings.cost) },
+                        isError = problem == EntryProblem.NOT_AN_AMOUNT,
+                        singleLine = true,
+                        modifier = Modifier.weight(1f),
+                    )
+                    OutlinedTextField(
+                        value = priceValue,
+                        onValueChange = {
+                            onEvent(ReceivingUiEvent.PickPriceChanged(item.variantId, it))
+                        },
+                        label = { Text(KeswaTheme.strings.price) },
+                        isError = problem == EntryProblem.NOT_AN_AMOUNT || problem == EntryProblem.PRICE_REQUIRED,
+                        singleLine = true,
+                        modifier = Modifier.weight(1f),
+                    )
+                }
+                if (problem != null) {
+                    val problemText = when (problem) {
+                        EntryProblem.NOT_A_QUANTITY -> KeswaTheme.strings.notAQuantity
+                        EntryProblem.NOT_AN_AMOUNT -> KeswaTheme.strings.notAnAmount
+                        EntryProblem.PRICE_REQUIRED -> KeswaTheme.strings.priceRequired
+                    }
+                    Text(
+                        text = problemText,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.padding(top = 2.dp),
+                    )
+                }
+            }
+        },
+    )
 }
 
 @Composable
@@ -175,6 +371,7 @@ private fun ScanBar(state: ReceivingUiState, onEvent: (ReceivingUiEvent) -> Unit
 private fun Lines(
     state: ReceivingUiState,
     onEvent: (ReceivingUiEvent) -> Unit,
+    onPrintLineLabels: (ReceiptLineUiModel) -> Unit,
     modifier: Modifier,
 ) {
     if (state.lines.isEmpty()) {
@@ -206,8 +403,12 @@ private fun Lines(
                         style = MaterialTheme.typography.bodyMedium,
                     )
                     val barcodeText = if (line.barcode != null) " · 🏷️ ${line.barcode}" else ""
+                    val newPriceText = line.sellPrice?.let { newPrice ->
+                        val arrow = line.livePrice?.let { "${it.format()} → " }.orEmpty()
+                        " · $arrow${KeswaTheme.strings.newPriceOnPosting(newPrice.format())}"
+                    }.orEmpty()
                     Text(
-                        "${line.sku}$barcodeText · ${line.quantity} × ${line.unitCost.format()}",
+                        "${line.sku}$barcodeText · ${line.quantity} × ${line.unitCost.format()}$newPriceText",
                         style = MaterialTheme.typography.labelSmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -218,8 +419,8 @@ private fun Lines(
                         Text(KeswaTheme.strings.generateBarcode)
                     }
                 } else {
-                    TextButton(onClick = { onEvent(ReceivingUiEvent.PrintVariantTag(line.variantId)) }) {
-                        Text(KeswaTheme.strings.printLabel)
+                    TextButton(onClick = { onPrintLineLabels(line) }) {
+                        Text(KeswaTheme.strings.printLabels)
                     }
                 }
                 if (state.isDraft) {
@@ -335,7 +536,7 @@ private fun LineDialog(state: ReceivingUiState, onEvent: (ReceivingUiEvent) -> U
 
     AlertDialog(
         onDismissRequest = { onEvent(ReceivingUiEvent.CancelLine) },
-        title = { Text(item.description) },
+        title = { Text(localisedName(item.description, item.descriptionAr)) },
         text = {
             Column {
                 Text(item.sku, style = MaterialTheme.typography.labelSmall)
@@ -353,6 +554,13 @@ private fun LineDialog(state: ReceivingUiState, onEvent: (ReceivingUiEvent) -> U
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
                 )
+                OutlinedTextField(
+                    value = state.priceEntry,
+                    onValueChange = { onEvent(ReceivingUiEvent.PriceChanged(it)) },
+                    label = { Text(KeswaTheme.strings.price) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                )
             }
         },
         confirmButton = {
@@ -364,6 +572,42 @@ private fun LineDialog(state: ReceivingUiState, onEvent: (ReceivingUiEvent) -> U
     )
 }
 
+@Composable
+private fun PrintLineLabelsDialog(
+    line: ReceiptLineUiModel,
+    copiesEntry: String,
+    onCopiesChanged: (String) -> Unit,
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(KeswaTheme.strings.printLabels) },
+        text = {
+            Column {
+                Text(
+                    localisedName(line.description, line.descriptionAr).ifBlank { line.sku },
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                OutlinedTextField(
+                    value = copiesEntry,
+                    onValueChange = onCopiesChanged,
+                    label = { Text(KeswaTheme.strings.copies) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+                )
+            }
+        },
+        confirmButton = {
+            Button(onClick = onConfirm) { Text(KeswaTheme.strings.print) }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text(KeswaTheme.strings.cancel) }
+        },
+    )
+}
+
+private val WIDE_BREAKPOINT = 900.dp
 private const val MAX_RECENT = 6
 
 private val previewReceipt = StockReceipt(
@@ -383,27 +627,109 @@ private val previewLines = listOf(
         variantId = "v1",
         sku = "KSW-TSH-022-NV",
         description = "Round-neck t-shirt — Navy",
+        descriptionAr = "تيشيرت رقبة دائرية — كحلي",
         quantity = 20,
         unitCost = Money.ofPounds(120),
         lineTotal = Money.ofPounds(2_400),
+        sellPrice = Money.ofPounds(250),
+        livePrice = Money.ofPounds(230),
+        barcode = "6221000000018",
     ),
     ReceiptLineUiModel(
         lineId = "l2",
         variantId = "v2",
         sku = "KSW-TSH-022-WH",
         description = "Round-neck t-shirt — White",
+        descriptionAr = "تيشيرت رقبة دائرية — أبيض",
         quantity = 30,
         unitCost = Money.ofPounds(118),
         lineTotal = Money.ofPounds(3_540),
+        barcode = "6221000000025",
     ),
+)
+
+private val previewItemNavy = SellableItem(
+    variantId = "v1",
+    productId = "p1",
+    sku = "KSW-TSH-022-NV",
+    name = "Round-neck t-shirt",
+    nameAr = "تيشيرت رقبة دائرية",
+    colourName = "Navy",
+    colourNameAr = "كحلي",
+    cost = Money.ofPounds(120),
+    price = Money.ofPounds(230),
+    onHand = 12,
+)
+
+private val previewItemWhite = SellableItem(
+    variantId = "v2",
+    productId = "p1",
+    sku = "KSW-TSH-022-WH",
+    name = "Round-neck t-shirt",
+    nameAr = "تيشيرت رقبة دائرية",
+    colourName = "White",
+    colourNameAr = "أبيض",
+    cost = Money.ofPounds(118),
+    price = null,
+    onHand = 0,
 )
 
 @Preview
 @Composable
-private fun ReceivingDraftPreview() {
+private fun ReceivingTopLevelPickerPreview() {
     KeswaTheme {
         ReceivingContent(
-            state = ReceivingUiState(receipt = previewReceipt, lines = previewLines),
+            state = ReceivingUiState(
+                receipt = previewReceipt,
+                lines = previewLines,
+                subCategories = listOf(
+                    Category(
+                        id = "c-men",
+                        name = "Men",
+                        nameAr = "رجالي",
+                        parentId = null,
+                        path = "/c-men/",
+                        depth = 0,
+                        sortOrder = 0,
+                        isActive = true,
+                    ),
+                    Category(
+                        id = "c-women",
+                        name = "Women",
+                        nameAr = "حريمي",
+                        parentId = null,
+                        path = "/c-women/",
+                        depth = 0,
+                        sortOrder = 1,
+                        isActive = true,
+                    ),
+                ),
+            ),
+            onEvent = {},
+            onBack = {},
+        )
+    }
+}
+
+@Preview
+@Composable
+private fun ReceivingCategoryPickerWithTypedAndProblemPreview() {
+    KeswaTheme {
+        ReceivingContent(
+            state = ReceivingUiState(
+                receipt = previewReceipt,
+                lines = previewLines,
+                crumbs = listOf(
+                    CategoryCrumb("c-men", "Men", "رجالي"),
+                    CategoryCrumb("c-shirts", "Shirts", "قمصان"),
+                ),
+                levelItems = listOf(previewItemNavy, previewItemWhite),
+                typed = mapOf(
+                    "v1" to TypedEntry(previewItemNavy, "20", "120.00", "250.00"),
+                    "v2" to TypedEntry(previewItemWhite, "15", "118.00", ""),
+                ),
+                problems = mapOf("v2" to EntryProblem.PRICE_REQUIRED),
+            ),
             onEvent = {},
             onBack = {},
         )

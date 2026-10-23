@@ -7,4 +7,5 @@ data class InventoryLabelUseCases(
     val ensureBarcode: EnsureVariantBarcodeUseCase,
     val printSingleLabel: PrintSingleVariantLabelUseCase,
     val printHangTags: PrintHangTagsUseCase,
+    val printLineLabels: PrintReceiptLineLabelsUseCase,
 )

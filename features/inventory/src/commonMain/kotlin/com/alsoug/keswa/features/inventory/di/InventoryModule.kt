@@ -21,6 +21,7 @@ import com.alsoug.keswa.features.inventory.domain.usecase.ParseCatalogueImportUs
 import com.alsoug.keswa.features.inventory.domain.usecase.PostCountUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.PostReceiptUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.PrintHangTagsUseCase
+import com.alsoug.keswa.features.inventory.domain.usecase.PrintReceiptLineLabelsUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.PrintSingleVariantLabelUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.RecentCountsUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.RecentReceiptsUseCase
@@ -48,11 +49,13 @@ val inventoryModule = module {
     factory { EnsureVariantBarcodeUseCase(get()) }
     factory { PrintSingleVariantLabelUseCase(get(), get(), get(), get(), get(), get()) { now() } }
     factory { PrintHangTagsUseCase(get(), get(), get(), get(), get(), get()) { now() } }
+    factory { PrintReceiptLineLabelsUseCase(get(), get(), get(), get(), get(), get()) }
     factory {
         InventoryLabelUseCases(
             ensureBarcode = get(),
             printSingleLabel = get(),
             printHangTags = get(),
+            printLineLabels = get(),
         )
     }
 

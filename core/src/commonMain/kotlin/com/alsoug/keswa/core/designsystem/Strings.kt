@@ -426,6 +426,19 @@ interface Strings {
     fun printerDidNotAnswer(detail: String): String
     fun paymentReceived(amount: String): String
     fun soldBelowStock(sku: String, sold: Int, onHand: Int): String
+    val pickFromCategories: String
+    val allCategories: String
+    val item: String
+    val colour: String
+    val priceRequired: String
+    val nothingFiledHere: String
+    val printLabels: String
+    val copies: String
+    val print: String
+    fun addToDelivery(count: Int): String
+    fun linesAdded(count: Int): String
+    fun rowsNeedFixing(count: Int): String
+    fun newPriceOnPosting(price: String): String
 }
 
 object EnglishStrings : Strings {
@@ -840,6 +853,19 @@ object EnglishStrings : Strings {
     override fun paymentReceived(amount: String) = "Received $amount"
     override fun soldBelowStock(sku: String, sold: Int, onHand: Int) =
         "$sku: sold $sold, stock said $onHand"
+    override val pickFromCategories = "Pick from categories"
+    override val allCategories = "All categories"
+    override val item = "Item"
+    override val colour = "Colour"
+    override val priceRequired = "This item has no price yet — set one"
+    override val nothingFiledHere = "Nothing filed here yet — add products and colours in the Catalogue"
+    override val printLabels = "Print labels"
+    override val copies = "Copies"
+    override val print = "Print"
+    override fun addToDelivery(count: Int) = "Add to delivery ($count)"
+    override fun linesAdded(count: Int) = "$count lines added"
+    override fun rowsNeedFixing(count: Int) = "$count rows need fixing"
+    override fun newPriceOnPosting(price: String) = "new price $price on posting"
 }
 
 /**
@@ -1259,6 +1285,19 @@ object ArabicStrings : Strings {
     override fun paymentReceived(amount: String) = "تم تحصيل $amount"
     override fun soldBelowStock(sku: String, sold: Int, onHand: Int) =
         "$sku: بيع $sold، والرصيد المسجل $onHand"
+    override val pickFromCategories = "اختر من الأقسام"
+    override val allCategories = "كل الأقسام"
+    override val item = "الصنف"
+    override val colour = "اللون"
+    override val priceRequired = "هذا الصنف بلا سعر بعد — حدّد سعرًا"
+    override val nothingFiledHere = "لا شيء هنا بعد — أضف المنتجات والألوان من الأصناف"
+    override val printLabels = "اطبع التيكيت"
+    override val copies = "عدد النسخ"
+    override val print = "طباعة"
+    override fun addToDelivery(count: Int) = "أضف إلى الاستلام ($count)"
+    override fun linesAdded(count: Int) = "أُضيف $count إلى الاستلام"
+    override fun rowsNeedFixing(count: Int) = "$count صف يحتاج تصحيحًا"
+    override fun newPriceOnPosting(price: String) = "السعر الجديد $price عند الترحيل"
 }
 
 fun stringsFor(language: KeswaLanguage): Strings =

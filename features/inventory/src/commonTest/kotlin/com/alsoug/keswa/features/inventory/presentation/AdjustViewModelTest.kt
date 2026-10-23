@@ -9,6 +9,7 @@ import com.alsoug.keswa.features.inventory.domain.usecase.FindStockItemUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.GetVariantBarcodeUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.InventoryLabelUseCases
 import com.alsoug.keswa.features.inventory.domain.usecase.PrintHangTagsUseCase
+import com.alsoug.keswa.features.inventory.domain.usecase.PrintReceiptLineLabelsUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.PrintSingleVariantLabelUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.ResolveStockLocationUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.StockHistoryUseCase
@@ -74,7 +75,8 @@ class AdjustViewModelTest {
     private val ensureBarcode = EnsureVariantBarcodeUseCase(variantsRepo)
     private val printSingleLabel = PrintSingleVariantLabelUseCase(variantsRepo, prices, settingsRepo, sessions, transports, ensureBarcode, now)
     private val printHangTags = PrintHangTagsUseCase(receiptsRepo, variantsRepo, prices, settingsRepo, sessions, transports, now)
-    private val labels = InventoryLabelUseCases(ensureBarcode, printSingleLabel, printHangTags)
+    private val printLineLabels = PrintReceiptLineLabelsUseCase(receiptsRepo, find, ensureBarcode, settingsRepo, sessions, transports)
+    private val labels = InventoryLabelUseCases(ensureBarcode, printSingleLabel, printHangTags, printLineLabels)
 
     private fun createViewModel() = AdjustViewModel(
         resolveLocation = resolveLocation,
