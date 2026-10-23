@@ -38,8 +38,10 @@ import com.alsoug.keswa.core.domain.repository.IStockReceiptRepository
 import com.alsoug.keswa.core.domain.repository.IVariantRepository
 import com.alsoug.keswa.core.domain.repository.PostedReceipt
 import com.alsoug.keswa.core.domain.repository.ReceiptLineInput
+import com.alsoug.keswa.core.platform.ILabelNameRenderer
 import com.alsoug.keswa.core.platform.IPrinterTransport
 import com.alsoug.keswa.core.platform.TransportFactory
+import com.alsoug.keswa.core.printing.MonoBitmap
 import com.alsoug.keswa.core.session.InMemorySessionManager
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
@@ -475,9 +477,10 @@ class FakeSettingsRepository : ISettingsRepository {
     }
 }
 
-class FakePrinterTransport : IPrinterTransport {
+class FakePrinterTransport(private val failWith: Throwable? = null) : IPrinterTransport {
     val sentPayloads = mutableListOf<ByteArray>()
-    override suspend fun open(): Result<Unit> = Result.success(Unit)
+    override suspend fun open(): Result<Unit> =
+        failWith?.let { Result.failure(it) } ?: Result.success(Unit)
     override suspend fun write(bytes: ByteArray): Result<Unit> {
         sentPayloads += bytes
         return Result.success(Unit)
@@ -487,4 +490,12 @@ class FakePrinterTransport : IPrinterTransport {
 
 class FakeTransportFactory(private val transport: IPrinterTransport = FakePrinterTransport()) : TransportFactory {
     override fun create(host: String, port: Int): IPrinterTransport = transport
+}
+
+class FakeLabelNameRenderer : ILabelNameRenderer {
+    val renderedTexts = mutableListOf<String>()
+    override fun render(text: String, widthDots: Int, maxHeightDots: Int): MonoBitmap {
+        renderedTexts += text
+        return MonoBitmap(widthDots.coerceAtLeast(8), 8)
+    }
 }

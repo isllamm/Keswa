@@ -97,12 +97,13 @@ object Tspl {
     }
 
     /** A self-test label, for proving the printer and media before any real stock is tagged. */
-    fun testLabel(spec: LabelSpec): ByteArray =
+    fun testLabel(spec: LabelSpec, nameBitmap: MonoBitmap? = null): ByteArray =
         label(
             spec = spec,
             barcode = "2000000000015",
             price = "EGP 0.00",
             sku = "TEST-LABEL",
             latinName = "Keswa test",
+            nameBitmap = nameBitmap,
         )
 }

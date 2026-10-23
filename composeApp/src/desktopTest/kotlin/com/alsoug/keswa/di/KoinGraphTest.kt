@@ -4,11 +4,18 @@ import androidx.room.Room
 import com.alsoug.keswa.core.coroutines.DispatcherProvider
 import com.alsoug.keswa.core.database.KeswaDatabase
 import com.alsoug.keswa.core.database.getKeswaDatabase
+import com.alsoug.keswa.core.platform.ILabelNameRenderer
 import com.alsoug.keswa.core.platform.IPlatformProvider
 import com.alsoug.keswa.features.analytics.presentation.screens.dashboard.DashboardViewModel
 import com.alsoug.keswa.features.auth.presentation.screens.signin.SignInViewModel
+import com.alsoug.keswa.features.catalog.domain.usecase.RenameCategoryUseCase
+import com.alsoug.keswa.features.catalog.domain.usecase.SetCategoryActiveUseCase
 import com.alsoug.keswa.features.catalog.presentation.screens.catalogbrowser.CatalogBrowserViewModel
 import com.alsoug.keswa.features.catalog.presentation.screens.producteditor.ProductEditorViewModel
+import com.alsoug.keswa.features.inventory.domain.usecase.AddReceiptLinesUseCase
+import com.alsoug.keswa.features.inventory.domain.usecase.BrowseCategoryUseCase
+import com.alsoug.keswa.features.inventory.domain.usecase.HangTagBuilder
+import com.alsoug.keswa.features.inventory.domain.usecase.PrintReceiptLineLabelsUseCase
 import com.alsoug.keswa.features.inventory.presentation.screens.adjust.AdjustViewModel
 import com.alsoug.keswa.features.inventory.presentation.screens.count.CountViewModel
 import com.alsoug.keswa.features.inventory.presentation.screens.importer.ImportViewModel
@@ -56,6 +63,20 @@ class KoinGraphTest {
 
         assertNotNull(koin.get<DispatcherProvider>())
         assertNotNull(koin.get<IPlatformProvider>())
+        assertNotNull(koin.get<ILabelNameRenderer>())
+    }
+
+    @Test
+    fun `the Koin graph resolves ILabelNameRenderer and the new use cases`() {
+        val koin = startWithInMemoryDatabase()
+
+        assertNotNull(koin.get<ILabelNameRenderer>())
+        assertNotNull(koin.get<RenameCategoryUseCase>())
+        assertNotNull(koin.get<SetCategoryActiveUseCase>())
+        assertNotNull(koin.get<BrowseCategoryUseCase>())
+        assertNotNull(koin.get<AddReceiptLinesUseCase>())
+        assertNotNull(koin.get<HangTagBuilder>())
+        assertNotNull(koin.get<PrintReceiptLineLabelsUseCase>())
     }
 
     /**

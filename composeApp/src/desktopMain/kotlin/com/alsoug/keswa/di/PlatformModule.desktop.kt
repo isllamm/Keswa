@@ -8,12 +8,14 @@ import com.alsoug.keswa.core.database.getDatabaseBuilder
 import com.alsoug.keswa.core.database.getKeswaDatabase
 import com.alsoug.keswa.core.platform.IPlatformProvider
 import com.alsoug.keswa.core.platform.IPasswordHasher
+import com.alsoug.keswa.core.platform.ILabelNameRenderer
 import com.alsoug.keswa.core.platform.IReceiptRenderer
 import com.alsoug.keswa.core.platform.DesktopSyncTokenStore
 import com.alsoug.keswa.core.platform.ISyncTokenStore
 import com.alsoug.keswa.core.sync.SyncScheduler
 import com.alsoug.keswa.core.sync.createSyncHttpClient
 import com.alsoug.keswa.core.platform.JvmPasswordHasher
+import com.alsoug.keswa.core.printing.DesktopLabelNameRenderer
 import com.alsoug.keswa.core.printing.DesktopReceiptRenderer
 import com.alsoug.keswa.core.platform.LogLevel
 import kotlinx.coroutines.CoroutineScope
@@ -26,6 +28,7 @@ actual val platformModule: Module = module {
     // Platform
     single<IPlatformProvider> { DesktopPlatformProvider() }
     single<IReceiptRenderer> { DesktopReceiptRenderer() }
+    single<ILabelNameRenderer> { DesktopLabelNameRenderer() }
     single<IPasswordHasher> { JvmPasswordHasher(get<DispatcherProvider>()) }
 
     // Application-lifetime scope. Injected rather than GlobalScope, per the forbidden-patterns

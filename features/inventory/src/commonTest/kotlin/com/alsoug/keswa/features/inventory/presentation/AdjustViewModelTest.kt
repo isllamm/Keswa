@@ -7,12 +7,14 @@ import com.alsoug.keswa.features.inventory.domain.usecase.AdjustStockUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.EnsureVariantBarcodeUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.FindStockItemUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.GetVariantBarcodeUseCase
+import com.alsoug.keswa.features.inventory.domain.usecase.HangTagBuilder
 import com.alsoug.keswa.features.inventory.domain.usecase.InventoryLabelUseCases
 import com.alsoug.keswa.features.inventory.domain.usecase.PrintHangTagsUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.PrintReceiptLineLabelsUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.PrintSingleVariantLabelUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.ResolveStockLocationUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.StockHistoryUseCase
+import com.alsoug.keswa.features.inventory.fakes.FakeLabelNameRenderer
 import com.alsoug.keswa.features.inventory.fakes.FakeLocationRepository
 import com.alsoug.keswa.features.inventory.fakes.FakePriceRepository
 import com.alsoug.keswa.features.inventory.fakes.FakeSellableRepository
@@ -66,6 +68,8 @@ class AdjustViewModelTest {
     private val settingsRepo = FakeSettingsRepository()
     private val transports = FakeTransportFactory()
     private val receiptsRepo = FakeStockReceiptRepository()
+    private val nameRenderer = FakeLabelNameRenderer()
+    private val tagBuilder = HangTagBuilder(nameRenderer)
 
     private val resolveLocation = ResolveStockLocationUseCase(locations)
     private val find = FindStockItemUseCase(sellablesRepo, prices, now)
@@ -73,9 +77,9 @@ class AdjustViewModelTest {
     private val history = StockHistoryUseCase(adjustmentsRepo)
     private val getBarcode = GetVariantBarcodeUseCase(variantsRepo)
     private val ensureBarcode = EnsureVariantBarcodeUseCase(variantsRepo)
-    private val printSingleLabel = PrintSingleVariantLabelUseCase(variantsRepo, prices, settingsRepo, sessions, transports, ensureBarcode, now)
-    private val printHangTags = PrintHangTagsUseCase(receiptsRepo, variantsRepo, prices, settingsRepo, sessions, transports, now)
-    private val printLineLabels = PrintReceiptLineLabelsUseCase(receiptsRepo, find, ensureBarcode, settingsRepo, sessions, transports)
+    private val printSingleLabel = PrintSingleVariantLabelUseCase(find, ensureBarcode, tagBuilder, settingsRepo, sessions, transports)
+    private val printHangTags = PrintHangTagsUseCase(receiptsRepo, find, variantsRepo, tagBuilder, settingsRepo, sessions, transports)
+    private val printLineLabels = PrintReceiptLineLabelsUseCase(receiptsRepo, find, ensureBarcode, tagBuilder, settingsRepo, sessions, transports)
     private val labels = InventoryLabelUseCases(ensureBarcode, printSingleLabel, printHangTags, printLineLabels)
 
     private fun createViewModel() = AdjustViewModel(

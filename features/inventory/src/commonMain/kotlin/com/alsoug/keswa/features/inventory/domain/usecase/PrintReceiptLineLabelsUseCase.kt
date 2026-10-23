@@ -6,17 +6,22 @@ import com.alsoug.keswa.core.domain.repository.ISettingsRepository
 import com.alsoug.keswa.core.domain.repository.IStockReceiptRepository
 import com.alsoug.keswa.core.platform.TransportFactory
 import com.alsoug.keswa.core.printing.tspl.LabelSpec
-import com.alsoug.keswa.core.printing.tspl.Tspl
 import com.alsoug.keswa.core.session.ISessionManager
 import com.alsoug.keswa.core.session.require
 
 /**
- * Prints hang tags for one line of a delivery — either while unpacking (draft) or after posting.
+ * Prints hang tags for one receipt line (before or after posting) with the user-chosen copy count.
+ *
+ * Price rule:
+ * - Draft line with a new `sellPrice` -> prints the line's new price.
+ * - Draft line without `sellPrice` -> prints the live price.
+ * - Posted receipt -> prints the live price (the new price is already live).
  */
 class PrintReceiptLineLabelsUseCase(
     private val receipts: IStockReceiptRepository,
     private val find: FindStockItemUseCase,
     private val ensureBarcode: EnsureVariantBarcodeUseCase,
+    private val tags: HangTagBuilder,
     private val settings: ISettingsRepository,
     private val sessions: ISessionManager,
     private val transports: TransportFactory,
@@ -26,8 +31,8 @@ class PrintReceiptLineLabelsUseCase(
         lineId: String,
         copies: Int,
     ): Result<LabelRunResult> = runCatching {
+        require(copies >= 1) { "copies must be at least 1" }
         sessions.require(Permission.RECEIVE_STOCK)
-        require(copies > 0) { "copies must be positive" }
 
         val shop = settings.get().getOrThrow()
         if (!shop.hasLabelPrinter) return@runCatching LabelRunResult.NoPrinter
@@ -41,10 +46,8 @@ class PrintReceiptLineLabelsUseCase(
         val item = requireNotNull(find.byVariantId(line.variantId, receipt.locationId).getOrThrow()) {
             "variant not found: ${line.variantId}"
         }
-        val barcode = ensureBarcode(line.variantId).getOrThrow()
 
-        // On a draft, a line with a new price prints that new price; once posted, the new price is
-        // already the live price.
+        val barcode = ensureBarcode(line.variantId).getOrThrow()
         val price = (if (receipt.isDraft) line.sellPrice ?: item.price else item.price) ?: Money.ZERO
 
         val spec = LabelSpec(
@@ -52,12 +55,12 @@ class PrintReceiptLineLabelsUseCase(
             heightMm = shop.labelHeightMm,
             gapMm = shop.labelGapMm,
         )
-        val payload = Tspl.label(
+
+        val payload = tags.build(
             spec = spec,
+            item = item,
             barcode = barcode,
-            price = "EGP ${price.format()}",
-            sku = item.sku,
-            latinName = item.sku,
+            price = price,
             copies = copies,
         )
 

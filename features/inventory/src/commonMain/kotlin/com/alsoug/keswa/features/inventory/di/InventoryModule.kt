@@ -15,6 +15,7 @@ import com.alsoug.keswa.features.inventory.domain.usecase.EnsureVariantBarcodeUs
 import com.alsoug.keswa.features.inventory.domain.usecase.FindStockItemUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.GetReceiptUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.GetVariantBarcodeUseCase
+import com.alsoug.keswa.features.inventory.domain.usecase.HangTagBuilder
 import com.alsoug.keswa.features.inventory.domain.usecase.InventoryLabelUseCases
 import com.alsoug.keswa.features.inventory.domain.usecase.ObserveDraftReceiptsUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.ParseCatalogueImportUseCase
@@ -47,9 +48,10 @@ val inventoryModule = module {
     factory { FindStockItemUseCase(get(), get()) { now() } }
 
     factory { EnsureVariantBarcodeUseCase(get()) }
-    factory { PrintSingleVariantLabelUseCase(get(), get(), get(), get(), get(), get()) { now() } }
-    factory { PrintHangTagsUseCase(get(), get(), get(), get(), get(), get()) { now() } }
-    factory { PrintReceiptLineLabelsUseCase(get(), get(), get(), get(), get(), get()) }
+    factory { HangTagBuilder(get()) }
+    factory { PrintSingleVariantLabelUseCase(get(), get(), get(), get(), get(), get()) }
+    factory { PrintHangTagsUseCase(get(), get(), get(), get(), get(), get(), get()) }
+    factory { PrintReceiptLineLabelsUseCase(get(), get(), get(), get(), get(), get(), get()) }
     factory {
         InventoryLabelUseCases(
             ensureBarcode = get(),
