@@ -36,6 +36,9 @@ interface CategoryDao {
     @Query("SELECT * FROM category WHERE parentId IS :parentId ORDER BY sortOrder, name")
     suspend fun getChildren(parentId: String?): List<CategoryEntity>
 
+    @Query("SELECT * FROM category WHERE parentId IS :parentId AND isActive = 1 ORDER BY sortOrder, name")
+    suspend fun getActiveChildren(parentId: String?): List<CategoryEntity>
+
     /** Every descendant of [pathPrefix], and the node itself, by materialised path. */
     @Query("SELECT * FROM category WHERE path LIKE :pathPrefix || '%' ORDER BY path")
     suspend fun getSubtree(pathPrefix: String): List<CategoryEntity>

@@ -19,6 +19,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.alsoug.keswa.core.designsystem.KeswaTheme
+import com.alsoug.keswa.core.designsystem.localisedName
 import com.alsoug.keswa.features.catalog.presentation.model.CategoryNodeUiModel
 
 /**
@@ -60,6 +62,14 @@ private fun CategoryRow(
     onClick: () -> Unit,
     trailing: @Composable () -> Unit,
 ) {
+    val displayLabel = localisedName(node.name, node.nameAr).ifBlank { node.label }
+    val text = if (node.isActive) displayLabel else "$displayLabel (${KeswaTheme.strings.hidden})"
+    val textColor = if (node.isActive) {
+        MaterialTheme.colorScheme.onSurface
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    }
+
     Surface(
         color = if (isSelected) {
             MaterialTheme.colorScheme.secondaryContainer
@@ -83,8 +93,9 @@ private fun CategoryRow(
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             Text(
-                text = node.label,
+                text = text,
                 style = MaterialTheme.typography.bodyMedium,
+                color = textColor,
                 fontWeight = if (isSelected) FontWeight.Medium else FontWeight.Normal,
                 modifier = Modifier.weight(1f),
             )

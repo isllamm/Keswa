@@ -183,4 +183,6 @@ private val STRING_READERS: List<(Strings) -> String> = listOf(
     { it.countedLabel }, { it.balanced }, { it.onAccount },
     { it.oneToThirtyDays }, { it.thirtyOneToSixtyDays },
     { it.outstanding }, { it.change }, { it.draft }, { it.approved },
+    { it.englishName }, { it.arabicName }, { it.rename }, { it.hide }, { it.show }, { it.hidden },
+    { it.categoryRenamed }, { it.categoryHidden }, { it.categoryShown },
 )

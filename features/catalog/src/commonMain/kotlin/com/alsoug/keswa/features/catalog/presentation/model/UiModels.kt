@@ -17,6 +17,9 @@ data class CategoryNodeUiModel(
     val label: String,
     val depth: Int,
     val hasChildren: Boolean,
+    val name: String = label,
+    val nameAr: String = label,
+    val isActive: Boolean = true,
 )
 
 data class ProductUiModel(
@@ -43,6 +46,9 @@ fun Category.toUiModel(arabic: Boolean, hasChildren: Boolean) = CategoryNodeUiMo
     label = if (arabic) nameAr else name,
     depth = depth,
     hasChildren = hasChildren,
+    name = name,
+    nameAr = nameAr,
+    isActive = isActive,
 )
 
 fun Product.toUiModel(arabic: Boolean, colourCount: Int) = ProductUiModel(

@@ -33,4 +33,12 @@ interface ICategoryRepository {
 
     /** [Category.path] of [id], for prefix queries such as "every product beneath this node". */
     suspend fun pathOf(id: String): Result<String?>
+
+    suspend fun rename(id: String, name: String, nameAr: String): Result<Category>
+
+    /** Hides or shows one category. Its products are not touched — they still sell and still scan. */
+    suspend fun setActive(id: String, isActive: Boolean): Result<Unit>
+
+    /** The active categories directly under [parentId]; the top level when it is null. */
+    suspend fun children(parentId: String?): Result<List<Category>>
 }

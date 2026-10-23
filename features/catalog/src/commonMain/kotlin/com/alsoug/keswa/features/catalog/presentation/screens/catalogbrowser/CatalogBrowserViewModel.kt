@@ -10,7 +10,9 @@ import com.alsoug.keswa.features.catalog.domain.usecase.CreateProductUseCase
 import com.alsoug.keswa.features.catalog.domain.usecase.GetCategoryTreeUseCase
 import com.alsoug.keswa.features.catalog.domain.usecase.GetProductsInCategoryUseCase
 import com.alsoug.keswa.features.catalog.domain.usecase.MoveCategoryUseCase
+import com.alsoug.keswa.features.catalog.domain.usecase.RenameCategoryUseCase
 import com.alsoug.keswa.features.catalog.domain.usecase.SearchCatalogUseCase
+import com.alsoug.keswa.features.catalog.domain.usecase.SetCategoryActiveUseCase
 import com.alsoug.keswa.features.catalog.presentation.model.toUiModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -27,6 +29,8 @@ class CatalogBrowserViewModel(
     private val getTree: GetCategoryTreeUseCase,
     private val getProducts: GetProductsInCategoryUseCase,
     private val createCategory: CreateCategoryUseCase,
+    private val renameCategory: RenameCategoryUseCase,
+    private val setCategoryActive: SetCategoryActiveUseCase,
     private val moveCategory: MoveCategoryUseCase,
     private val createProduct: CreateProductUseCase,
     private val search: SearchCatalogUseCase,
@@ -55,6 +59,8 @@ class CatalogBrowserViewModel(
             is CatalogBrowserUiEvent.CategorySelected -> selectCategory(event.categoryId)
             is CatalogBrowserUiEvent.SearchChanged -> runSearch(event.query)
             is CatalogBrowserUiEvent.CreateCategory -> addCategory(event)
+            is CatalogBrowserUiEvent.RenameCategory -> rename(event.categoryId, event.name, event.nameAr)
+            is CatalogBrowserUiEvent.SetCategoryActive -> setActive(event.categoryId, event.isActive)
             is CatalogBrowserUiEvent.MoveCategory -> relocate(event.categoryId, event.newParentId)
             is CatalogBrowserUiEvent.CreateProduct -> addProduct(event.name, event.nameAr)
             is CatalogBrowserUiEvent.ProductSelected -> openProduct(event.productId)
@@ -123,6 +129,35 @@ class CatalogBrowserViewModel(
             createCategory(parentId, event.name, event.nameAr).fold(
                 onSuccess = {
                     _effect.emit(CatalogBrowserUiEffect.ShowMessage(message { it.categoryAdded }))
+                    load()
+                },
+                onFailure = { fail(it) },
+            )
+        }
+    }
+
+    private fun rename(categoryId: String, name: String, nameAr: String) {
+        viewModelScope.launch(dispatchers.io) {
+            renameCategory(categoryId, name, nameAr).fold(
+                onSuccess = {
+                    _effect.emit(CatalogBrowserUiEffect.ShowMessage(message { it.categoryRenamed }))
+                    load()
+                },
+                onFailure = { fail(it) },
+            )
+        }
+    }
+
+    private fun setActive(categoryId: String, isActive: Boolean) {
+        viewModelScope.launch(dispatchers.io) {
+            setCategoryActive(categoryId, isActive).fold(
+                onSuccess = {
+                    val notice = if (isActive) {
+                        message { it.categoryShown }
+                    } else {
+                        message { it.categoryHidden }
+                    }
+                    _effect.emit(CatalogBrowserUiEffect.ShowMessage(notice))
                     load()
                 },
                 onFailure = { fail(it) },

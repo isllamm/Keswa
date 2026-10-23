@@ -154,6 +154,12 @@ interface Strings {
     val categories: String
     val searchProducts: String
     val newCategory: String
+    val englishName: String
+    val arabicName: String
+    val rename: String
+    val hide: String
+    val show: String
+    val hidden: String
     val addTopLevel: String
     val addUnderSelected: String
     val newProduct: String
@@ -380,6 +386,9 @@ interface Strings {
     val priceSet: String
     val noRetailPriceList: String
     val categoryAdded: String
+    val categoryRenamed: String
+    val categoryHidden: String
+    val categoryShown: String
     val pickACategoryFirst: String
     val startACountFirst: String
     val everythingMatched: String
@@ -545,6 +554,12 @@ object EnglishStrings : Strings {
     override val categories = "Categories"
     override val searchProducts = "Search products"
     override val newCategory = "New category"
+    override val englishName = "English name"
+    override val arabicName = "Arabic name"
+    override val rename = "Rename"
+    override val hide = "Hide"
+    override val show = "Show"
+    override val hidden = "Hidden"
     override val addTopLevel = "Add top level"
     override val addUnderSelected = "Add under selected"
     override val newProduct = "New product"
@@ -785,6 +800,9 @@ object EnglishStrings : Strings {
     override val priceSet = "Price set"
     override val noRetailPriceList = "No retail price list"
     override val categoryAdded = "Category added"
+    override val categoryRenamed = "Category renamed"
+    override val categoryHidden = "Category hidden"
+    override val categoryShown = "Category shown"
     override val pickACategoryFirst = "Pick a category first"
     override val startACountFirst = "Start a count first"
     override val everythingMatched = "Everything matched"
@@ -954,6 +972,12 @@ object ArabicStrings : Strings {
     override val categories = "الأقسام"
     override val searchProducts = "ابحث في المنتجات"
     override val newCategory = "قسم جديد"
+    override val englishName = "الاسم بالإنجليزية"
+    override val arabicName = "الاسم بالعربية"
+    override val rename = "إعادة تسمية"
+    override val hide = "إخفاء"
+    override val show = "إظهار"
+    override val hidden = "مخفي"
     override val addTopLevel = "أضف قسمًا رئيسيًا"
     override val addUnderSelected = "أضف داخل المحدد"
     override val newProduct = "منتج جديد"
@@ -1195,6 +1219,9 @@ object ArabicStrings : Strings {
     override val priceSet = "تم ضبط السعر"
     override val noRetailPriceList = "لا توجد قائمة أسعار تجزئة"
     override val categoryAdded = "تمت إضافة القسم"
+    override val categoryRenamed = "تم تغيير اسم القسم"
+    override val categoryHidden = "تم إخفاء القسم"
+    override val categoryShown = "تم إظهار القسم"
     override val pickACategoryFirst = "اختر قسمًا أولًا"
     override val startACountFirst = "ابدأ جردًا أولًا"
     override val everythingMatched = "كل شيء مطابق"

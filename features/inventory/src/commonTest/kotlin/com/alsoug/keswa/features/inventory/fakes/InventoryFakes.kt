@@ -147,7 +147,13 @@ class FakeColourRepository : IColourRepository {
 }
 
 class FakeCategoryRepository : ICategoryRepository {
-    private val cat = Category("cat-1", null, "Apparel", "ملابس", "cat-1", 0, 0, true)
+    private val cat = Category("cat-1", null, "Apparel", "ملابس", "/cat-1/", 0, 0, true)
+    private val categories = mutableMapOf(cat.id to cat)
+
+    fun withCategory(category: Category): FakeCategoryRepository {
+        categories[category.id] = category
+        return this
+    }
 
     override suspend fun create(
         id: String,
@@ -155,15 +161,40 @@ class FakeCategoryRepository : ICategoryRepository {
         name: String,
         nameAr: String,
         sortOrder: Int,
-    ): Result<Category> = Result.success(cat)
+    ): Result<Category> {
+        val parent = parentId?.let { categories[it] }
+        val path = if (parent == null) "/$id/" else "${parent.path}$id/"
+        val created = Category(id, parentId, name, nameAr, path, (parent?.depth ?: -1) + 1, sortOrder, true)
+        categories[id] = created
+        return Result.success(created)
+    }
 
     override suspend fun move(categoryId: String, newParentId: String?): Result<Unit> = Result.success(Unit)
 
-    override suspend fun getTree(): Result<List<Category>> = Result.success(listOf(cat))
+    override suspend fun getTree(): Result<List<Category>> = Result.success(categories.values.toList())
 
-    override suspend fun getById(id: String): Result<Category?> = Result.success(cat)
+    override suspend fun getById(id: String): Result<Category?> = Result.success(categories[id])
 
-    override suspend fun pathOf(id: String): Result<String?> = Result.success(cat.path)
+    override suspend fun pathOf(id: String): Result<String?> = Result.success(categories[id]?.path)
+
+    override suspend fun rename(id: String, name: String, nameAr: String): Result<Category> {
+        val current = categories[id] ?: return Result.failure(IllegalArgumentException("not found: $id"))
+        val updated = current.copy(name = name, nameAr = nameAr)
+        categories[id] = updated
+        return Result.success(updated)
+    }
+
+    override suspend fun setActive(id: String, isActive: Boolean): Result<Unit> {
+        val current = categories[id] ?: return Result.failure(IllegalArgumentException("not found: $id"))
+        categories[id] = current.copy(isActive = isActive)
+        return Result.success(Unit)
+    }
+
+    override suspend fun children(parentId: String?): Result<List<Category>> = Result.success(
+        categories.values
+            .filter { it.parentId == parentId && it.isActive }
+            .sortedWith(compareBy<Category> { it.sortOrder }.thenBy { it.name }),
+    )
 }
 
 class FakeSellableRepository : ISellableRepository {

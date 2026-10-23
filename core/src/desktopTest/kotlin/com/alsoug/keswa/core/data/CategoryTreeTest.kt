@@ -123,4 +123,42 @@ class CategoryTreeTest {
         assertEquals(listOf("p1"), underTshirts.map { it.id })
         assertTrue(underShirts.isEmpty())
     }
+
+    @Test
+    fun `rename keeps the path and the products`() = runTest {
+        db.seedBaseData()
+
+        val renamed = repo.rename(CAT_TSHIRTS, "Tees", "تي شيرت").getOrThrow()
+
+        assertEquals("Tees", renamed.name)
+        assertEquals("تي شيرت", renamed.nameAr)
+        assertEquals("/$CAT_TSHIRTS/", renamed.path)
+        assertEquals(1, db.productDao().countInCategory(CAT_TSHIRTS))
+    }
+
+    @Test
+    fun `a hidden category is left out of children`() = runTest {
+        buildTree()
+        repo.create("vneck", "tshirts", "V-neck", "رقبة سبعة").getOrThrow()
+
+        repo.setActive("roundneck", false).getOrThrow()
+
+        val children = repo.children("tshirts").getOrThrow()
+        assertEquals(listOf("vneck"), children.map { it.id })
+        // Still in the full tree for the Catalogue screen
+        val all = repo.getTree().getOrThrow().associateBy { it.id }
+        assertEquals(false, all.getValue("roundneck").isActive)
+    }
+
+    @Test
+    fun `children(null) returns the top level only, in sortOrder then name order`() = runTest {
+        repo.create("c", null, "Coats", "معاطف", sortOrder = 1).getOrThrow()
+        repo.create("b", null, "Blazers", "بليزرات", sortOrder = 0).getOrThrow()
+        repo.create("a", null, "Accessories", "إكسسوارات", sortOrder = 0).getOrThrow()
+        repo.create("child", "a", "Belts", "أحزمة", sortOrder = 0).getOrThrow()
+
+        val top = repo.children(null).getOrThrow()
+
+        assertEquals(listOf("a", "b", "c"), top.map { it.id })
+    }
 }
