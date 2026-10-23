@@ -25,6 +25,7 @@ flowchart LR
 | | |
 |---|---|
 | **Colour is the only variant axis** | Sizes were removed on 14 Sep. The hierarchy that matters is the category tree, which the admin owns end to end. |
+| **Categories carry English and Arabic names, and can be renamed or hidden** | Every category stores both `name` and `nameAr`. Renaming updates the names in place without touching the materialised `path` (which is built from IDs). Hiding (`isActive = false`) hides the category and its descendants from pickers while leaving products filed under it sellable and scannable at the till; in the Catalogue browser, hidden rows remain visible in grey so an admin can show them again. Creating, renaming, moving, and hiding categories all require `Permission.MANAGE_CATALOGUE`. |
 | **Barcodes are EAN-13 from the in-store range 20–29** | GS1 reserves that range for shop-printed codes, so a generated barcode can never collide with a manufacturer's GTIN — and any cheap scanner reads it with no configuration. |
 | **A variant keeps several barcodes** | The supplier's and ours both resolve to the same SKU. That is why barcodes are their own table rather than a column. |
 | **SKUs are readable (`OXF-NAV`)** | A SKU is what staff read off a tag when the scanner fails. Collisions get a numeric suffix rather than a rejection. |

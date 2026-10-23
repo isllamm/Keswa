@@ -50,6 +50,28 @@ anything reaches the data layer, by handing the use cases repositories that expl
 many navy mediums did we get". A variant with no barcode is reported rather than printed blank — a
 tag that cannot be scanned at the till has no reason to exist.
 
+## Receiving by category
+
+Deliveries that arrive without barcodes — or with several colours of the same garment — can be
+entered by walking down the active category tree (`BrowseCategoryUseCase`) instead of scanning one
+by one:
+
+- **One validation and write path for grid and scan.** `AddReceiptLinesUseCase` validates every
+  typed row together (`NOT_A_QUANTITY`, `NOT_AN_AMOUNT`, `PRICE_REQUIRED`), ensures every variant
+  has an in-store EAN-13 barcode, and writes all lines in one transaction (`putLines`). One bad row
+  adds nothing and names every row that needs fixing; the scan dialog calls the same use case with a
+  single entry.
+- **A price typed while receiving is held on the line (`sellPricePiastres`) and applied on post.**
+  A draft receipt never changes the live retail price — if a draft is discarded, no price has moved.
+  When the receipt is posted, `StockReceiptRepositoryImpl.post` writes the stock movements, updates
+  weighted-average costs, and writes any changed retail prices in the same database transaction.
+  Setting or posting a price change requires `Permission.MANAGE_CATALOGUE`.
+- **Tags carry the Arabic name as a picture (`ILabelNameRenderer` + `HangTagBuilder`).** TSPL
+  firmware cannot shape Arabic or resolve bidirectional text, so the product and colour name is
+  rendered to a `MonoBitmap` (304 × 40 dots on a 40 × 30 mm label) and sent via `BITMAP`. Labels
+  can be printed per line at any time (`PrintReceiptLineLabelsUseCase`, using the line's new price
+  while in draft) or all together after posting (`PrintHangTagsUseCase`).
+
 **An import is validated as a whole and applied as a whole.** One bad row imports nothing, and
 every problem names its line. A repeated SKU is caught here, where "row 41 repeats row 12" is
 fixable, rather than by the unique index, where "UNIQUE constraint failed" is not. Applying reuses
