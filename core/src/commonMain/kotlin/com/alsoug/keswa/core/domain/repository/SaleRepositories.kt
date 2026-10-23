@@ -175,4 +175,11 @@ interface ISellableRepository {
         at: Long,
         limit: Int = 25,
     ): Result<List<SellableItem>>
+
+    suspend fun inCategory(
+        categoryId: String,
+        priceListId: String,
+        locationId: String,
+        at: Long,
+    ): Result<List<SellableItem>>
 }

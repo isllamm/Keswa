@@ -220,6 +220,13 @@ class FakeSellableRepository(private val items: List<SellableItem> = emptyList()
         limit: Int,
     ): Result<List<SellableItem>> =
         Result.success(items.filter { it.name.contains(term, ignoreCase = true) })
+
+    override suspend fun inCategory(
+        categoryId: String,
+        priceListId: String,
+        locationId: String,
+        at: Long,
+    ): Result<List<SellableItem>> = Result.success(emptyList())
 }
 
 fun sellable(

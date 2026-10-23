@@ -109,4 +109,30 @@ interface SellableDao {
         locationId: String,
         at: Long,
     ): SellableRow?
+
+    @Query(
+        """
+        SELECT v.id AS variantId, v.productId AS productId, v.sku AS sku,
+               p.name AS name, p.nameAr AS nameAr,
+               c.name AS colourName, c.nameAr AS colourNameAr,
+               v.costPiastres AS costPiastres,
+               (SELECT pr.pricePiastres FROM price pr
+                 WHERE pr.variantId = v.id AND pr.priceListId = :priceListId
+                   AND pr.validFrom <= :at AND (pr.validTo IS NULL OR pr.validTo > :at)
+                 ORDER BY pr.validFrom DESC LIMIT 1) AS pricePiastres,
+               COALESCE((SELECT soh.quantity FROM stock_on_hand soh
+                          WHERE soh.variantId = v.id AND soh.locationId = :locationId), 0) AS onHand
+        FROM variant v
+        JOIN product p ON p.id = v.productId
+        JOIN colour c ON c.id = v.colourId
+        WHERE p.categoryId = :categoryId AND p.isActive = 1 AND v.isActive = 1
+        ORDER BY p.name, c.sortOrder, c.name
+        """,
+    )
+    suspend fun inCategory(
+        categoryId: String,
+        priceListId: String,
+        locationId: String,
+        at: Long,
+    ): List<SellableRow>
 }

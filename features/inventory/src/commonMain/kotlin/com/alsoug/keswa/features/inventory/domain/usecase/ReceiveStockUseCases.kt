@@ -67,10 +67,11 @@ class AddReceiptLineUseCase(
         variantId: String,
         quantity: Int,
         unitCost: Money,
+        sellPrice: Money? = null,
     ): Result<StockReceipt> = runCatching {
         sessions.require(Permission.RECEIVE_STOCK)
         ensureBarcode?.invoke(variantId)?.getOrThrow()
-        receipts.putLine(ids.newId(), receiptId, variantId, quantity, unitCost).getOrThrow()
+        receipts.putLine(ids.newId(), receiptId, variantId, quantity, unitCost, sellPrice).getOrThrow()
     }
 }
 
@@ -99,6 +100,10 @@ class PostReceiptUseCase(
     suspend operator fun invoke(receiptId: String): Result<PostedReceipt> = runCatching {
         sessions.require(Permission.RECEIVE_STOCK)
         val user = requireNotNull(sessions.current.value) { "no session" }.user
+        val receipt = receipts.getById(receiptId).getOrThrow()
+        if (receipt != null && receipt.lines.any { it.sellPrice != null }) {
+            sessions.require(Permission.MANAGE_CATALOGUE)
+        }
         receipts.post(receiptId, user.id, now()).getOrThrow()
     }
 }
@@ -132,6 +137,8 @@ class ObserveDraftReceiptsUseCase(private val receipts: IStockReceiptRepository)
 data class ReceivingUseCases(
     val start: StartReceiptUseCase,
     val addLine: AddReceiptLineUseCase,
+    val addLines: AddReceiptLinesUseCase,
+    val browse: BrowseCategoryUseCase,
     val removeLine: RemoveReceiptLineUseCase,
     val post: PostReceiptUseCase,
     val discard: DiscardReceiptUseCase,

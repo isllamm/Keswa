@@ -1,8 +1,10 @@
 package com.alsoug.keswa.features.inventory.di
 
 import com.alsoug.keswa.features.inventory.domain.usecase.AddReceiptLineUseCase
+import com.alsoug.keswa.features.inventory.domain.usecase.AddReceiptLinesUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.AdjustStockUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.ApplyCatalogueImportUseCase
+import com.alsoug.keswa.features.inventory.domain.usecase.BrowseCategoryUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.CountVariantUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.CurrentCountUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.DiscardCountUseCase
@@ -56,6 +58,8 @@ val inventoryModule = module {
 
     factory { StartReceiptUseCase(get(), get(), get()) { now() } }
     factory { AddReceiptLineUseCase(get(), get(), get(), get()) }
+    factory { AddReceiptLinesUseCase(get(), get(), get(), get()) }
+    factory { BrowseCategoryUseCase(get(), get()) }
     factory { RemoveReceiptLineUseCase(get(), get()) }
     factory { PostReceiptUseCase(get(), get()) { now() } }
     factory { DiscardReceiptUseCase(get(), get()) }
@@ -66,6 +70,8 @@ val inventoryModule = module {
         ReceivingUseCases(
             start = get(),
             addLine = get(),
+            addLines = get(),
+            browse = get(),
             removeLine = get(),
             post = get(),
             discard = get(),

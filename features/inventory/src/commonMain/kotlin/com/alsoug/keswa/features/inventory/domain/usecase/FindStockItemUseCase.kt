@@ -32,6 +32,11 @@ class FindStockItemUseCase(
             sellables.byVariantId(variantId, priceListId(), locationId, now()).getOrThrow()
         }
 
+    suspend fun inCategory(categoryId: String, locationId: String): Result<List<SellableItem>> =
+        runCatching {
+            sellables.inCategory(categoryId, priceListId(), locationId, now()).getOrThrow()
+        }
+
     private suspend fun priceListId(): String =
         prices.defaultList().getOrThrow()?.id.orEmpty()
 }

@@ -151,6 +151,11 @@ class FakeCategoryRepository : ICategoryRepository {
     private val cat = Category("cat-1", null, "Apparel", "ملابس", "/cat-1/", 0, 0, true)
     private val categories = mutableMapOf(cat.id to cat)
 
+    fun clear(): FakeCategoryRepository {
+        categories.clear()
+        return this
+    }
+
     fun withCategory(category: Category): FakeCategoryRepository {
         categories[category.id] = category
         return this
@@ -201,10 +206,12 @@ class FakeCategoryRepository : ICategoryRepository {
 class FakeSellableRepository : ISellableRepository {
     val items = mutableMapOf<String, SellableItem>()
     private val barcodeMap = mutableMapOf<String, String>()
+    private val categoryMap = mutableMapOf<String, String>()
 
-    fun withItem(item: SellableItem, barcode: String? = null): FakeSellableRepository {
+    fun withItem(item: SellableItem, barcode: String? = null, categoryId: String? = null): FakeSellableRepository {
         items[item.variantId] = item
         if (barcode != null) barcodeMap[barcode] = item.variantId
+        if (categoryId != null) categoryMap[item.variantId] = categoryId
         return this
     }
 
@@ -216,6 +223,13 @@ class FakeSellableRepository : ISellableRepository {
 
     override suspend fun search(term: String, priceListId: String, locationId: String, at: Long, limit: Int): Result<List<SellableItem>> =
         Result.success(items.values.filter { it.sku.contains(term, ignoreCase = true) || it.description.contains(term, ignoreCase = true) })
+
+    override suspend fun inCategory(categoryId: String, priceListId: String, locationId: String, at: Long): Result<List<SellableItem>> =
+        Result.success(
+            items.values
+                .filter { categoryMap[it.variantId] == categoryId }
+                .sortedWith(compareBy<SellableItem> { it.name }.thenBy { it.colourName }),
+        )
 }
 
 class FakeStockReceiptRepository : IStockReceiptRepository {
@@ -265,7 +279,7 @@ class FakeStockReceiptRepository : IStockReceiptRepository {
         for (line in lines) {
             if (line.quantity <= 0) return Result.failure(IllegalArgumentException("a receipt line must add stock"))
             if (line.unitCost.isNegative) return Result.failure(IllegalArgumentException("a cost cannot be negative"))
-            if (line.sellPrice != null && line.sellPrice.isNegative) {
+            if (line.sellPrice?.isNegative == true) {
                 return Result.failure(IllegalArgumentException("a price cannot be negative"))
             }
             val existingIndex = updatedLines.indexOfFirst { it.variantId == line.variantId }

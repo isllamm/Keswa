@@ -3,6 +3,8 @@ package com.alsoug.keswa.features.inventory.presentation
 import com.alsoug.keswa.core.domain.model.SellableItem
 import com.alsoug.keswa.core.domain.money.Money
 import com.alsoug.keswa.features.inventory.domain.usecase.AddReceiptLineUseCase
+import com.alsoug.keswa.features.inventory.domain.usecase.AddReceiptLinesUseCase
+import com.alsoug.keswa.features.inventory.domain.usecase.BrowseCategoryUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.DiscardReceiptUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.EnrichReceiptLinesUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.EnsureVariantBarcodeUseCase
@@ -18,6 +20,7 @@ import com.alsoug.keswa.features.inventory.domain.usecase.ReceivingUseCases
 import com.alsoug.keswa.features.inventory.domain.usecase.RemoveReceiptLineUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.ResolveStockLocationUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.StartReceiptUseCase
+import com.alsoug.keswa.features.inventory.fakes.FakeCategoryRepository
 import com.alsoug.keswa.features.inventory.fakes.FakeLocationRepository
 import com.alsoug.keswa.features.inventory.fakes.FakePriceRepository
 import com.alsoug.keswa.features.inventory.fakes.FakeSellableRepository
@@ -55,6 +58,7 @@ class ReceivingViewModelTest {
     private val now = { 1_000_000L }
 
     private val locations = FakeLocationRepository()
+    private val categoriesRepo = FakeCategoryRepository()
     private val prices = FakePriceRepository()
     private val receiptsRepo = FakeStockReceiptRepository()
     private val variantsRepo = FakeVariantRepository().withBarcode("var-1", "6221112223334")
@@ -86,6 +90,8 @@ class ReceivingViewModelTest {
     private val receiving = ReceivingUseCases(
         start = StartReceiptUseCase(receiptsRepo, sessions, ids, now),
         addLine = AddReceiptLineUseCase(receiptsRepo, sessions, ids, ensureBarcode),
+        addLines = AddReceiptLinesUseCase(receiptsRepo, sessions, ensureBarcode, ids),
+        browse = BrowseCategoryUseCase(categoriesRepo, find),
         removeLine = RemoveReceiptLineUseCase(receiptsRepo, sessions),
         post = PostReceiptUseCase(receiptsRepo, sessions, now),
         discard = DiscardReceiptUseCase(receiptsRepo, sessions),
