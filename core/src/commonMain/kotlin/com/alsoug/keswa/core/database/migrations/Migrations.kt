@@ -449,6 +449,16 @@ val MIGRATION_7_8: Migration = object : Migration(7, 8) {
 }
 
 /**
+ * 8 → 9: `stock_receipt_line` gains `sellPricePiastres` so a retail price typed while receiving
+ * can be held on the draft line and applied when the receipt is posted.
+ */
+val MIGRATION_8_9: Migration = object : Migration(8, 9) {
+    override fun migrate(connection: SQLiteConnection) {
+        connection.execSQL("ALTER TABLE `stock_receipt_line` ADD COLUMN `sellPricePiastres` INTEGER")
+    }
+}
+
+/**
  * Every migration this database has ever shipped, in order.
  *
  * KD-002: the local database is the source of truth until sync arrives, so
@@ -463,4 +473,5 @@ val ALL_MIGRATIONS: Array<Migration> = arrayOf(
     MIGRATION_5_6,
     MIGRATION_6_7,
     MIGRATION_7_8,
+    MIGRATION_8_9,
 )

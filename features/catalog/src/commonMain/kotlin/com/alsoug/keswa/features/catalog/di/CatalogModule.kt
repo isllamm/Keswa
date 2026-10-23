@@ -11,8 +11,10 @@ import com.alsoug.keswa.features.catalog.domain.usecase.GetRetailPriceUseCase
 import com.alsoug.keswa.features.catalog.domain.usecase.GetProductsInCategoryUseCase
 import com.alsoug.keswa.features.catalog.domain.usecase.MoveCategoryUseCase
 import com.alsoug.keswa.features.catalog.domain.usecase.RemoveColourFromProductUseCase
+import com.alsoug.keswa.features.catalog.domain.usecase.RenameCategoryUseCase
 import com.alsoug.keswa.features.catalog.domain.usecase.SearchCatalogUseCase
 import com.alsoug.keswa.features.catalog.domain.usecase.SeedShopUseCase
+import com.alsoug.keswa.features.catalog.domain.usecase.SetCategoryActiveUseCase
 import com.alsoug.keswa.features.catalog.domain.usecase.SetRetailPriceUseCase
 import com.alsoug.keswa.features.catalog.presentation.screens.catalogbrowser.CatalogBrowserViewModel
 import com.alsoug.keswa.features.catalog.presentation.screens.producteditor.ProductEditorViewModel
@@ -23,8 +25,10 @@ import org.koin.dsl.module
 @OptIn(ExperimentalTime::class)
 val catalogModule = module {
     // Domain Layer — use cases are stateless, so factory
-    factory { CreateCategoryUseCase(get(), get()) }
-    factory { MoveCategoryUseCase(get()) }
+    factory { CreateCategoryUseCase(get(), get(), get()) }
+    factory { MoveCategoryUseCase(get(), get()) }
+    factory { RenameCategoryUseCase(get(), get()) }
+    factory { SetCategoryActiveUseCase(get(), get()) }
     factory { GetCategoryTreeUseCase(get()) }
     factory { CreateProductUseCase(get(), get()) }
     factory { GetProductsInCategoryUseCase(get(), get()) }
@@ -39,7 +43,7 @@ val catalogModule = module {
     factory { GetRetailPriceUseCase(get()) { now() } }
 
     // Presentation Layer
-    factory { CatalogBrowserViewModel(get(), get(), get(), get(), get(), get(), get()) }
+    factory { CatalogBrowserViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
     factory { ProductEditorViewModel(get(), get(), get(), get(), get(), get(), get(), get(), get()) }
 }
 

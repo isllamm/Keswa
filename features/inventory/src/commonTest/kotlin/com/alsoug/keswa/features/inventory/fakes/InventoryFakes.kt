@@ -37,8 +37,11 @@ import com.alsoug.keswa.core.domain.repository.IStockCountRepository
 import com.alsoug.keswa.core.domain.repository.IStockReceiptRepository
 import com.alsoug.keswa.core.domain.repository.IVariantRepository
 import com.alsoug.keswa.core.domain.repository.PostedReceipt
+import com.alsoug.keswa.core.domain.repository.ReceiptLineInput
+import com.alsoug.keswa.core.platform.ILabelNameRenderer
 import com.alsoug.keswa.core.platform.IPrinterTransport
 import com.alsoug.keswa.core.platform.TransportFactory
+import com.alsoug.keswa.core.printing.MonoBitmap
 import com.alsoug.keswa.core.session.InMemorySessionManager
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.flow.Flow
@@ -147,7 +150,18 @@ class FakeColourRepository : IColourRepository {
 }
 
 class FakeCategoryRepository : ICategoryRepository {
-    private val cat = Category("cat-1", null, "Apparel", "ملابس", "cat-1", 0, 0, true)
+    private val cat = Category("cat-1", null, "Apparel", "ملابس", "/cat-1/", 0, 0, true)
+    private val categories = mutableMapOf(cat.id to cat)
+
+    fun clear(): FakeCategoryRepository {
+        categories.clear()
+        return this
+    }
+
+    fun withCategory(category: Category): FakeCategoryRepository {
+        categories[category.id] = category
+        return this
+    }
 
     override suspend fun create(
         id: String,
@@ -155,24 +169,51 @@ class FakeCategoryRepository : ICategoryRepository {
         name: String,
         nameAr: String,
         sortOrder: Int,
-    ): Result<Category> = Result.success(cat)
+    ): Result<Category> {
+        val parent = parentId?.let { categories[it] }
+        val path = if (parent == null) "/$id/" else "${parent.path}$id/"
+        val created = Category(id, parentId, name, nameAr, path, (parent?.depth ?: -1) + 1, sortOrder, true)
+        categories[id] = created
+        return Result.success(created)
+    }
 
     override suspend fun move(categoryId: String, newParentId: String?): Result<Unit> = Result.success(Unit)
 
-    override suspend fun getTree(): Result<List<Category>> = Result.success(listOf(cat))
+    override suspend fun getTree(): Result<List<Category>> = Result.success(categories.values.toList())
 
-    override suspend fun getById(id: String): Result<Category?> = Result.success(cat)
+    override suspend fun getById(id: String): Result<Category?> = Result.success(categories[id])
 
-    override suspend fun pathOf(id: String): Result<String?> = Result.success(cat.path)
+    override suspend fun pathOf(id: String): Result<String?> = Result.success(categories[id]?.path)
+
+    override suspend fun rename(id: String, name: String, nameAr: String): Result<Category> {
+        val current = categories[id] ?: return Result.failure(IllegalArgumentException("not found: $id"))
+        val updated = current.copy(name = name, nameAr = nameAr)
+        categories[id] = updated
+        return Result.success(updated)
+    }
+
+    override suspend fun setActive(id: String, isActive: Boolean): Result<Unit> {
+        val current = categories[id] ?: return Result.failure(IllegalArgumentException("not found: $id"))
+        categories[id] = current.copy(isActive = isActive)
+        return Result.success(Unit)
+    }
+
+    override suspend fun children(parentId: String?): Result<List<Category>> = Result.success(
+        categories.values
+            .filter { it.parentId == parentId && it.isActive }
+            .sortedWith(compareBy<Category> { it.sortOrder }.thenBy { it.name }),
+    )
 }
 
 class FakeSellableRepository : ISellableRepository {
     val items = mutableMapOf<String, SellableItem>()
     private val barcodeMap = mutableMapOf<String, String>()
+    private val categoryMap = mutableMapOf<String, String>()
 
-    fun withItem(item: SellableItem, barcode: String? = null): FakeSellableRepository {
+    fun withItem(item: SellableItem, barcode: String? = null, categoryId: String? = null): FakeSellableRepository {
         items[item.variantId] = item
         if (barcode != null) barcodeMap[barcode] = item.variantId
+        if (categoryId != null) categoryMap[item.variantId] = categoryId
         return this
     }
 
@@ -184,6 +225,13 @@ class FakeSellableRepository : ISellableRepository {
 
     override suspend fun search(term: String, priceListId: String, locationId: String, at: Long, limit: Int): Result<List<SellableItem>> =
         Result.success(items.values.filter { it.sku.contains(term, ignoreCase = true) || it.description.contains(term, ignoreCase = true) })
+
+    override suspend fun inCategory(categoryId: String, priceListId: String, locationId: String, at: Long): Result<List<SellableItem>> =
+        Result.success(
+            items.values
+                .filter { categoryMap[it.variantId] == categoryId }
+                .sortedWith(compareBy<SellableItem> { it.name }.thenBy { it.colourName }),
+        )
 }
 
 class FakeStockReceiptRepository : IStockReceiptRepository {
@@ -219,20 +267,36 @@ class FakeStockReceiptRepository : IStockReceiptRepository {
         variantId: String,
         quantity: Int,
         unitCost: Money,
+        sellPrice: Money?,
+    ): Result<StockReceipt> =
+        putLines(receiptId, listOf(ReceiptLineInput(id, variantId, quantity, unitCost, sellPrice)))
+
+    override suspend fun putLines(
+        receiptId: String,
+        lines: List<ReceiptLineInput>,
     ): Result<StockReceipt> {
         val receipt = receipts[receiptId] ?: return Result.failure(IllegalArgumentException("not found"))
-        val existingIndex = receipt.lines.indexOfFirst { it.variantId == variantId }
+        if (!receipt.isDraft) return Result.failure(IllegalArgumentException("already posted"))
         val updatedLines = receipt.lines.toMutableList()
-        val newLine = StockReceiptLine(
-            id = if (existingIndex >= 0) updatedLines[existingIndex].id else id,
-            receiptId = receiptId,
-            lineNumber = if (existingIndex >= 0) updatedLines[existingIndex].lineNumber else receipt.lines.size + 1,
-            variantId = variantId,
-            quantity = quantity,
-            unitCost = unitCost,
-            lineTotal = unitCost * quantity,
-        )
-        if (existingIndex >= 0) updatedLines[existingIndex] = newLine else updatedLines.add(newLine)
+        for (line in lines) {
+            if (line.quantity <= 0) return Result.failure(IllegalArgumentException("a receipt line must add stock"))
+            if (line.unitCost.isNegative) return Result.failure(IllegalArgumentException("a cost cannot be negative"))
+            if (line.sellPrice?.isNegative == true) {
+                return Result.failure(IllegalArgumentException("a price cannot be negative"))
+            }
+            val existingIndex = updatedLines.indexOfFirst { it.variantId == line.variantId }
+            val newLine = StockReceiptLine(
+                id = if (existingIndex >= 0) updatedLines[existingIndex].id else line.id,
+                receiptId = receiptId,
+                lineNumber = if (existingIndex >= 0) updatedLines[existingIndex].lineNumber else updatedLines.size + 1,
+                variantId = line.variantId,
+                quantity = line.quantity,
+                unitCost = line.unitCost,
+                lineTotal = line.unitCost * line.quantity,
+                sellPrice = line.sellPrice,
+            )
+            if (existingIndex >= 0) updatedLines[existingIndex] = newLine else updatedLines.add(newLine)
+        }
         val updated = receipt.copy(lines = updatedLines)
         receipts[receiptId] = updated
         updateFlow()
@@ -413,9 +477,10 @@ class FakeSettingsRepository : ISettingsRepository {
     }
 }
 
-class FakePrinterTransport : IPrinterTransport {
+class FakePrinterTransport(private val failWith: Throwable? = null) : IPrinterTransport {
     val sentPayloads = mutableListOf<ByteArray>()
-    override suspend fun open(): Result<Unit> = Result.success(Unit)
+    override suspend fun open(): Result<Unit> =
+        failWith?.let { Result.failure(it) } ?: Result.success(Unit)
     override suspend fun write(bytes: ByteArray): Result<Unit> {
         sentPayloads += bytes
         return Result.success(Unit)
@@ -425,4 +490,12 @@ class FakePrinterTransport : IPrinterTransport {
 
 class FakeTransportFactory(private val transport: IPrinterTransport = FakePrinterTransport()) : TransportFactory {
     override fun create(host: String, port: Int): IPrinterTransport = transport
+}
+
+class FakeLabelNameRenderer : ILabelNameRenderer {
+    val renderedTexts = mutableListOf<String>()
+    override fun render(text: String, widthDots: Int, maxHeightDots: Int): MonoBitmap {
+        renderedTexts += text
+        return MonoBitmap(widthDots.coerceAtLeast(8), 8)
+    }
 }

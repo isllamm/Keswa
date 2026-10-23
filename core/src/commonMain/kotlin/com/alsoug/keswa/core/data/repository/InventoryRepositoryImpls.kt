@@ -3,10 +3,12 @@ package com.alsoug.keswa.core.data.repository
 import com.alsoug.keswa.core.coroutines.runCatchingCancellable
 import com.alsoug.keswa.core.data.mapper.toDomain
 import com.alsoug.keswa.core.database.KeswaDatabase
+import com.alsoug.keswa.core.database.dao.PriceDao
 import com.alsoug.keswa.core.database.dao.StockCountDao
 import com.alsoug.keswa.core.database.dao.StockLedgerDao
 import com.alsoug.keswa.core.database.dao.StockReceiptDao
 import com.alsoug.keswa.core.database.dao.VariantDao
+import com.alsoug.keswa.core.database.entities.PriceEntity
 import com.alsoug.keswa.core.database.entities.StockCountEntity
 import com.alsoug.keswa.core.database.entities.StockCountLineEntity
 import com.alsoug.keswa.core.database.entities.StockMovementEntity
@@ -26,6 +28,7 @@ import com.alsoug.keswa.core.domain.repository.IStockAdjustmentRepository
 import com.alsoug.keswa.core.domain.repository.IStockCountRepository
 import com.alsoug.keswa.core.domain.repository.IStockReceiptRepository
 import com.alsoug.keswa.core.domain.repository.PostedReceipt
+import com.alsoug.keswa.core.domain.repository.ReceiptLineInput
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
@@ -41,6 +44,7 @@ class StockReceiptRepositoryImpl(
     private val dao: StockReceiptDao,
     private val variants: VariantDao,
     private val ledger: StockLedgerDao,
+    private val prices: PriceDao,
     private val ids: IdGenerator,
     private val now: () -> Long,
 ) : IStockReceiptRepository {
@@ -76,28 +80,41 @@ class StockReceiptRepositoryImpl(
         variantId: String,
         quantity: Int,
         unitCost: Money,
+        sellPrice: Money?,
+    ): Result<StockReceipt> =
+        putLines(receiptId, listOf(ReceiptLineInput(id, variantId, quantity, unitCost, sellPrice)))
+
+    override suspend fun putLines(
+        receiptId: String,
+        lines: List<ReceiptLineInput>,
     ): Result<StockReceipt> = runCatchingCancellable {
-        require(quantity > 0) { "a receipt line must add stock" }
-        require(!unitCost.isNegative) { "a cost cannot be negative" }
+        database.inTransaction {
+            val receipt = requireNotNull(dao.getById(receiptId)) { "receipt not found: $receiptId" }
+            require(receipt.status == DocumentStatus.DRAFT) { "receipt is already posted: $receiptId" }
 
-        val receipt = requireNotNull(dao.getById(receiptId)) { "receipt not found: $receiptId" }
-        require(receipt.status == DocumentStatus.DRAFT) { "receipt is already posted: $receiptId" }
+            for (line in lines) {
+                require(line.quantity > 0) { "a receipt line must add stock" }
+                require(!line.unitCost.isNegative) { "a cost cannot be negative" }
+                require(line.sellPrice == null || !line.sellPrice.isNegative) { "a price cannot be negative" }
 
-        // Scanning the same carton twice should correct the line, not add a second one for the
-        // same variant — the same reasoning as the till's basket.
-        val existing = dao.getLines(receiptId).firstOrNull { it.variantId == variantId }
-        dao.upsertLine(
-            StockReceiptLineEntity(
-                id = existing?.id ?: id,
-                receiptId = receiptId,
-                lineNumber = existing?.lineNumber ?: dao.nextLineNumber(receiptId),
-                variantId = variantId,
-                quantity = quantity,
-                unitCostPiastres = unitCost.piastres,
-                lineTotalPiastres = unitCost.piastres * quantity,
-            ),
-        )
-        read(receiptId)
+                // Scanning the same carton twice should correct the line, not add a second one for the
+                // same variant — the same reasoning as the till's basket.
+                val existing = dao.getLines(receiptId).firstOrNull { it.variantId == line.variantId }
+                dao.upsertLine(
+                    StockReceiptLineEntity(
+                        id = existing?.id ?: line.id,
+                        receiptId = receiptId,
+                        lineNumber = existing?.lineNumber ?: dao.nextLineNumber(receiptId),
+                        variantId = line.variantId,
+                        quantity = line.quantity,
+                        unitCostPiastres = line.unitCost.piastres,
+                        lineTotalPiastres = line.unitCost.piastres * line.quantity,
+                        sellPricePiastres = line.sellPrice?.piastres,
+                    ),
+                )
+            }
+            read(receiptId)
+        }
     }
 
     override suspend fun removeLine(receiptId: String, lineId: String): Result<StockReceipt> =
@@ -156,6 +173,29 @@ class StockReceiptRepositoryImpl(
                 )
 
                 CostChange(line.variantId, before, after)
+            }
+
+            val priced = lines.filter { it.sellPricePiastres != null }
+            if (priced.isNotEmpty()) {
+                val listId = requireNotNull(prices.getDefaultList()?.id) { "no default price list" }
+                priced.forEach { line ->
+                    val live = prices.getEffectivePrice(line.variantId, listId, atMillis)?.pricePiastres
+                    // A price that did not change writes nothing: a history full of "same again" hides the
+                    // changes that matter.
+                    if (live != line.sellPricePiastres) {
+                        prices.closeCurrent(line.variantId, listId, atMillis)
+                        prices.upsertPrice(
+                            PriceEntity(
+                                id = ids.newId(),
+                                priceListId = listId,
+                                variantId = line.variantId,
+                                pricePiastres = requireNotNull(line.sellPricePiastres),
+                                validFrom = atMillis,
+                                validTo = null,
+                            ),
+                        )
+                    }
+                }
             }
 
             PostedReceipt(read(receiptId), changes)

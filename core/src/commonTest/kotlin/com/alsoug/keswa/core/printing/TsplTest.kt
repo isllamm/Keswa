@@ -75,4 +75,21 @@ class TsplTest {
             Tspl.label(spec, "2000000000015", "0.00", "SKU", copies = 0)
         }
     }
+
+    @Test
+    fun `a label with a 304 x 40 name picture has BITMAP 10,10,38,40,0, and no TEXT for the name`() {
+        val nameBitmap = MonoBitmap(304, 40)
+        val label = Tspl.label(
+            spec = spec,
+            barcode = "2000000000015",
+            price = "EGP 250.00",
+            sku = "KSW-TSH-022-NV",
+            latinName = "Should not appear",
+            nameBitmap = nameBitmap,
+        ).decodeToString()
+
+        assertTrue(label.contains("BITMAP 10,10,38,40,0,"), label)
+        assertTrue(!label.contains("Should not appear"), label)
+        assertTrue(!label.contains("TEXT 10,14,"), label)
+    }
 }

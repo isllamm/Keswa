@@ -87,6 +87,10 @@ class StringsTest {
         assertTrue(arabic.importRowDetail("SKU1", "10.00", 5) != english.importRowDetail("SKU1", "10.00", 5))
         assertTrue(arabic.movementReason(com.alsoug.keswa.core.domain.model.MovementReason.RECEIPT) != english.movementReason(com.alsoug.keswa.core.domain.model.MovementReason.RECEIPT))
         assertTrue(arabic.permissionNeeded(com.alsoug.keswa.core.domain.model.Permission.DISCOUNT_LINE) != english.permissionNeeded(com.alsoug.keswa.core.domain.model.Permission.DISCOUNT_LINE))
+        assertTrue(arabic.addToDelivery(2) != english.addToDelivery(2))
+        assertTrue(arabic.linesAdded(2) != english.linesAdded(2))
+        assertTrue(arabic.rowsNeedFixing(2) != english.rowsNeedFixing(2))
+        assertTrue(arabic.newPriceOnPosting("250.00") != english.newPriceOnPosting("250.00"))
 
         // And the value itself still appears, in both.
         assertTrue("42" in arabic.importRows(42))
@@ -183,4 +187,8 @@ private val STRING_READERS: List<(Strings) -> String> = listOf(
     { it.countedLabel }, { it.balanced }, { it.onAccount },
     { it.oneToThirtyDays }, { it.thirtyOneToSixtyDays },
     { it.outstanding }, { it.change }, { it.draft }, { it.approved },
+    { it.englishName }, { it.arabicName }, { it.rename }, { it.hide }, { it.show }, { it.hidden },
+    { it.categoryRenamed }, { it.categoryHidden }, { it.categoryShown },
+    { it.pickFromCategories }, { it.allCategories }, { it.item }, { it.colour },
+    { it.priceRequired }, { it.nothingFiledHere }, { it.printLabels }, { it.copies }, { it.print },
 )

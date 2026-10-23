@@ -35,6 +35,7 @@ data class StockReceiptLine(
     val quantity: Int,
     val unitCost: Money,
     val lineTotal: Money,
+    val sellPrice: Money? = null,
 )
 
 /**

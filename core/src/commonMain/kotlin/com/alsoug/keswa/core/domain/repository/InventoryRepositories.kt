@@ -27,6 +27,15 @@ data class CostChange(
     val hasChanged: Boolean get() = before != after
 }
 
+/** One line to put on a draft. [sellPrice] null means "leave the retail price alone". */
+data class ReceiptLineInput(
+    val id: String,
+    val variantId: String,
+    val quantity: Int,
+    val unitCost: Money,
+    val sellPrice: Money? = null,
+)
+
 interface IStockReceiptRepository {
 
     suspend fun createDraft(
@@ -45,7 +54,15 @@ interface IStockReceiptRepository {
         variantId: String,
         quantity: Int,
         unitCost: Money,
+        sellPrice: Money? = null,
     ): Result<StockReceipt>
+
+    /**
+     * Puts several lines on a draft in one transaction — all of them, or none.
+     *
+     * Same rule as [putLine]: a colour already on the delivery has its line replaced, not doubled.
+     */
+    suspend fun putLines(receiptId: String, lines: List<ReceiptLineInput>): Result<StockReceipt>
 
     suspend fun removeLine(receiptId: String, lineId: String): Result<StockReceipt>
 

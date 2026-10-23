@@ -21,6 +21,7 @@ class EnrichReceiptLinesUseCase(
         val sku: String,
         val description: String,
         val descriptionAr: String,
+        val livePrice: com.alsoug.keswa.core.domain.money.Money?,
         val barcode: String?,
     )
 
@@ -44,6 +45,7 @@ class EnrichReceiptLinesUseCase(
                         sku = item?.sku ?: variantId,
                         description = item?.description.orEmpty(),
                         descriptionAr = item?.descriptionAr.orEmpty(),
+                        livePrice = item?.price,
                         barcode = primaryBarcode,
                     )
                 }
@@ -61,6 +63,8 @@ class EnrichReceiptLinesUseCase(
                 quantity = line.quantity,
                 unitCost = line.unitCost,
                 lineTotal = line.lineTotal,
+                sellPrice = line.sellPrice,
+                livePrice = meta?.livePrice,
                 barcode = meta?.barcode,
             )
         }

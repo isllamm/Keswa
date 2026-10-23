@@ -76,6 +76,13 @@ class PackAllocationTest {
             at: Long,
             limit: Int,
         ): Result<List<SellableItem>> = Result.success(emptyList())
+
+        override suspend fun inCategory(
+            categoryId: String,
+            priceListId: String,
+            locationId: String,
+            at: Long,
+        ): Result<List<SellableItem>> = Result.success(emptyList())
     }
 
     private fun item(id: String, price: Long?) = SellableItem(

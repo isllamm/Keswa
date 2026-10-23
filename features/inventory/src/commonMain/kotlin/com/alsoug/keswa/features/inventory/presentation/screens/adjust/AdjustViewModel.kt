@@ -106,9 +106,10 @@ class AdjustViewModel(
     }
 
     private fun printLabel() {
+        val location = locationId ?: return
         val variantId = _state.value.item?.variantId ?: return
         viewModelScope.launch(dispatchers.io) {
-            labels.printSingleLabel(variantId, 1).fold(
+            labels.printSingleLabel(variantId, location, 1).fold(
                 onSuccess = { result ->
                     when (result) {
                         is LabelRunResult.Printed ->

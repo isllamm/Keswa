@@ -3,6 +3,7 @@ package com.alsoug.keswa.features.catalog.domain.usecase
 import com.alsoug.keswa.core.domain.IdGenerator
 import com.alsoug.keswa.core.domain.model.Barcode
 import com.alsoug.keswa.core.domain.model.BarcodeSource
+import com.alsoug.keswa.core.domain.model.Category
 import com.alsoug.keswa.core.domain.model.Colour
 import com.alsoug.keswa.core.domain.model.PriceList
 import com.alsoug.keswa.core.domain.model.PriceListType
@@ -11,6 +12,7 @@ import com.alsoug.keswa.core.domain.model.User
 import com.alsoug.keswa.core.domain.model.UserRole
 import com.alsoug.keswa.core.domain.model.Variant
 import com.alsoug.keswa.core.domain.money.Money
+import com.alsoug.keswa.core.domain.repository.ICategoryRepository
 import com.alsoug.keswa.core.domain.repository.IColourRepository
 import com.alsoug.keswa.core.domain.repository.IPriceRepository
 import com.alsoug.keswa.core.domain.repository.IProductRepository
@@ -195,4 +197,80 @@ class FakePriceRepository : IPriceRepository {
 /** An admin at the keyboard — the catalogue is theirs to manage. */
 fun adminSession(): ISessionManager = InMemorySessionManager().apply {
     signIn(User("usr-admin", "owner", "Owner", "المالك", UserRole.ADMIN), atMillis = 0)
+}
+
+fun sellerSession(): ISessionManager = InMemorySessionManager().apply {
+    signIn(User("usr-seller", "sara", "Sara", "سارة", UserRole.SELLER), atMillis = 0)
+}
+
+class FakeCategoryRepository : ICategoryRepository {
+    val categories = linkedMapOf<String, Category>()
+    var writes = 0
+
+    fun given(category: Category) = apply { categories[category.id] = category }
+
+    override suspend fun create(
+        id: String,
+        parentId: String?,
+        name: String,
+        nameAr: String,
+        sortOrder: Int,
+    ): Result<Category> {
+        writes += 1
+        val parent = parentId?.let { categories[it] }
+        val path = if (parent == null) "/$id/" else "${parent.path}$id/"
+        val category = Category(
+            id = id,
+            parentId = parentId,
+            name = name,
+            nameAr = nameAr,
+            path = path,
+            depth = (parent?.depth ?: -1) + 1,
+            sortOrder = sortOrder,
+            isActive = true,
+        )
+        categories[id] = category
+        return Result.success(category)
+    }
+
+    override suspend fun move(categoryId: String, newParentId: String?): Result<Unit> {
+        writes += 1
+        val current = categories[categoryId] ?: return Result.failure(IllegalArgumentException("not found"))
+        val parent = newParentId?.let { categories[it] }
+        val newPath = if (parent == null) "/$categoryId/" else "${parent.path}$categoryId/"
+        categories[categoryId] = current.copy(
+            parentId = newParentId,
+            path = newPath,
+            depth = (parent?.depth ?: -1) + 1,
+        )
+        return Result.success(Unit)
+    }
+
+    override suspend fun getTree(): Result<List<Category>> =
+        Result.success(categories.values.sortedBy { it.path })
+
+    override suspend fun getById(id: String): Result<Category?> = Result.success(categories[id])
+
+    override suspend fun pathOf(id: String): Result<String?> = Result.success(categories[id]?.path)
+
+    override suspend fun rename(id: String, name: String, nameAr: String): Result<Category> {
+        writes += 1
+        val current = categories[id] ?: return Result.failure(IllegalArgumentException("not found"))
+        val updated = current.copy(name = name, nameAr = nameAr)
+        categories[id] = updated
+        return Result.success(updated)
+    }
+
+    override suspend fun setActive(id: String, isActive: Boolean): Result<Unit> {
+        writes += 1
+        val current = categories[id] ?: return Result.failure(IllegalArgumentException("not found"))
+        categories[id] = current.copy(isActive = isActive)
+        return Result.success(Unit)
+    }
+
+    override suspend fun children(parentId: String?): Result<List<Category>> = Result.success(
+        categories.values
+            .filter { it.parentId == parentId && it.isActive }
+            .sortedWith(compareBy<Category> { it.sortOrder }.thenBy { it.name }),
+    )
 }

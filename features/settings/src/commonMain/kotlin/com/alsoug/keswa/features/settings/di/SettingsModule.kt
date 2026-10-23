@@ -12,7 +12,7 @@ val settingsModule = module {
     factory { GetSettingsUseCase(get()) }
     factory { SaveSettingsUseCase(get()) }
     factory { PrintTestPageUseCase(get(), get(), get()) }
-    factory { PrintTestLabelUseCase(get(), get()) }
+    factory { PrintTestLabelUseCase(get(), get(), get()) }
 
     // Presentation Layer
     factory { SettingsViewModel(get(), get(), get(), get(), get()) }

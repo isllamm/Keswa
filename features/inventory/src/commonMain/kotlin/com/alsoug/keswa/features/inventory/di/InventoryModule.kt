@@ -1,8 +1,10 @@
 package com.alsoug.keswa.features.inventory.di
 
 import com.alsoug.keswa.features.inventory.domain.usecase.AddReceiptLineUseCase
+import com.alsoug.keswa.features.inventory.domain.usecase.AddReceiptLinesUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.AdjustStockUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.ApplyCatalogueImportUseCase
+import com.alsoug.keswa.features.inventory.domain.usecase.BrowseCategoryUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.CountVariantUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.CurrentCountUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.DiscardCountUseCase
@@ -13,12 +15,14 @@ import com.alsoug.keswa.features.inventory.domain.usecase.EnsureVariantBarcodeUs
 import com.alsoug.keswa.features.inventory.domain.usecase.FindStockItemUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.GetReceiptUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.GetVariantBarcodeUseCase
+import com.alsoug.keswa.features.inventory.domain.usecase.HangTagBuilder
 import com.alsoug.keswa.features.inventory.domain.usecase.InventoryLabelUseCases
 import com.alsoug.keswa.features.inventory.domain.usecase.ObserveDraftReceiptsUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.ParseCatalogueImportUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.PostCountUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.PostReceiptUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.PrintHangTagsUseCase
+import com.alsoug.keswa.features.inventory.domain.usecase.PrintReceiptLineLabelsUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.PrintSingleVariantLabelUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.RecentCountsUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.RecentReceiptsUseCase
@@ -44,18 +48,23 @@ val inventoryModule = module {
     factory { FindStockItemUseCase(get(), get()) { now() } }
 
     factory { EnsureVariantBarcodeUseCase(get()) }
-    factory { PrintSingleVariantLabelUseCase(get(), get(), get(), get(), get(), get()) { now() } }
-    factory { PrintHangTagsUseCase(get(), get(), get(), get(), get(), get()) { now() } }
+    factory { HangTagBuilder(get()) }
+    factory { PrintSingleVariantLabelUseCase(get(), get(), get(), get(), get(), get()) }
+    factory { PrintHangTagsUseCase(get(), get(), get(), get(), get(), get(), get()) }
+    factory { PrintReceiptLineLabelsUseCase(get(), get(), get(), get(), get(), get(), get()) }
     factory {
         InventoryLabelUseCases(
             ensureBarcode = get(),
             printSingleLabel = get(),
             printHangTags = get(),
+            printLineLabels = get(),
         )
     }
 
     factory { StartReceiptUseCase(get(), get(), get()) { now() } }
     factory { AddReceiptLineUseCase(get(), get(), get(), get()) }
+    factory { AddReceiptLinesUseCase(get(), get(), get(), get()) }
+    factory { BrowseCategoryUseCase(get(), get()) }
     factory { RemoveReceiptLineUseCase(get(), get()) }
     factory { PostReceiptUseCase(get(), get()) { now() } }
     factory { DiscardReceiptUseCase(get(), get()) }
@@ -66,6 +75,8 @@ val inventoryModule = module {
         ReceivingUseCases(
             start = get(),
             addLine = get(),
+            addLines = get(),
+            browse = get(),
             removeLine = get(),
             post = get(),
             discard = get(),

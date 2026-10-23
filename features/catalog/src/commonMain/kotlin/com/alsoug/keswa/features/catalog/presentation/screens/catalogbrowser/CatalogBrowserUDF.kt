@@ -31,6 +31,10 @@ sealed interface CatalogBrowserUiEvent {
     data class SearchChanged(val query: String) : CatalogBrowserUiEvent
     data class CreateCategory(val name: String, val nameAr: String, val underSelected: Boolean) :
         CatalogBrowserUiEvent
+    data class RenameCategory(val categoryId: String, val name: String, val nameAr: String) :
+        CatalogBrowserUiEvent
+    data class SetCategoryActive(val categoryId: String, val isActive: Boolean) :
+        CatalogBrowserUiEvent
     data class MoveCategory(val categoryId: String, val newParentId: String?) :
         CatalogBrowserUiEvent
     data class CreateProduct(val name: String, val nameAr: String) : CatalogBrowserUiEvent

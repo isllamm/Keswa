@@ -175,4 +175,13 @@ class SellableRepositoryImpl(
         if (cleaned.isEmpty()) emptyList()
         else dao.search(cleaned, priceListId, locationId, at, limit).map { it.toDomain() }
     }
+
+    override suspend fun inCategory(
+        categoryId: String,
+        priceListId: String,
+        locationId: String,
+        at: Long,
+    ): Result<List<SellableItem>> = runCatchingCancellable {
+        dao.inCategory(categoryId, priceListId, locationId, at).map { it.toDomain() }
+    }
 }

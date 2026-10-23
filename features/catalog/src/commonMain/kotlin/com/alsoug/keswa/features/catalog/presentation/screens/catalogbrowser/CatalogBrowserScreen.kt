@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
@@ -83,6 +84,19 @@ internal fun CatalogBrowserContent(
     onEvent: (CatalogBrowserUiEvent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var renaming by remember { mutableStateOf<CategoryNodeUiModel?>(null) }
+
+    renaming?.let { target ->
+        RenameCategoryDialog(
+            category = target,
+            onDismiss = { renaming = null },
+            onConfirm = { name, nameAr ->
+                onEvent(CatalogBrowserUiEvent.RenameCategory(target.id, name, nameAr))
+                renaming = null
+            },
+        )
+    }
+
     Column(modifier = modifier.fillMaxSize()) {
         if (state.isLoading) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
 
@@ -92,7 +106,7 @@ internal fun CatalogBrowserContent(
         )
 
         Row(modifier = Modifier.fillMaxSize()) {
-            Column(modifier = Modifier.width(280.dp).padding(12.dp)) {
+            Column(modifier = Modifier.width(340.dp).padding(12.dp)) {
                 Text(KeswaTheme.strings.categories, style = MaterialTheme.typography.titleSmall)
                 Text(
                     KeswaTheme.strings.youDefineThisTree,
@@ -105,6 +119,31 @@ internal fun CatalogBrowserContent(
                     selectedId = state.selectedCategoryId,
                     onSelect = { onEvent(CatalogBrowserUiEvent.CategorySelected(it)) },
                     modifier = Modifier.weight(1f),
+                    trailing = { node ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                            TextButton(onClick = { renaming = node }) {
+                                Text(
+                                    KeswaTheme.strings.rename,
+                                    style = MaterialTheme.typography.labelSmall,
+                                )
+                            }
+                            TextButton(
+                                onClick = {
+                                    onEvent(
+                                        CatalogBrowserUiEvent.SetCategoryActive(
+                                            categoryId = node.id,
+                                            isActive = !node.isActive,
+                                        ),
+                                    )
+                                },
+                            ) {
+                                Text(
+                                    if (node.isActive) KeswaTheme.strings.hide else KeswaTheme.strings.show,
+                                    style = MaterialTheme.typography.labelSmall,
+                                )
+                            }
+                        }
+                    },
                 )
                 AddCategoryRow(canAddSub = state.canAddSubCategory, onEvent = onEvent)
             }
@@ -138,6 +177,52 @@ internal fun CatalogBrowserContent(
 }
 
 @Composable
+private fun RenameCategoryDialog(
+    category: CategoryNodeUiModel,
+    onDismiss: () -> Unit,
+    onConfirm: (String, String) -> Unit,
+) {
+    var name by remember(category.id) { mutableStateOf(category.name) }
+    var nameAr by remember(category.id) { mutableStateOf(category.nameAr) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(KeswaTheme.strings.rename) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text(KeswaTheme.strings.englishName) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                OutlinedTextField(
+                    value = nameAr,
+                    onValueChange = { nameAr = it },
+                    label = { Text(KeswaTheme.strings.arabicName) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                enabled = name.isNotBlank(),
+                onClick = { onConfirm(name, nameAr) },
+            ) {
+                Text(KeswaTheme.strings.save)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(KeswaTheme.strings.cancel)
+            }
+        },
+    )
+}
+
+@Composable
 private fun ProductList(
     products: List<ProductUiModel>,
     onSelect: (String) -> Unit,
@@ -167,11 +252,19 @@ private fun ProductList(
 @Composable
 private fun AddCategoryRow(canAddSub: Boolean, onEvent: (CatalogBrowserUiEvent) -> Unit) {
     var name by remember { mutableStateOf("") }
+    var nameAr by remember { mutableStateOf("") }
     Column(verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 8.dp)) {
         OutlinedTextField(
             value = name,
             onValueChange = { name = it },
-            label = { Text(KeswaTheme.strings.newCategory) },
+            label = { Text(KeswaTheme.strings.englishName) },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        OutlinedTextField(
+            value = nameAr,
+            onValueChange = { nameAr = it },
+            label = { Text(KeswaTheme.strings.arabicName) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -179,15 +272,17 @@ private fun AddCategoryRow(canAddSub: Boolean, onEvent: (CatalogBrowserUiEvent) 
             TextButton(
                 enabled = name.isNotBlank(),
                 onClick = {
-                    onEvent(CatalogBrowserUiEvent.CreateCategory(name, name, underSelected = false))
+                    onEvent(CatalogBrowserUiEvent.CreateCategory(name, nameAr, underSelected = false))
                     name = ""
+                    nameAr = ""
                 },
             ) { Text(KeswaTheme.strings.addTopLevel) }
             TextButton(
                 enabled = name.isNotBlank() && canAddSub,
                 onClick = {
-                    onEvent(CatalogBrowserUiEvent.CreateCategory(name, name, underSelected = true))
+                    onEvent(CatalogBrowserUiEvent.CreateCategory(name, nameAr, underSelected = true))
                     name = ""
+                    nameAr = ""
                 },
             ) { Text(KeswaTheme.strings.addUnderSelected) }
         }
@@ -207,7 +302,7 @@ private fun AddProductRow(enabled: Boolean, onEvent: (CatalogBrowserUiEvent) -> 
             onValueChange = { name = it },
             label = { Text(KeswaTheme.strings.newProduct) },
             singleLine = true,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.fillMaxWidth().weight(1f),
         )
         Button(
             enabled = enabled && name.isNotBlank(),
@@ -230,6 +325,7 @@ private val previewCategories = listOf(
     CategoryNodeUiModel("1", "T-shirts", depth = 0, hasChildren = true),
     CategoryNodeUiModel("2", "Round neck", depth = 1, hasChildren = false),
     CategoryNodeUiModel("3", "Shirts", depth = 0, hasChildren = false),
+    CategoryNodeUiModel("4", "Women", depth = 0, hasChildren = false, isActive = false),
 )
 
 @Preview
