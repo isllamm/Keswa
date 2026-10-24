@@ -280,8 +280,8 @@ class FakeHeldSaleRepository : IHeldSaleRepository {
 class FakeSettingsRepository(private var settings: ShopSettings = ShopSettings()) :
     ISettingsRepository {
     override suspend fun get(): Result<ShopSettings> = Result.success(settings)
-    override suspend fun save(value: ShopSettings): Result<Unit> {
-        settings = value
+    override suspend fun save(settings: ShopSettings): Result<Unit> {
+        this.settings = settings
         return Result.success(Unit)
     }
 }
