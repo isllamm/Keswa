@@ -273,6 +273,7 @@ interface Strings {
     val adjustNoteLong: String
     val appendOnlyCorrection: String
     val pasteSpreadsheetNote: String
+    val chooseSpreadsheetFile: String
     val nothingWasImported: String
     val oneBadRowNone: String
     val stockArrivedAsDelivery: String
@@ -354,6 +355,7 @@ interface Strings {
     fun importLineProblem(lineNumber: Int, message: String): String
     fun importPreviewSummary(rows: Int, pieces: Int): String
     fun importRowDetail(sku: String, cost: String, quantity: Int): String
+    fun fileSelected(name: String): String
     fun movementReason(reason: MovementReason): String
     fun permissionNeeded(permission: Permission): String
 
@@ -689,6 +691,7 @@ object EnglishStrings : Strings {
     override val appendOnlyCorrection = "Append-only: a correction is another line, never an edit of one above it."
     override val pasteSpreadsheetNote =
         "Paste the spreadsheet as comma-separated rows: product, productAr, colour, sku, cost, price, quantity. Quantity is optional, and arrives as a delivery so it carries a cost."
+    override val chooseSpreadsheetFile = "Choose file (.csv, .tsv)..."
     override val nothingWasImported = "Nothing was imported"
     override val oneBadRowNone =
         "A file with one bad row imports none of it, so nobody has to work out which half went in."
@@ -769,6 +772,7 @@ object EnglishStrings : Strings {
     override fun importLineProblem(lineNumber: Int, message: String) = "Line $lineNumber: $message"
     override fun importPreviewSummary(rows: Int, pieces: Int) = "$rows rows, $pieces pieces"
     override fun importRowDetail(sku: String, cost: String, quantity: Int) = "$sku · cost $cost · $quantity pcs"
+    override fun fileSelected(name: String) = "Selected: $name"
     override fun movementReason(reason: MovementReason) = when (reason) {
         MovementReason.SALE -> "Sale"
         MovementReason.RETURN -> "Return"
@@ -1118,6 +1122,7 @@ object ArabicStrings : Strings {
     override val appendOnlyCorrection = "الإضافة فقط: التصحيح سطر جديد، لا تعديل لسطر فوقه."
     override val pasteSpreadsheetNote =
         "الصق الملف كصفوف مفصولة بفواصل: المنتج، الاسم بالعربية، اللون، كود الصنف، التكلفة، السعر، الكمية. الكمية اختيارية وتدخل كاستلام فتحمل تكلفة."
+    override val chooseSpreadsheetFile = "اختر ملف (.csv, .tsv)..."
     override val nothingWasImported = "لم يتم استيراد شيء"
     override val oneBadRowNone = "ملف فيه صف واحد خاطئ لا يُستورد منه شيء، فلا يضطر أحد لمعرفة أي نصف دخل."
     override val stockArrivedAsDelivery = "دخل المخزون عبر استلام عادي، فيحمل تكلفة ويظهر في الدفتر تمامًا كأي شحنة."
@@ -1201,6 +1206,7 @@ object ArabicStrings : Strings {
     override fun importLineProblem(lineNumber: Int, message: String) = "السطر $lineNumber: $message"
     override fun importPreviewSummary(rows: Int, pieces: Int) = "$rows صفوف، $pieces قطعة"
     override fun importRowDetail(sku: String, cost: String, quantity: Int) = "$sku · التكلفة $cost · $quantity قطعة"
+    override fun fileSelected(name: String) = "تم اختيار: $name"
     override fun movementReason(reason: MovementReason) = when (reason) {
         MovementReason.SALE -> "بيع"
         MovementReason.RETURN -> "مرتجع"
