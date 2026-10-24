@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.sell.domain.usecase
 
+import com.alsoug.keswa.core.coroutines.runCatchingCancellable
 import com.alsoug.keswa.core.domain.model.Sale
 import com.alsoug.keswa.core.domain.model.ShopSettings
 import com.alsoug.keswa.core.domain.model.TenderMethod
@@ -40,9 +41,9 @@ class PrintReceiptUseCase(
     private val transports: TransportFactory,
 ) {
 
-    suspend operator fun invoke(sale: Sale): Result<ReceiptResult> = runCatching {
+    suspend operator fun invoke(sale: Sale): Result<ReceiptResult> = runCatchingCancellable {
         val shop = settings.get().getOrThrow()
-        if (!shop.hasReceiptPrinter) return@runCatching ReceiptResult.NoPrinter
+        if (!shop.hasReceiptPrinter) return@runCatchingCancellable ReceiptResult.NoPrinter
 
         val bitmap = renderer.render(sale.toReceipt(shop), shop.paperWidthDots)
         val tookCash = sale.payments.any { it.method == TenderMethod.CASH }
@@ -56,9 +57,9 @@ class PrintReceiptUseCase(
     }
 
     /** Reprints from storage, so a paper jam does not need the cart to still be on screen. */
-    suspend fun reprint(saleId: String): Result<ReceiptResult> = runCatching {
+    suspend fun reprint(saleId: String): Result<ReceiptResult> = runCatchingCancellable {
         val sale = sales.getById(saleId).getOrThrow()
-            ?: return@runCatching ReceiptResult.Unreachable("no such sale")
+            ?: return@runCatchingCancellable ReceiptResult.Unreachable("no such sale")
         invoke(sale).getOrThrow()
     }
 }

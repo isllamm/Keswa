@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.returns.domain.usecase
 
+import com.alsoug.keswa.core.coroutines.runCatchingCancellable
 import com.alsoug.keswa.core.domain.model.SaleReturn
 import com.alsoug.keswa.core.domain.model.ShopSettings
 import com.alsoug.keswa.core.domain.model.TenderMethod
@@ -41,9 +42,9 @@ class PrintRefundNoteUseCase(
     private val transports: TransportFactory,
 ) {
 
-    suspend operator fun invoke(saleReturn: SaleReturn): Result<RefundNoteResult> = runCatching {
+    suspend operator fun invoke(saleReturn: SaleReturn): Result<RefundNoteResult> = runCatchingCancellable {
         val shop = settings.get().getOrThrow()
-        if (!shop.hasReceiptPrinter) return@runCatching RefundNoteResult.NoPrinter
+        if (!shop.hasReceiptPrinter) return@runCatchingCancellable RefundNoteResult.NoPrinter
 
         val bitmap = renderer.render(saleReturn.toRefundNote(shop), shop.paperWidthDots)
         val paidInCash = saleReturn.refundMethod == TenderMethod.CASH

@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.catalog.domain.usecase
 
+import com.alsoug.keswa.core.coroutines.runCatchingCancellable
 import com.alsoug.keswa.core.domain.IdGenerator
 import com.alsoug.keswa.core.domain.model.BarcodeSource
 import com.alsoug.keswa.core.domain.model.Colour
@@ -35,15 +36,15 @@ class AddColourToProductUseCase(
         productId: String,
         colourId: String,
         cost: Money = Money.ZERO,
-    ): Result<AddColourResult> = runCatching {
+    ): Result<AddColourResult> = runCatchingCancellable {
         val product = products.getById(productId).getOrThrow()
-            ?: return@runCatching AddColourResult.ProductNotFound
+            ?: return@runCatchingCancellable AddColourResult.ProductNotFound
         val colour = colours.getAll().getOrThrow().firstOrNull { it.id == colourId }
-            ?: return@runCatching AddColourResult.ColourNotFound
+            ?: return@runCatchingCancellable AddColourResult.ColourNotFound
 
         val existing = variants.forProduct(productId).getOrThrow()
         if (existing.any { it.colourId == colourId }) {
-            return@runCatching AddColourResult.AlreadyStocked
+            return@runCatchingCancellable AddColourResult.AlreadyStocked
         }
 
         val variant = variants.addColour(
@@ -87,11 +88,11 @@ sealed interface RemoveColourResult {
 class RemoveColourFromProductUseCase(
     private val variants: IVariantRepository,
 ) {
-    suspend operator fun invoke(variantId: String): Result<RemoveColourResult> = runCatching {
-        variants.getById(variantId).getOrThrow() ?: return@runCatching RemoveColourResult.NotFound
+    suspend operator fun invoke(variantId: String): Result<RemoveColourResult> = runCatchingCancellable {
+        variants.getById(variantId).getOrThrow() ?: return@runCatchingCancellable RemoveColourResult.NotFound
 
         val onHand = variants.onHand(variantId).getOrThrow()
-        if (onHand != 0) return@runCatching RemoveColourResult.HasStock(onHand)
+        if (onHand != 0) return@runCatchingCancellable RemoveColourResult.HasStock(onHand)
 
         variants.deactivate(variantId).getOrThrow()
         RemoveColourResult.Removed

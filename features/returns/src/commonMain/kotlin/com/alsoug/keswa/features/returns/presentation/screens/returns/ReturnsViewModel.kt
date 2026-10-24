@@ -3,6 +3,7 @@ package com.alsoug.keswa.features.returns.presentation.screens.returns
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alsoug.keswa.core.coroutines.DispatcherProvider
+import com.alsoug.keswa.core.coroutines.runCatchingCancellable
 import com.alsoug.keswa.core.designsystem.message
 import com.alsoug.keswa.core.domain.model.Permission
 import com.alsoug.keswa.core.domain.repository.ISettingsRepository
@@ -150,7 +151,7 @@ class ReturnsViewModel(
         val permission = Permission.REFUND_ANY
         val secret = password.toCharArray()
         viewModelScope.launch(dispatchers.io) {
-            runCatching { verifier.approve(username, secret, permission) }.fold(
+            runCatchingCancellable { verifier.approve(username, secret, permission) }.fold(
                 onSuccess = { result ->
                     when (result) {
                         is ApprovalResult.Approved -> _state.update {

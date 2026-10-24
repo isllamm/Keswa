@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.sell.domain.usecase
 
+import com.alsoug.keswa.core.coroutines.runCatchingCancellable
 import com.alsoug.keswa.core.domain.IdGenerator
 import com.alsoug.keswa.core.domain.model.Permission
 import com.alsoug.keswa.core.domain.model.Shift
@@ -22,7 +23,7 @@ class OpenShiftUseCase(
     private val now: () -> Long,
 ) {
     suspend operator fun invoke(openingFloat: Money, till: TillContext): Result<Shift> =
-        runCatching {
+        runCatchingCancellable {
             sessions.require(Permission.SELL)
             val user = requireNotNull(sessions.current.value) { "no session" }.user
             shifts.open(ids.newId(), till.locationId, user.id, openingFloat, now()).getOrThrow()
@@ -45,7 +46,7 @@ class CloseShiftUseCase(
         shiftId: String,
         countedCash: Money,
         note: String?,
-    ): Result<ZReport> = runCatching {
+    ): Result<ZReport> = runCatchingCancellable {
         sessions.require(Permission.SELL)
         require(!countedCash.isNegative) { "a count cannot be negative" }
         val user = requireNotNull(sessions.current.value) { "no session" }.user
@@ -67,7 +68,7 @@ class ShiftReportUseCase(
     private val shifts: IShiftRepository,
     private val sessions: ISessionManager,
 ) {
-    suspend operator fun invoke(shiftId: String): Result<ZReport?> = runCatching {
+    suspend operator fun invoke(shiftId: String): Result<ZReport?> = runCatchingCancellable {
         sessions.require(Permission.VIEW_SHOP_ANALYTICS)
         shifts.report(shiftId).getOrThrow()
     }

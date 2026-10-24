@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.inventory.domain.usecase
 
+import com.alsoug.keswa.core.coroutines.runCatchingCancellable
 import com.alsoug.keswa.core.domain.model.Permission
 import com.alsoug.keswa.core.domain.money.Money
 import com.alsoug.keswa.core.domain.repository.ISettingsRepository
@@ -30,12 +31,12 @@ class PrintReceiptLineLabelsUseCase(
         receiptId: String,
         lineId: String,
         copies: Int,
-    ): Result<LabelRunResult> = runCatching {
+    ): Result<LabelRunResult> = runCatchingCancellable {
         require(copies >= 1) { "copies must be at least 1" }
         sessions.require(Permission.RECEIVE_STOCK)
 
         val shop = settings.get().getOrThrow()
-        if (!shop.hasLabelPrinter) return@runCatching LabelRunResult.NoPrinter
+        if (!shop.hasLabelPrinter) return@runCatchingCancellable LabelRunResult.NoPrinter
 
         val receipt = requireNotNull(receipts.getById(receiptId).getOrThrow()) {
             "receipt not found: $receiptId"

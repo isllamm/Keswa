@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.sell.domain.usecase
 
+import com.alsoug.keswa.core.coroutines.runCatchingCancellable
 import com.alsoug.keswa.core.domain.IdGenerator
 import com.alsoug.keswa.core.domain.model.HeldSale
 import com.alsoug.keswa.core.domain.model.HeldSaleLine
@@ -26,7 +27,7 @@ class HoldSaleUseCase(
         basket: Basket,
         label: String,
         till: TillContext,
-    ): Result<HeldSale> = runCatching {
+    ): Result<HeldSale> = runCatchingCancellable {
         require(!basket.isEmpty) { "nothing to hold" }
         val user = requireNotNull(sessions.current.value) { "no session" }.user
 
@@ -76,7 +77,7 @@ class ResumeHeldSaleUseCase(
     data class Resumed(val basket: Basket, val dropped: List<String>)
 
     suspend operator fun invoke(heldSaleId: String, till: TillContext): Result<Resumed> =
-        runCatching {
+        runCatchingCancellable {
             val parked = requireNotNull(held.getById(heldSaleId).getOrThrow()) {
                 "held sale not found: $heldSaleId"
             }
