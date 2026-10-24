@@ -69,7 +69,7 @@ internal fun SettingsContent(
         modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        if (state.isLoading || state.isBusy) LinearProgressIndicator(Modifier.fillMaxWidth())
+        if (state.isLoading || state.isBusy || state.isSyncing) LinearProgressIndicator(Modifier.fillMaxWidth())
 
         ScreenHeader(
             title = KeswaTheme.strings.settings,
@@ -130,6 +130,77 @@ internal fun SettingsContent(
         ) {
             NumberField(KeswaTheme.strings.maxGapMs, settings.scanMaxGapMillis.toInt()) {
                 onEvent(SettingsUiEvent.Edit(settings.copy(scanMaxGapMillis = it.toLong())))
+            }
+        }
+
+        Section(
+            title = KeswaTheme.strings.syncAndServer,
+            subtitle = KeswaTheme.strings.syncSubtitle,
+        ) {
+            val sync = state.syncStatus
+            if (sync?.isEnrolled == true) {
+                Text(
+                    text = KeswaTheme.strings.enrolledStatus(sync.ordinal, sync.deviceName),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                Text(
+                    text = "${KeswaTheme.strings.serverUrl}: ${sync.serverUrl ?: "-"}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Text(
+                    text = "${KeswaTheme.strings.receiptRange}: ${sync.receiptRange}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                OutlinedButton(
+                    enabled = state.canSyncNow,
+                    onClick = { onEvent(SettingsUiEvent.SyncNow) },
+                ) {
+                    Text(KeswaTheme.strings.syncNow)
+                }
+            } else {
+                Text(
+                    text = KeswaTheme.strings.notEnrolledStatus,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.error,
+                )
+                Text(
+                    text = KeswaTheme.strings.enterEnrolmentCode,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                OutlinedTextField(
+                    value = state.syncServerUrlInput,
+                    onValueChange = { onEvent(SettingsUiEvent.EditSyncServerUrl(it)) },
+                    label = { Text(KeswaTheme.strings.serverUrl) },
+                    placeholder = { Text("http://192.168.1.100:8080") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(
+                        value = state.syncDeviceNameInput,
+                        onValueChange = { onEvent(SettingsUiEvent.EditSyncDeviceName(it)) },
+                        label = { Text(KeswaTheme.strings.tillName) },
+                        singleLine = true,
+                        modifier = Modifier.weight(1f),
+                    )
+                    OutlinedTextField(
+                        value = state.syncCodeInput,
+                        onValueChange = { onEvent(SettingsUiEvent.EditSyncCode(it)) },
+                        label = { Text(KeswaTheme.strings.enrolmentCode) },
+                        singleLine = true,
+                        modifier = Modifier.width(160.dp),
+                    )
+                }
+                Button(
+                    enabled = state.canEnrol,
+                    onClick = { onEvent(SettingsUiEvent.EnrolDevice) },
+                ) {
+                    Text(KeswaTheme.strings.enrolTill)
+                }
             }
         }
 

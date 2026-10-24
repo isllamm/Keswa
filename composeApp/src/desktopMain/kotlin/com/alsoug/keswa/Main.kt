@@ -3,6 +3,7 @@ package com.alsoug.keswa
 import com.alsoug.keswa.core.database.KeswaDatabase
 import com.alsoug.keswa.core.platform.IPlatformProvider
 import com.alsoug.keswa.core.platform.LogLevel
+import com.alsoug.keswa.core.sync.SyncScheduler
 import com.alsoug.keswa.di.APPLICATION_SCOPE
 import com.alsoug.keswa.di.initKoin
 import com.alsoug.keswa.features.catalog.domain.usecase.SeedShopUseCase
@@ -27,6 +28,8 @@ fun main() {
         scope = koin.get(named(APPLICATION_SCOPE)),
         platform = koin.get(),
     )
+
+    koin.get<SyncScheduler>().start()
 
     application {
         val iconPainter = remember {
