@@ -7,6 +7,20 @@ import java.util.Locale
 
 object BackOfficeHtml {
 
+    /**
+     * The Keswa icon as a data URI, so the back office has a favicon without a static-file route.
+     * A flat copy of `design/brand/keswa-icon.svg` without the stitches, which 16 px cannot show.
+     */
+    private const val FAVICON = "data:image/svg+xml," +
+        "%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20viewBox='0%200%201024%201024'%3E" +
+        "%3Crect%20width='1024'%20height='1024'%20rx='230'%20fill='%231A2344'/%3E" +
+        "%3Cg%20transform='translate%28512%20512%29%20scale%281.12%29'%3E" +
+        "%3Cpath%20d='M-204-250H-112V250H-204Z'%20fill='%23E8CD8F'/%3E" +
+        "%3Cpath%20d='M-112-66L72-250H204L-112%2066Z'%20fill='%23CAA55C'/%3E" +
+        "%3Cpath%20d='M-112%2066L72%20250H204L-112-66Z'%20fill='%23A5843F'/%3E" +
+        "%3Cpath%20d='M-112-66L-46%200L-112%2066Z'%20fill='%237A5F2A'/%3E" +
+        "%3C/g%3E%3C/svg%3E"
+
     private val DATE_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm", Locale.ENGLISH)
         .withZone(ZoneId.systemDefault())
 
@@ -27,6 +41,7 @@ object BackOfficeHtml {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>$title</title>
+    <link rel="icon" type="image/svg+xml" href="$FAVICON">
     <style>
         :root {
             --bg: #0F172A;
@@ -58,6 +73,7 @@ object BackOfficeHtml {
 <body>
     <div class="card">
         <div class="header">
+            <img src="$FAVICON" alt="" width="56" height="56" style="display: block; margin: 0 auto 14px;">
             <h1>KESWA · كسوة</h1>
             <p>$title</p>
         </div>
@@ -180,6 +196,7 @@ object BackOfficeHtml {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>$title</title>
+    <link rel="icon" type="image/svg+xml" href="$FAVICON">
     <style>
         :root {
             --bg: #0B1120;
@@ -260,6 +277,7 @@ object BackOfficeHtml {
 <body>
     <nav class="navbar">
         <div class="logo">
+            <img src="$FAVICON" alt="" width="26" height="26">
             <span class="status-dot"></span>
             <span>KESWA · كسوة</span>
         </div>
