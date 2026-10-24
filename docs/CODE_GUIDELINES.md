@@ -17,13 +17,16 @@ drift, this points at the originals and lists only what differs.
 
 | ADR | Decision |
 |---|---|
-| KD-001 | Money is `Money(Long)` piastres, not `String`/`BigDecimal` |
-| KD-002 | Real migrations; `fallbackToDestructiveMigration` is a blocker |
-| KD-003 | Dispatchers are injected, including in ViewModels |
-| KD-004 | Targets are `jvm("desktop")` then `androidTarget()`. No iOS |
-| KD-005 | Printers/scanners are `:core` interfaces bound through Koin; protocols are pure `commonMain` |
-| KD-006 | Desktop secure storage is unsolved — decided in Phase 9 |
-| KD-008 | Cost is a moving weighted average, snapshotted onto every movement |
+| [KD-001](adr/KD-001-money-as-minor-units.md) | Money is `Money(Long)` piastres, not `String`/`BigDecimal` |
+| [KD-002](adr/KD-002-real-migrations.md) | Real migrations; `fallbackToDestructiveMigration` is a blocker |
+| [KD-003](adr/KD-003-injected-dispatchers.md) | Dispatchers are injected, including in ViewModels |
+| [KD-004](adr/KD-004-targets-desktop-first.md) | Targets are `jvm("desktop")` then `androidTarget()`. No iOS |
+| [KD-005](adr/KD-005-hardware-as-core-interfaces.md) | Printers/scanners are `:core` interfaces bound through Koin; protocols are pure `commonMain` |
+| [KD-006](adr/KD-006-desktop-secure-storage-deferred.md) | Desktop secure storage is deferred — superseded by KD-007 |
+| [KD-007](adr/KD-007-desktop-secure-storage.md) | Desktop secure storage: user profile boundary, filesystem permissions and server-side revocation |
+| [KD-008](adr/KD-008-moving-average-cost.md) | Cost is a moving weighted average, snapshotted onto every movement |
+| [KD-009](adr/KD-009-bounded-retry-on-sync.md) | Bounded, jittered exponential backoff retry on sync |
+| [KD-010](adr/KD-010-sync-is-log-shipping.md) | Sync is log shipping: three row kinds, append-only outbox triggers |
 
 ## Declared not applicable
 
