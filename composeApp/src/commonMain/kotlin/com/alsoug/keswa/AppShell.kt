@@ -113,14 +113,25 @@ internal fun NavigationSidebar(
                 // A link rather than a `TextButton`: the button's own 12dp inset would step the
                 // label out of line with the name above it, and this is a footer, not an action
                 // anybody should be able to hit by accident.
-                Text(
-                    strings.signOut,
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier
-                        .padding(top = 6.dp)
-                        .clickable(onClick = onSignOut),
-                )
+                Row(
+                    modifier = Modifier.padding(top = 6.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        strings.settings,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.clickable { onNavigate(Route.Settings) },
+                    )
+                    Text("•", color = semantics.hair)
+                    Text(
+                        strings.signOut,
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.clickable(onClick = onSignOut),
+                    )
+                }
                 LanguageSwitch(language, onLanguage, Modifier.padding(top = 10.dp))
             }
         }
@@ -224,6 +235,28 @@ internal fun NavigationStrip(
                         .padding(horizontal = 12.dp, vertical = 7.dp),
                 )
             }
+            val settingsSelected = current == Route.Settings
+            Text(
+                strings.settings,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = if (settingsSelected) FontWeight.SemiBold else FontWeight.Normal,
+                color = if (settingsSelected) {
+                    MaterialTheme.colorScheme.onSurface
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+                modifier = Modifier
+                    .background(
+                        if (settingsSelected) {
+                            MaterialTheme.colorScheme.surface
+                        } else {
+                            androidx.compose.ui.graphics.Color.Transparent
+                        },
+                        RoundedCornerShape(5.dp),
+                    )
+                    .clickable { onNavigate(Route.Settings) }
+                    .padding(horizontal = 12.dp, vertical = 7.dp),
+            )
             LanguageSwitch(language, onLanguage, Modifier.padding(start = 8.dp))
         }
         HorizontalDivider(color = semantics.grid)
