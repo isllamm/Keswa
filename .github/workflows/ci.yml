@@ -30,3 +30,10 @@ jobs:
 
       - name: Test
         run: ./gradlew allTests
+
+      - name: Archive Visual Regression UI Proofs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: visual-regression-ui-proofs
+          path: features/*/build/ui-proofs/*.png
