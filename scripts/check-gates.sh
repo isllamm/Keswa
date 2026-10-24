@@ -96,6 +96,10 @@ if require_paths "no runBlocking" "$PROD"; then
   gate "no runBlocking in production code" \
        "$(code_grep 'runBlocking' $PROD)" \
        "use a suspend function or an injected CoroutineScope"
+
+  gate "no GlobalScope in production code (ADR-040)" \
+       "$(code_grep 'GlobalScope' $PROD)" \
+       "use an injected CoroutineScope or viewModelScope instead of GlobalScope"
 fi
 
 # A credential in a log survives backups, support bundles and screenshares.
@@ -142,6 +146,10 @@ if require_paths "domain purity (ADR-005)" "$DOMAIN"; then
   gate "domain models avoid Float and Double (KD-001)" \
        "$(code_grep ':[[:space:]]*(Float|Double)' $DOMAIN | grep -vE '(\/\/|\*|\/\*)' || true)" \
        "use Money(Long) piastres for money amounts"
+
+  gate "domain use cases preserve cancellation (ADR-040)" \
+       "$(code_grep '\<runCatching[[:space:]]*{' $DOMAIN | grep -v 'Cancellable' || true)" \
+       "use runCatchingCancellable in domain use cases to avoid swallowing CancellationException"
 fi
 
 if require_paths "injected dispatchers (KD-003)" "$PROD"; then

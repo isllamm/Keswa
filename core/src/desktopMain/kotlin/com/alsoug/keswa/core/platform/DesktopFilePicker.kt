@@ -1,6 +1,7 @@
 package com.alsoug.keswa.core.platform
 
 import com.alsoug.keswa.core.coroutines.DispatcherProvider
+import com.alsoug.keswa.core.coroutines.runCatchingCancellable
 import kotlinx.coroutines.withContext
 import java.awt.FileDialog
 import java.awt.Frame
@@ -16,9 +17,9 @@ class DesktopFilePicker(
 ) : IFilePicker {
 
     override suspend fun pickSpreadsheet(): Result<SpreadsheetFile?> = withContext(dispatchers.main) {
-        runCatching {
+        runCatchingCancellable {
             if (GraphicsEnvironment.isHeadless()) {
-                return@runCatching null
+                return@runCatchingCancellable null
             }
 
             val dialog = FileDialog(null as Frame?, "Import Catalogue", FileDialog.LOAD).apply {
