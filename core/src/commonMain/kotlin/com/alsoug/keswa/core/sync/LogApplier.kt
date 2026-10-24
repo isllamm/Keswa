@@ -3,7 +3,7 @@ package com.alsoug.keswa.core.sync
 import androidx.room.PooledConnection
 import androidx.room.immediateTransaction
 import androidx.room.useWriterConnection
-import com.alsoug.keswa.core.coroutines.rethrowIfCancellation
+import com.alsoug.keswa.core.coroutines.runCatchingCancellable
 import com.alsoug.keswa.core.database.KeswaDatabase
 import com.alsoug.keswa.core.database.entities.SyncSupersededEntity
 import com.alsoug.keswa.core.domain.IdGenerator
@@ -92,13 +92,13 @@ class LogApplier(
                 // An empty column map is a row the sending device no longer has: the outbox
                 // named it, the table had already dropped it, and that is what a delete looks like
                 // when nothing stores tombstones.
-                val outcome = runCatching {
+                val outcome = runCatchingCancellable {
                     if (logged.row.columns.isEmpty()) {
                         RowCodec.delete(connection, table, logged.row.id)
                     } else {
                         RowCodec.write(connection, logged.row, table)
                     }
-                }.onFailure { it.rethrowIfCancellation() }
+                }
 
                 when {
                     outcome.isFailure -> {
