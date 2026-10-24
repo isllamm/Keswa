@@ -61,3 +61,23 @@ data class Barcode(
     val isPrimary: Boolean,
     val source: BarcodeSource,
 )
+
+/** A named set of prices. One RETAIL list is seeded at install; WHOLESALE is Phase 7, gated on Q1. */
+data class PriceList(
+    val id: String,
+    val name: String,
+    val nameAr: String,
+    val type: PriceListType,
+    val isDefault: Boolean,
+    val isActive: Boolean,
+)
+
+/** A place stock can sit. A single-shop install has exactly one, seeded at first run. */
+data class Location(
+    val id: String,
+    val name: String,
+    val nameAr: String,
+    val type: LocationType,
+    val isDefault: Boolean,
+    val isActive: Boolean,
+)

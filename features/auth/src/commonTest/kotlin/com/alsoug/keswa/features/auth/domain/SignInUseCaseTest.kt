@@ -7,7 +7,7 @@ import com.alsoug.keswa.core.domain.model.can
 import com.alsoug.keswa.core.session.InMemorySessionManager
 import com.alsoug.keswa.features.auth.domain.usecase.SignInResult
 import com.alsoug.keswa.features.auth.domain.usecase.SignInUseCase
-import com.alsoug.keswa.features.auth.domain.usecase.encodeSalt
+import com.alsoug.keswa.core.domain.auth.encodeSalt
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertFalse

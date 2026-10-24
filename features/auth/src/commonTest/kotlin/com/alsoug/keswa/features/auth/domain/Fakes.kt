@@ -19,7 +19,7 @@ class SequentialIds(private val prefix: String = "user") : IdGenerator {
 /**
  * A hasher that is honest about shape but not about cost — it derives deterministically so tests
  * are fast and reproducible. The real key-derivation cost is asserted separately, in
- * `DesktopPasswordHasherTest`, where it belongs.
+ * `JvmPasswordHasherTest`, where it belongs.
  */
 class FakeHasher : IPasswordHasher {
     override suspend fun hash(secret: CharArray, salt: ByteArray): String =

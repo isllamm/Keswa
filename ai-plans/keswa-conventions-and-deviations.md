@@ -13,7 +13,7 @@ Keswa inherits the Cashi KMP conventions wholesale. This records **only** what d
 
 | Area | Rule |
 |---|---|
-| Module hierarchy | `composeApp → features:* → core → (nothing)`. Forbidden: `core → features`, `features:A → features:B`. Multi-word features are **kebab-case** in Gradle, hyphen dropped in the package (`payment-receipt` → `features.paymentreceipt`) |
+| Module hierarchy | `composeApp → features:* → core → (nothing)`, plus `server → core` from Phase 9 — a second top-level consumer, not a new layer. Forbidden: `core → features`, `features:A → features:B`. Multi-word features are **kebab-case** in Gradle, hyphen dropped in the package (`payment-receipt` → `features.paymentreceipt`) |
 | Feature layout | `data/ · domain/ · presentation/ · di/` + `README.md`. **Golden module: `features/auth/`** — pattern-match against it |
 | Naming | ADR-033 table. Plus two rules `rules.md` still enforces that ADR-033 dropped: `I{Name}` for general interfaces, and `Android{Name}`/`Ios{Name}` for platform impls |
 | Domain purity | ADR-005: zero framework imports in `domain/`. ADR-021: ViewModels hold state and delegate — no business logic, no platform types |
@@ -44,7 +44,7 @@ Listing these explicitly so their absence reads as a decision, not an oversight:
 | ADR-002 Ring Fencing | Strategy for porting an existing native app |
 | ADR-035 Migration Simplicity | Ditto — "keep signatures identical to the native app" |
 | ADR-036 Strict Logic Parity | Ditto. This ADR is what produced Cashi's `Float` money bugs |
-| ADR-041 No HTTP Retry | Justified solely by ADR-036 parity. **Re-decided in Phase 9** — a till on in-store wifi has a different failure profile |
+| ADR-041 No HTTP Retry | Justified solely by ADR-036 parity. **Re-decided in Phase 9 as KD-009**: bounded, jittered retry on the sync path, and nowhere else |
 | ADR-033 API Envelope | Specific to Cashi's `{status, code, message}` soft-200 backend |
 
 > ⚠️ Cashi has **two ADR-033s** (naming conventions and api-envelope). Keswa numbers its ADRs
@@ -158,6 +158,24 @@ and ETA signing needs PKCS#11).
 - Ktor engine: `ktor-client-java` or CIO in place of okhttp/darwin.
 - Previews use the JetBrains `org.jetbrains.compose.ui.tooling.preview.Preview`.
 
+> **Amended in Phase 6, when `androidTarget()` actually landed.** A `jvmCommonMain` source set now
+> exists, shared by `desktopMain` and `androidMain`, holding platform bridges whose implementation
+> is genuinely identical on both — currently just `JvmPasswordHasher`.
+>
+> This is not the `jvmCommonMain` rejected under KD-001. That one would have put *money* in shared
+> JVM code and foreclosed a non-JVM target permanently. A platform bridge is per-platform by
+> definition, so a third platform would simply get a third implementation; nothing is foreclosed.
+>
+> The reason it is worth having at all: a user created at the till must sign in on the handheld,
+> so the algorithm, iteration count, key length and salt length have to match exactly. Two copies
+> of a work factor is one copy that gets raised and one that does not — and then nobody can sign
+> in. A golden-hash test pins all four.
+>
+> The rest of the target cost nothing in source: six phases of `commonMain` compiled for Android
+> unchanged, which is the `java.*` gate from Phase 0 paying for itself. The only thing that had to
+> move was the *test* fixtures — `Room.inMemoryDatabaseBuilder` needs a `Context` on Android, so
+> database-backed tests live in `desktopTest` and `commonTest` keeps the pure ones.
+
 ### KD-005 — `IReceiptPrinter` / `IBarcodeScanner` follow ADR-018 — interface + DI, not `expect`/`actual`
 
 **Correction to an earlier draft of this document.** Cashi's dominant platform mechanism is an
@@ -179,6 +197,18 @@ ADR-018's scope list explicitly names **`PaymentTerminal`** — direct precedent
 - `TcpTransport` is written once in `commonMain` with `ktor-network`. Platform code is needed only
   for USB and Bluetooth, deferred to Phase 7+.
 
+### KD-009 — Sync is log shipping, and retry is safe *because* of it
+
+Recorded in full as **KD-010** (three kinds of row, one log, one cursor) and **KD-009** (bounded
+jittered retry on the sync path only). Both are Phase 9 decisions and both are consequences of a
+Phase 1 one: every document is append-only with a client-generated UUID, so merging two devices is a
+union rather than a merge, and pushing a batch twice is pushing it once.
+
+The pairing matters more than either half. Retry is normally dangerous because a request may have
+taken effect before the connection dropped; KD-010 engineered that away, which is what makes KD-009
+defensible where ADR-041 would otherwise stand. Anything that made a push non-idempotent would make
+KD-009 wrong, and `SyncMergeTest` is what guards that.
+
 ### KD-006 — Desktop secure storage needs its own decision (ADR-038 has no JVM answer)
 
 **Cashi rule** (ADR-038): Tier 1 data — tokens, balances, account numbers, PII — goes in
@@ -198,17 +228,47 @@ since there is no server and no fiscal integration.
 ADR-022 (PCI-DSS) likewise assumes a mobile threat model; a shop-floor till machine is a different
 one and gets re-examined in the same phase.
 
+> ✅ **Discharged in Phase 9 by KD-007**, and not by any of the four options above. Deciding it
+> meant first being honest about what was being protected: the token file would sit beside
+> `keswa.db`, which holds the shop's entire trading history in plaintext. Encrypting one string
+> with an OS keystore next to that protects the least valuable thing in the directory while looking
+> like the problem is solved.
+>
+> So: on desktop the filesystem is the trust boundary (a `0600` file, under the user profile on
+> Windows); on Android the Keystore, because it is there, costs nothing, and the handheld is the
+> device that gets left on a counter. What does the real work on both is that the token is
+> device-scoped and **server-revocable**. If the threat model changes, the answer is encrypting the
+> whole database, not a keystore for one string.
+>
+> **ADR-022 was re-examined and does not apply.** It assumes a consumer phone its owner carries, and
+> Q2 took card data out of scope entirely.
+
 ---
 
 ## Part C — Open questions
 
-| # | Question | Blocks |
-|---|---|---|
-| **Q1** | Wholesale+retail, or multi-tenant SaaS? | Phase 7 only — see below |
-| **Q2** | "Receipt will not be payment receipts" — separate payment terminal, or non-fiscal slips? | Phase 10 only |
-| **Q3** | Printers already owned, or buying? | Phase 3 |
-| **Q4** | Is quantity ever fractional (fabric by the metre)? | Phase 1 — `Int` vs scaled integer |
+| # | Question | Answer | Blocks |
+|---|---|---|---|
+| **Q1** | Wholesale+retail, or multi-tenant SaaS? | ✅ **Wholesale + retail** (21 Sep 2026) | Phase 7 — now unblocked and building |
+| **Q2** | "Receipt will not be payment receipts" — separate payment terminal, or non-fiscal slips? | ✅ **Non-fiscal slips** (21 Sep 2026) | Phase 10 — now almost entirely removed |
+| **Q3** | Printers already owned, or buying? | — | Phase 3 (shipped; addresses are configuration) |
+| **Q4** | Is quantity ever fractional (fabric by the metre)? | — | Phase 1 — `Int` vs scaled integer |
 
-**Q1 is narrower than first assessed.** A desktop app sold to many shops is *multi-instance*, not
-multi-tenant — each shop runs its own local database. Tenancy only bites the **server** in Phase 9.
-Phases 0–6 proceed either way.
+**Q1 — wholesale + retail.** Phase 7 is built: customers, price tiers, credit limits, an
+append-only receivables ledger, invoices with terms, and assortment packs. Tenancy does not arise:
+a desktop app sold to many shops is *multi-instance*, not multi-tenant, and each shop runs its own
+local database. Phase 9's sync stays single-tenant.
+
+**Q2 — non-fiscal slips.** This removes the largest single unknown in the project. Phase 10's
+B2C e-Receipt work disappears along with architecture-plan **R1**, the offline/QR conflict that had
+no good answer: a receipt printed offline cannot carry an ETA-validated QR, and now it does not
+need to. The e-seal material that would have been Tier 1 data is gone too, which narrows KD-006's
+scope in Phase 9 to sync tokens alone.
+
+> If a shop is later obliged to issue B2B e-Invoices, that work returns — and the isolation KD-005
+> bought (`:features:fiscal` behind an interface) still keeps the blast radius to one module.
+> Nobody should start it without reading ETA's own SDK documentation: everything in §5 of the
+> architecture plan came from secondary sources.
+
+**Q4 is still open**, and cheap to keep open — `Int` quantities are correct for garments, and
+fabric by the metre would be a Phase 1 revisit rather than a patch.

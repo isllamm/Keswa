@@ -45,3 +45,55 @@ enum class MovementReason {
     COUNT,
     DAMAGE,
 }
+
+/**
+ * Whether a sale still stands.
+ *
+ * There is no `HELD`: a parked cart has not happened, and lives in its own table so that every
+ * revenue query is a plain read with no status filter to forget.
+ */
+enum class SaleStatus { COMPLETED, VOIDED }
+
+/**
+ * How a customer paid.
+ *
+ * `CARD` records that a card was used; it drives no terminal. Whether this app ever talks to one is
+ * Q2, and until that is answered a record is what the shop needs and all it needs.
+ */
+enum class TenderMethod {
+    CASH,
+    CARD,
+
+    /**
+     * On account — the wholesale tender.
+     *
+     * Settles the sale at the till and opens a receivable in the same transaction. The money is
+     * owed rather than received, which is exactly what the customer ledger is for.
+     */
+    CREDIT,
+}
+
+/**
+ * Where a document that moves stock has got to.
+ *
+ * A `DRAFT` moves nothing, which is what makes unpacking a delivery interruptible. `POSTED` is
+ * terminal — a mistake is corrected with an adjustment, never by reopening.
+ */
+enum class DocumentStatus { DRAFT, POSTED }
+
+/**
+ * What state a returned garment came back in.
+ *
+ * The only thing that decides whether it goes back on the rail — and a `DAMAGED` return still
+ * writes a `RETURN` movement before its `DAMAGE` one, because the shop did take it back.
+ */
+enum class ReturnCondition { SELLABLE, DAMAGED }
+
+/**
+ * What kind of entry moved a customer's balance.
+ *
+ * Signed amounts throughout: an invoice is positive (they owe more), a payment negative. The
+ * balance is `SUM(amount)` and nothing else — the same shape as the stock ledger, and for the same
+ * three reasons: it is auditable, it merges without conflict resolution, and it cannot be edited.
+ */
+enum class LedgerEntryType { INVOICE, PAYMENT, CREDIT_NOTE, ADJUSTMENT }

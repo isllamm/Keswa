@@ -1,11 +1,12 @@
 package com.alsoug.keswa.features.auth.domain.usecase
 
+import com.alsoug.keswa.core.domain.auth.LockoutPolicy
+import com.alsoug.keswa.core.domain.auth.decodeSalt
 import com.alsoug.keswa.core.domain.model.User
 import com.alsoug.keswa.core.domain.repository.IUserRepository
 import com.alsoug.keswa.core.domain.repository.StoredCredential
 import com.alsoug.keswa.core.platform.IPasswordHasher
 import com.alsoug.keswa.core.session.ISessionManager
-import com.alsoug.keswa.features.auth.domain.LockoutPolicy
 
 sealed interface SignInResult {
     data class Success(val user: User) : SignInResult
@@ -82,12 +83,3 @@ class SignInUseCase(
         const val DECOY_HASH = "0000000000000000000000000000000000000000000="
     }
 }
-
-internal fun String.decodeSalt(): ByteArray =
-    chunked(2).map { it.toInt(radix = 16).toByte() }.toByteArray()
-
-internal fun ByteArray.encodeSalt(): String =
-    joinToString("") { byte ->
-        val value = byte.toInt() and 0xFF
-        "0123456789abcdef"[value shr 4].toString() + "0123456789abcdef"[value and 0xF]
-    }

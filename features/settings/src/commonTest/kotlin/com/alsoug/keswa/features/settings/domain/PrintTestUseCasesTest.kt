@@ -2,6 +2,7 @@ package com.alsoug.keswa.features.settings.domain
 
 import com.alsoug.keswa.core.domain.model.ShopSettings
 import com.alsoug.keswa.core.domain.repository.ISettingsRepository
+import com.alsoug.keswa.core.platform.ILabelNameRenderer
 import com.alsoug.keswa.core.platform.IPrinterTransport
 import com.alsoug.keswa.core.platform.IReceiptRenderer
 import com.alsoug.keswa.core.printing.MonoBitmap
@@ -10,7 +11,7 @@ import com.alsoug.keswa.features.settings.domain.usecase.PrintResult
 import com.alsoug.keswa.features.settings.domain.usecase.PrintTestLabelUseCase
 import com.alsoug.keswa.features.settings.domain.usecase.PrintTestPageUseCase
 import com.alsoug.keswa.features.settings.domain.usecase.SaveSettingsUseCase
-import com.alsoug.keswa.features.settings.domain.usecase.TransportFactory
+import com.alsoug.keswa.core.platform.TransportFactory
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertIs
@@ -43,6 +44,14 @@ private class StubRenderer : IReceiptRenderer {
     override fun render(receipt: Receipt, widthDots: Int) = MonoBitmap(widthDots, 4)
     override fun renderTestPage(widthDots: Int): MonoBitmap {
         requestedWidth = widthDots
+        return MonoBitmap(widthDots, 4)
+    }
+}
+
+private class StubLabelNameRenderer : ILabelNameRenderer {
+    var renderedText: String = ""
+    override fun render(text: String, widthDots: Int, maxHeightDots: Int): MonoBitmap {
+        renderedText = text
         return MonoBitmap(widthDots, 4)
     }
 }
@@ -124,6 +133,8 @@ class PrintTestPageUseCaseTest {
 
 class PrintTestLabelUseCaseTest {
 
+    private val nameRenderer = StubLabelNameRenderer()
+
     @Test
     fun `a test label carries a valid barcode and the configured media size`() = runTest {
         val repository = FakeSettingsRepository(
@@ -131,11 +142,13 @@ class PrintTestLabelUseCaseTest {
         )
         val transport = RecordingTransport()
 
-        val result = PrintTestLabelUseCase(repository) { _, _ -> transport }()
+        val result = PrintTestLabelUseCase(repository, nameRenderer) { _, _ -> transport }()
 
         assertIs<PrintResult.Printed>(result.getOrThrow())
+        assertEquals("اختبار التيكيت — Test", nameRenderer.renderedText)
         val label = transport.written.single().decodeToString()
         assertTrue(label.contains("SIZE 50 mm,25 mm"), label)
+        assertTrue(label.contains("BITMAP 10,10,"), label)
         assertTrue(label.contains("2000000000015"), label)
         assertTrue(label.trimEnd().endsWith("PRINT 1,1"), label)
     }
@@ -145,7 +158,7 @@ class PrintTestLabelUseCaseTest {
         val repository = FakeSettingsRepository(ShopSettings(labelHost = ""))
         val transport = RecordingTransport()
 
-        val result = PrintTestLabelUseCase(repository) { _, _ -> transport }()
+        val result = PrintTestLabelUseCase(repository, nameRenderer) { _, _ -> transport }()
 
         assertIs<PrintResult.NotConfigured>(result.getOrThrow())
         assertTrue(transport.written.isEmpty())

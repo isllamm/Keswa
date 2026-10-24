@@ -4,31 +4,63 @@ import androidx.room.ConstructedBy
 import androidx.room.Database
 import androidx.room.RoomDatabase
 import androidx.room.RoomDatabaseConstructor
+import com.alsoug.keswa.core.database.dao.AnalyticsDao
+import com.alsoug.keswa.core.database.dao.AssortmentPackDao
 import com.alsoug.keswa.core.database.dao.CategoryDao
 import com.alsoug.keswa.core.database.dao.ColourDao
+import com.alsoug.keswa.core.database.dao.CustomerDao
+import com.alsoug.keswa.core.database.dao.CustomerLedgerDao
+import com.alsoug.keswa.core.database.dao.HeldSaleDao
 import com.alsoug.keswa.core.database.dao.LocationDao
 import com.alsoug.keswa.core.database.dao.PriceDao
 import com.alsoug.keswa.core.database.dao.ProductDao
+import com.alsoug.keswa.core.database.dao.SaleDao
+import com.alsoug.keswa.core.database.dao.SaleReturnDao
+import com.alsoug.keswa.core.database.dao.SellableDao
 import com.alsoug.keswa.core.database.dao.SettingDao
+import com.alsoug.keswa.core.database.dao.StockCountDao
+import com.alsoug.keswa.core.database.dao.StockReceiptDao
+import com.alsoug.keswa.core.database.dao.ShiftDao
 import com.alsoug.keswa.core.database.dao.UserDao
 import com.alsoug.keswa.core.database.dao.StockLedgerDao
+import com.alsoug.keswa.core.database.dao.SyncDao
 import com.alsoug.keswa.core.database.dao.VariantBarcodeDao
 import com.alsoug.keswa.core.database.dao.VariantDao
 import com.alsoug.keswa.core.database.entities.AppSettingEntity
 import com.alsoug.keswa.core.database.entities.AppUserEntity
+import com.alsoug.keswa.core.database.entities.AssortmentPackEntity
+import com.alsoug.keswa.core.database.entities.AssortmentPackLineEntity
 import com.alsoug.keswa.core.database.entities.CategoryEntity
+import com.alsoug.keswa.core.database.entities.CustomerEntity
+import com.alsoug.keswa.core.database.entities.CustomerLedgerEntryEntity
 import com.alsoug.keswa.core.database.entities.ColourEntity
+import com.alsoug.keswa.core.database.entities.HeldSaleEntity
+import com.alsoug.keswa.core.database.entities.HeldSaleLineEntity
 import com.alsoug.keswa.core.database.entities.LocationEntity
+import com.alsoug.keswa.core.database.entities.PaymentEntity
 import com.alsoug.keswa.core.database.entities.PriceEntity
 import com.alsoug.keswa.core.database.entities.PriceListEntity
 import com.alsoug.keswa.core.database.entities.ProductEntity
+import com.alsoug.keswa.core.database.entities.SaleEntity
+import com.alsoug.keswa.core.database.entities.SaleLineEntity
+import com.alsoug.keswa.core.database.entities.SaleReturnEntity
+import com.alsoug.keswa.core.database.entities.SaleReturnLineEntity
+import com.alsoug.keswa.core.database.entities.ShiftEntity
+import com.alsoug.keswa.core.database.entities.StockCountEntity
+import com.alsoug.keswa.core.database.entities.StockCountLineEntity
 import com.alsoug.keswa.core.database.entities.StockMovementEntity
+import com.alsoug.keswa.core.database.entities.StockReceiptEntity
+import com.alsoug.keswa.core.database.entities.StockReceiptLineEntity
 import com.alsoug.keswa.core.database.entities.StockOnHandEntity
+import com.alsoug.keswa.core.database.entities.SyncControlEntity
+import com.alsoug.keswa.core.database.entities.SyncCursorEntity
+import com.alsoug.keswa.core.database.entities.SyncOutboxEntity
+import com.alsoug.keswa.core.database.entities.SyncSupersededEntity
 import com.alsoug.keswa.core.database.entities.VariantBarcodeEntity
 import com.alsoug.keswa.core.database.entities.VariantEntity
 
 /**
- * The shop's database — and, until sync ships in Phase 9, the only copy of its sales history.
+ * The shop's database — and, until this shop enrols a second device, the only copy of its sales history.
  *
  * That is why KD-002 forbids `fallbackToDestructiveMigration`: there is no server to re-fetch from,
  * so a dropped table is permanent data loss. Every version bump ships a tested [androidx.room.migration.Migration].
@@ -47,8 +79,34 @@ import com.alsoug.keswa.core.database.entities.VariantEntity
         PriceEntity::class,
         AppSettingEntity::class,
         AppUserEntity::class,
+        SaleEntity::class,
+        SaleLineEntity::class,
+        PaymentEntity::class,
+        ShiftEntity::class,
+        HeldSaleEntity::class,
+        HeldSaleLineEntity::class,
+        StockReceiptEntity::class,
+        StockReceiptLineEntity::class,
+        StockCountEntity::class,
+        StockCountLineEntity::class,
+        SaleReturnEntity::class,
+        SaleReturnLineEntity::class,
+        CustomerEntity::class,
+        CustomerLedgerEntryEntity::class,
+        AssortmentPackEntity::class,
+        AssortmentPackLineEntity::class,
+        SyncOutboxEntity::class,
+        SyncCursorEntity::class,
+        SyncControlEntity::class,
+        SyncSupersededEntity::class,
     ],
-    version = 3, // 3: added app_user (sign-in, roles, lockout)
+    version = 9, // 9: stock_receipt_line.sellPricePiastres — a price typed while receiving, applied on post
+    // 8: sync — outbox, cursor, control and superseded, plus the outbox triggers
+    // 7: wholesale — customer, customer_ledger_entry, assortment packs; sale gained a customer
+    // 6: added sale_return/_line
+    // 5: added stock_receipt/_line, stock_count/_line; stock_movement gained cost and note
+    // 4: added sale, sale_line, payment, shift, held_sale, held_sale_line
+    // 3: added app_user (sign-in, roles, lockout)
     // 2: added app_setting (printer and scanner configuration)
     // 1: initial schema — category tree, catalogue, stock ledger, pricing
     exportSchema = true,
@@ -65,6 +123,18 @@ abstract class KeswaDatabase : RoomDatabase() {
     abstract fun priceDao(): PriceDao
     abstract fun settingDao(): SettingDao
     abstract fun userDao(): UserDao
+    abstract fun saleDao(): SaleDao
+    abstract fun shiftDao(): ShiftDao
+    abstract fun heldSaleDao(): HeldSaleDao
+    abstract fun sellableDao(): SellableDao
+    abstract fun stockReceiptDao(): StockReceiptDao
+    abstract fun stockCountDao(): StockCountDao
+    abstract fun saleReturnDao(): SaleReturnDao
+    abstract fun analyticsDao(): AnalyticsDao
+    abstract fun customerDao(): CustomerDao
+    abstract fun customerLedgerDao(): CustomerLedgerDao
+    abstract fun assortmentPackDao(): AssortmentPackDao
+    abstract fun syncDao(): SyncDao
 }
 
 /**

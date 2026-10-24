@@ -2,11 +2,13 @@ package com.alsoug.keswa.core.data.mapper
 
 import com.alsoug.keswa.core.database.entities.CategoryEntity
 import com.alsoug.keswa.core.database.entities.ColourEntity
+import com.alsoug.keswa.core.database.entities.LocationEntity
 import com.alsoug.keswa.core.database.entities.ProductEntity
 import com.alsoug.keswa.core.database.entities.StockMovementEntity
 import com.alsoug.keswa.core.database.entities.VariantEntity
 import com.alsoug.keswa.core.domain.model.Category
 import com.alsoug.keswa.core.domain.model.Colour
+import com.alsoug.keswa.core.domain.model.Location
 import com.alsoug.keswa.core.domain.model.Product
 import com.alsoug.keswa.core.domain.model.StockMovement
 import com.alsoug.keswa.core.domain.model.Variant
@@ -56,6 +58,8 @@ fun StockMovementEntity.toDomain(): StockMovement = StockMovement(
     refId = refId,
     occurredAt = occurredAt,
     userId = userId,
+    unitCost = unitCostPiastres?.let { Money.ofPiastres(it) },
+    note = note,
 )
 
 fun StockMovement.toEntity(): StockMovementEntity = StockMovementEntity(
@@ -68,4 +72,9 @@ fun StockMovement.toEntity(): StockMovementEntity = StockMovementEntity(
     refId = refId,
     occurredAt = occurredAt,
     userId = userId,
+    unitCostPiastres = unitCost?.piastres,
+    note = note,
 )
+
+fun LocationEntity.toDomain(): Location =
+    Location(id = id, name = name, nameAr = nameAr, type = type, isDefault = isDefault, isActive = isActive)

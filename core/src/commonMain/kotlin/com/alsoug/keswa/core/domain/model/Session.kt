@@ -13,6 +13,7 @@ data class User(
 data class Session(
     val user: User,
     val signedInAtMillis: Long,
+    val permissions: Set<Permission> = user.role.permissions,
 ) {
     val role: UserRole get() = user.role
 }
@@ -52,4 +53,4 @@ val UserRole.permissions: Set<Permission>
     }
 
 fun Session?.can(permission: Permission): Boolean =
-    this != null && permission in role.permissions
+    this != null && permission in permissions

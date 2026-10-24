@@ -272,9 +272,14 @@ secondary sources. This is the highest-uncertainty area in the plan.
 Sync (Phase 9) is hard in one place and trivial elsewhere:
 
 - **Stock movements** — append-only, commutative ⇒ merge with no conflict resolution.
-- **Catalogue** — server authoritative, pull with a version cursor.
+- **Catalogue** — pulled with a cursor; it is the one mutable pile and the only one that can conflict.
 - **Documents** — client-generated UUIDs, idempotent upsert (`cashi_pax` defect F2: non-idempotent
   IDs create duplicates).
+
+> **Built in Phase 9, and one line of this needed correcting.** The catalogue is not "server
+> authoritative" — a till creates products too. It converges instead on the log's own order, which
+> every device reads identically. The three-way split that actually fell out of the schema (events,
+> documents, records) is KD-010.
 
 Because the local DB is the source of truth, **`fallbackToDestructiveMigration` is a blocker** and
 every schema change ships a tested migration — see **KD-002**.
@@ -318,7 +323,7 @@ Seeded from `kmp_cashimobile`'s version catalog so the two projects stay in step
 | DI | Koin 4.1.1 | |
 | Barcode / QR | `zxing-core`, `qrose` | already proven in Cashi's common code |
 | Testing | kotlin-test, coroutines-test, **hand-written fakes** | ADR-019 — no mocking framework |
-| Backend (Ph. 9) | Ktor + Postgres | |
+| Backend (Ph. 9) | Ktor + **SQLite**, not Postgres | Deviation, taken when Phase 9 was built — see `phase-9-sync-plan.md` §9c and `server/README.md`. The server reuses `:core`'s schema and migrations, so there is one definition of what a sale is; the log is the durable artefact, so replaying it into Postgres is the exit whenever a shop outgrows this |
 
 ---
 

@@ -3,6 +3,7 @@ package com.alsoug.keswa.features.settings.presentation.screens.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alsoug.keswa.core.coroutines.DispatcherProvider
+import com.alsoug.keswa.core.designsystem.message
 import com.alsoug.keswa.features.settings.domain.usecase.GetSettingsUseCase
 import com.alsoug.keswa.features.settings.domain.usecase.PrintResult
 import com.alsoug.keswa.features.settings.domain.usecase.PrintTestLabelUseCase
@@ -57,7 +58,7 @@ class SettingsViewModel(
     private fun save() {
         viewModelScope.launch(dispatchers.io) {
             saveSettings(_state.value.settings).fold(
-                onSuccess = { _effect.emit(SettingsUiEffect.ShowMessage("Settings saved")) },
+                onSuccess = { _effect.emit(SettingsUiEffect.ShowMessage(message { it.settingsSaved })) },
                 onFailure = { fail(it) },
             )
         }
@@ -76,12 +77,12 @@ class SettingsViewModel(
                     _state.update { it.copy(isBusy = false) }
                     when (result) {
                         PrintResult.Printed ->
-                            _effect.emit(SettingsUiEffect.ShowMessage("Sent to printer"))
+                            _effect.emit(SettingsUiEffect.ShowMessage(message { it.sentToPrinter }))
                         PrintResult.NotConfigured ->
-                            _effect.emit(SettingsUiEffect.ShowError("Enter the printer address first"))
+                            _effect.emit(SettingsUiEffect.ShowError(message { it.enterPrinterAddressFirst }))
                         is PrintResult.Unreachable ->
                             _effect.emit(
-                                SettingsUiEffect.ShowError("Printer did not answer — ${result.detail}"),
+                                SettingsUiEffect.ShowError(message { it.printerDidNotAnswer(result.detail) }),
                             )
                     }
                 },
@@ -92,6 +93,6 @@ class SettingsViewModel(
 
     private suspend fun fail(cause: Throwable) {
         _state.update { it.copy(isLoading = false, isBusy = false) }
-        _effect.emit(SettingsUiEffect.ShowError(cause.message ?: "Something went wrong"))
+        _effect.emit(SettingsUiEffect.ShowError(message { it.somethingWentWrong }))
     }
 }

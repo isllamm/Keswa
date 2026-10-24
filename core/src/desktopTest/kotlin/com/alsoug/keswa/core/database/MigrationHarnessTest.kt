@@ -1,6 +1,7 @@
 package com.alsoug.keswa.core.database
 
 import androidx.room.Room
+import com.alsoug.keswa.core.coroutines.RealDispatchers
 import androidx.room.migration.Migration
 import com.alsoug.keswa.core.database.entities.StockMovementEntity
 import com.alsoug.keswa.core.domain.model.MovementReason

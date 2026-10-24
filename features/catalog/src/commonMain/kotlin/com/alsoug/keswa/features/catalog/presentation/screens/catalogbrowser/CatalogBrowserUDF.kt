@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.catalog.presentation.screens.catalogbrowser
 
+import com.alsoug.keswa.core.designsystem.Message
 import com.alsoug.keswa.features.catalog.presentation.model.CategoryNodeUiModel
 import com.alsoug.keswa.features.catalog.presentation.model.ProductUiModel
 
@@ -30,6 +31,10 @@ sealed interface CatalogBrowserUiEvent {
     data class SearchChanged(val query: String) : CatalogBrowserUiEvent
     data class CreateCategory(val name: String, val nameAr: String, val underSelected: Boolean) :
         CatalogBrowserUiEvent
+    data class RenameCategory(val categoryId: String, val name: String, val nameAr: String) :
+        CatalogBrowserUiEvent
+    data class SetCategoryActive(val categoryId: String, val isActive: Boolean) :
+        CatalogBrowserUiEvent
     data class MoveCategory(val categoryId: String, val newParentId: String?) :
         CatalogBrowserUiEvent
     data class CreateProduct(val name: String, val nameAr: String) : CatalogBrowserUiEvent
@@ -41,6 +46,6 @@ sealed interface CatalogBrowserNavigation {
 }
 
 sealed interface CatalogBrowserUiEffect {
-    data class ShowError(val message: String) : CatalogBrowserUiEffect
-    data class ShowMessage(val message: String) : CatalogBrowserUiEffect
+    data class ShowError(val message: Message) : CatalogBrowserUiEffect
+    data class ShowMessage(val message: Message) : CatalogBrowserUiEffect
 }

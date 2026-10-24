@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AssistChip
 import androidx.compose.material3.Button
@@ -24,9 +26,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alsoug.keswa.core.designsystem.KeswaTheme
+import com.alsoug.keswa.core.designsystem.ScreenHeader
+import com.alsoug.keswa.core.designsystem.localisedName
+import com.alsoug.keswa.core.designsystem.resolve
 import com.alsoug.keswa.core.domain.model.Colour
+import com.alsoug.keswa.core.domain.money.Money
 import com.alsoug.keswa.features.catalog.presentation.components.ColourList
 import com.alsoug.keswa.features.catalog.presentation.components.ColourSwatch
 import com.alsoug.keswa.features.catalog.presentation.model.ColourRowUiModel
@@ -41,6 +49,7 @@ fun ProductEditorScreen(
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val strings = KeswaTheme.strings
 
     LaunchedEffect(productId) { viewModel.onEvent(ProductEditorUiEvent.Load(productId)) }
 
@@ -55,10 +64,10 @@ fun ProductEditorScreen(
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
-                is ProductEditorUiEffect.ShowError -> onMessage(effect.message)
-                is ProductEditorUiEffect.ShowMessage -> onMessage(effect.message)
+                is ProductEditorUiEffect.ShowError -> onMessage(effect.message.resolve(strings))
+                is ProductEditorUiEffect.ShowMessage -> onMessage(effect.message.resolve(strings))
                 is ProductEditorUiEffect.BlockedByStock ->
-                    onMessage("${effect.onHand} still in stock — sell or adjust them first")
+                    onMessage(strings.blockedByStock(effect.onHand))
             }
         }
     }
@@ -75,12 +84,13 @@ internal fun ProductEditorContent(
     Column(modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(16.dp)) {
         if (state.isLoading) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
 
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            TextButton(onClick = { onEvent(ProductEditorUiEvent.Back) }) { Text("← Back") }
-            Text(state.productLabel, style = MaterialTheme.typography.titleMedium)
-        }
+        ScreenHeader(
+            title = state.productLabel,
+            subtitle = KeswaTheme.strings.eachColourItsOwnSku,
+            onBack = { onEvent(ProductEditorUiEvent.Back) },
+        )
         Text(
-            "Each colour is its own SKU, with its own barcode and stock.",
+            KeswaTheme.strings.eachColourOwnSkuLong,
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(bottom = 12.dp),
@@ -89,21 +99,22 @@ internal fun ProductEditorContent(
         ColourList(rows = state.colours) { row ->
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("${row.onHand}", style = MaterialTheme.typography.labelMedium)
+                PriceField(row, onEvent)
                 TextButton(onClick = { onEvent(ProductEditorUiEvent.RemoveColour(row.variantId)) }) {
-                    Text("Retire")
+                    Text(KeswaTheme.strings.retire)
                 }
             }
         }
 
         Text(
-            "On hand: ${state.totalOnHand}",
+            KeswaTheme.strings.totalOnHand(state.totalOnHand),
             style = MaterialTheme.typography.titleSmall,
             modifier = Modifier.padding(top = 12.dp),
         )
 
         if (state.addableColours.isNotEmpty()) {
             Text(
-                "Add a colour",
+                KeswaTheme.strings.addAColour,
                 style = MaterialTheme.typography.titleSmall,
                 modifier = Modifier.padding(top = 16.dp, bottom = 6.dp),
             )
@@ -111,7 +122,7 @@ internal fun ProductEditorContent(
                 state.addableColours.take(6).forEach { colour ->
                     AssistChip(
                         onClick = { onEvent(ProductEditorUiEvent.AddColour(colour.id)) },
-                        label = { Text(colour.name) },
+                        label = { Text(localisedName(colour.name, colour.nameAr)) },
                         leadingIcon = { ColourSwatch(colour.hex, size = 12) },
                     )
                 }
@@ -126,6 +137,33 @@ internal fun ProductEditorContent(
     }
 }
 
+/**
+ * What this colour sells for.
+ *
+ * Empty until somebody sets it, and shown as such rather than as a zero: the till refuses to ring
+ * up an unpriced SKU, so "no price yet" is a state worth seeing here.
+ */
+@Composable
+private fun PriceField(row: ColourRowUiModel, onEvent: (ProductEditorUiEvent) -> Unit) {
+    var entry by remember(row.variantId, row.price) { mutableStateOf(row.price?.format() ?: "") }
+
+    OutlinedTextField(
+        value = entry,
+        onValueChange = { entry = it },
+        label = { Text(if (row.price == null) KeswaTheme.strings.noPrice else KeswaTheme.strings.price) },
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
+        keyboardActions = KeyboardActions(
+            onDone = { onEvent(ProductEditorUiEvent.SetPrice(row.variantId, entry)) },
+        ),
+        modifier = Modifier.widthIn(max = 140.dp),
+    )
+    TextButton(
+        onClick = { onEvent(ProductEditorUiEvent.SetPrice(row.variantId, entry)) },
+        enabled = entry.isNotBlank(),
+    ) { Text(KeswaTheme.strings.save) }
+}
+
 @Composable
 private fun SupplierBarcodeRow(
     enabled: Boolean,
@@ -134,9 +172,9 @@ private fun SupplierBarcodeRow(
 ) {
     var barcode by remember { mutableStateOf("") }
     Column(modifier = Modifier.padding(top = 20.dp)) {
-        Text("Supplier barcode", style = MaterialTheme.typography.titleSmall)
+        Text(KeswaTheme.strings.supplierBarcode, style = MaterialTheme.typography.titleSmall)
         Text(
-            "Scan the code already on the garment — it will resolve to the same SKU as ours.",
+            KeswaTheme.strings.scanCodeOnGarment,
             style = MaterialTheme.typography.labelSmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -148,7 +186,7 @@ private fun SupplierBarcodeRow(
             OutlinedTextField(
                 value = barcode,
                 onValueChange = { barcode = it.filter(Char::isDigit).take(13) },
-                label = { Text("EAN-13") },
+                label = { Text(KeswaTheme.strings.eanThirteen) },
                 singleLine = true,
                 modifier = Modifier.widthIn(max = 240.dp),
             )
@@ -160,20 +198,20 @@ private fun SupplierBarcodeRow(
                     }
                     barcode = ""
                 },
-            ) { Text("Attach") }
+            ) { Text(KeswaTheme.strings.attach) }
         }
     }
 }
 
 private val previewRows = listOf(
-    ColourRowUiModel("v1", "c1", "Navy", "#20304f", "OXF-NAV", "2000000000015", 12),
-    ColourRowUiModel("v2", "c2", "White", "#f2f2ef", "OXF-WHI", "2000000000022", 0),
+    ColourRowUiModel("v1", "c1", "Navy", "#20304f", "OXF-NAV", "2000000000015", 12, Money.ofPounds(380)),
+    ColourRowUiModel("v2", "c2", "White", "#f2f2ef", "OXF-WHI", "2000000000022", 0, null),
 )
 
 @Preview
 @Composable
 private fun ProductEditorSuccessPreview() {
-    MaterialTheme {
+    KeswaTheme {
         ProductEditorContent(
             state = ProductEditorUiState(
                 productLabel = "Oxford shirt",
@@ -188,7 +226,7 @@ private fun ProductEditorSuccessPreview() {
 @Preview
 @Composable
 private fun ProductEditorLoadingPreview() {
-    MaterialTheme {
+    KeswaTheme {
         ProductEditorContent(state = ProductEditorUiState(isLoading = true), onEvent = {})
     }
 }
@@ -196,7 +234,7 @@ private fun ProductEditorLoadingPreview() {
 @Preview
 @Composable
 private fun ProductEditorEmptyPreview() {
-    MaterialTheme {
+    KeswaTheme {
         ProductEditorContent(
             state = ProductEditorUiState(
                 productLabel = "New product",

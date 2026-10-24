@@ -2,23 +2,62 @@ package com.alsoug.keswa.core.di
 
 import com.alsoug.keswa.core.coroutines.DefaultDispatcherProvider
 import com.alsoug.keswa.core.coroutines.DispatcherProvider
+import com.alsoug.keswa.core.data.repository.AnalyticsRepositoryImpl
+import com.alsoug.keswa.core.data.repository.AssortmentPackRepositoryImpl
 import com.alsoug.keswa.core.data.repository.CategoryRepositoryImpl
+import com.alsoug.keswa.core.data.repository.CustomerRepositoryImpl
+import com.alsoug.keswa.core.data.repository.ReceivablesRepositoryImpl
 import com.alsoug.keswa.core.data.repository.ColourRepositoryImpl
 import com.alsoug.keswa.core.data.repository.ProductRepositoryImpl
+import com.alsoug.keswa.core.data.repository.HeldSaleRepositoryImpl
+import com.alsoug.keswa.core.data.repository.LocationRepositoryImpl
+import com.alsoug.keswa.core.data.repository.PriceRepositoryImpl
+import com.alsoug.keswa.core.data.repository.SaleRepositoryImpl
+import com.alsoug.keswa.core.data.repository.SaleReturnRepositoryImpl
+import com.alsoug.keswa.core.data.repository.SellableRepositoryImpl
 import com.alsoug.keswa.core.data.repository.SettingsRepositoryImpl
+import com.alsoug.keswa.core.data.repository.StockAdjustmentRepositoryImpl
+import com.alsoug.keswa.core.data.repository.StockCountRepositoryImpl
+import com.alsoug.keswa.core.data.repository.StockReceiptRepositoryImpl
+import com.alsoug.keswa.core.data.repository.ShiftRepositoryImpl
 import com.alsoug.keswa.core.data.repository.UserRepositoryImpl
 import com.alsoug.keswa.core.data.repository.VariantRepositoryImpl
 import com.alsoug.keswa.core.database.KeswaDatabase
 import com.alsoug.keswa.core.domain.IdGenerator
 import com.alsoug.keswa.core.domain.UuidIdGenerator
+import com.alsoug.keswa.core.domain.repository.IAnalyticsRepository
+import com.alsoug.keswa.core.domain.repository.IAssortmentPackRepository
 import com.alsoug.keswa.core.domain.repository.ICategoryRepository
+import com.alsoug.keswa.core.domain.repository.ICustomerRepository
+import com.alsoug.keswa.core.domain.repository.IReceivablesRepository
+import com.alsoug.keswa.core.domain.repository.IHeldSaleRepository
+import com.alsoug.keswa.core.domain.repository.ILocationRepository
+import com.alsoug.keswa.core.domain.repository.IPriceRepository
+import com.alsoug.keswa.core.domain.repository.ISaleRepository
+import com.alsoug.keswa.core.domain.repository.ISaleReturnRepository
+import com.alsoug.keswa.core.domain.repository.ISellableRepository
+import com.alsoug.keswa.core.domain.repository.IStockAdjustmentRepository
+import com.alsoug.keswa.core.domain.repository.IStockCountRepository
+import com.alsoug.keswa.core.domain.repository.IStockReceiptRepository
+import com.alsoug.keswa.core.domain.repository.IShiftRepository
 import com.alsoug.keswa.core.domain.repository.IColourRepository
 import com.alsoug.keswa.core.domain.repository.IProductRepository
 import com.alsoug.keswa.core.domain.repository.ISettingsRepository
 import com.alsoug.keswa.core.domain.repository.IUserRepository
+import com.alsoug.keswa.core.session.ICredentialVerifier
 import com.alsoug.keswa.core.session.ISessionManager
+import com.alsoug.keswa.core.session.LockoutAwareCredentialVerifier
 import com.alsoug.keswa.core.session.InMemorySessionManager
 import com.alsoug.keswa.core.domain.repository.IVariantRepository
+import com.alsoug.keswa.core.platform.ISyncTokenStore
+import com.alsoug.keswa.core.platform.IPlatformProvider
+import com.alsoug.keswa.core.platform.TransportFactory
+import com.alsoug.keswa.core.sync.ISyncApi
+import com.alsoug.keswa.core.sync.KtorSyncApi
+import com.alsoug.keswa.core.sync.LogApplier
+import com.alsoug.keswa.core.sync.SyncEngine
+import com.alsoug.keswa.core.sync.SyncSettings
+import com.alsoug.keswa.core.printing.transport.TcpTransport
 import kotlin.time.Clock
 import kotlin.time.ExperimentalTime
 import org.koin.dsl.module
@@ -33,6 +72,9 @@ val coreModule = module {
     single<DispatcherProvider> { DefaultDispatcherProvider() }
     single<IdGenerator> { UuidIdGenerator() }
 
+    // Network printers, so one shared implementation covers every platform and every feature
+    single<TransportFactory> { TransportFactory { host, port -> TcpTransport(host, port, get()) } }
+
     // Data Layer — repositories
     single<ICategoryRepository> {
         CategoryRepositoryImpl(get<KeswaDatabase>().categoryDao()) { now() }
@@ -43,18 +85,116 @@ val coreModule = module {
             get<KeswaDatabase>().categoryDao(),
         ) { now() }
     }
+    single<ILocationRepository> { LocationRepositoryImpl(get<KeswaDatabase>().locationDao()) }
     single<IColourRepository> { ColourRepositoryImpl(get<KeswaDatabase>().colourDao()) }
     single<ISettingsRepository> { SettingsRepositoryImpl(get<KeswaDatabase>().settingDao()) }
     single<IUserRepository> { UserRepositoryImpl(get<KeswaDatabase>().userDao()) { now() } }
 
     // Session — in memory only, so closing the app signs everyone out (correct for a shared till)
     single<ISessionManager> { InMemorySessionManager() }
+
+    // Approving one action without disturbing the session — the till's discounts and voids, and
+    // a return outside the policy window. Feeds the same lockout counter as sign-in.
+    single<ICredentialVerifier> { LockoutAwareCredentialVerifier(get(), get()) { now() } }
     single<IVariantRepository> {
         VariantRepositoryImpl(
             get<KeswaDatabase>().variantDao(),
             get<KeswaDatabase>().variantBarcodeDao(),
             get<KeswaDatabase>().stockLedgerDao(),
         ) { now() }
+    }
+
+    // Selling — the sale repository takes the database itself because a sale spans DAOs and has to
+    // commit as one transaction
+    single<ISaleRepository> {
+        SaleRepositoryImpl(
+            get(),
+            get<KeswaDatabase>().saleDao(),
+            get<KeswaDatabase>().stockLedgerDao(),
+            get<KeswaDatabase>().customerLedgerDao(),
+            get<KeswaDatabase>().customerDao(),
+            get(),
+            // This device's block of receipt numbers, so two tills cannot issue the same one (9i)
+            receiptBlock = { get<SyncSettings>().receiptBlock() },
+        )
+    }
+    single<IAnalyticsRepository> { AnalyticsRepositoryImpl(get<KeswaDatabase>().analyticsDao()) }
+
+    // Wholesale — receivables are an append-only ledger, the same shape as stock
+    single<ICustomerRepository> { CustomerRepositoryImpl(get<KeswaDatabase>().customerDao()) { now() } }
+    single<IReceivablesRepository> {
+        ReceivablesRepositoryImpl(
+            get<KeswaDatabase>().customerLedgerDao(),
+            get<KeswaDatabase>().customerDao(),
+        )
+    }
+    single<IAssortmentPackRepository> {
+        AssortmentPackRepositoryImpl(get<KeswaDatabase>().assortmentPackDao())
+    }
+    single<ISaleReturnRepository> {
+        SaleReturnRepositoryImpl(
+            get(),
+            get<KeswaDatabase>().saleReturnDao(),
+            get<KeswaDatabase>().saleDao(),
+            get<KeswaDatabase>().stockLedgerDao(),
+            get(),
+            returnBlock = { get<SyncSettings>().receiptBlock() },
+        )
+    }
+    single<IShiftRepository> {
+        ShiftRepositoryImpl(
+            get<KeswaDatabase>().shiftDao(),
+            get<KeswaDatabase>().saleDao(),
+            get<KeswaDatabase>().saleReturnDao(),
+        )
+    }
+    single<IHeldSaleRepository> {
+        HeldSaleRepositoryImpl(get(), get<KeswaDatabase>().heldSaleDao())
+    }
+    single<IPriceRepository> { PriceRepositoryImpl(get<KeswaDatabase>().priceDao()) }
+    single<ISellableRepository> { SellableRepositoryImpl(get<KeswaDatabase>().sellableDao()) }
+
+    // Receiving and counting — posting spans DAOs, so these take the database too
+    single<IStockReceiptRepository> {
+        StockReceiptRepositoryImpl(
+            get(),
+            get<KeswaDatabase>().stockReceiptDao(),
+            get<KeswaDatabase>().variantDao(),
+            get<KeswaDatabase>().stockLedgerDao(),
+            get<KeswaDatabase>().priceDao(),
+            get(),
+        ) { now() }
+    }
+    single<IStockCountRepository> {
+        StockCountRepositoryImpl(
+            get(),
+            get<KeswaDatabase>().stockCountDao(),
+            get<KeswaDatabase>().variantDao(),
+            get<KeswaDatabase>().stockLedgerDao(),
+            get(),
+        )
+    }
+    // Sync — the engine and its bookkeeping. `ISyncTokenStore` and the `HttpClient` are bound
+    // per platform, because where a secret belongs is a platform question (KD-007).
+    single { SyncSettings(get<KeswaDatabase>().settingDao(), get()) }
+    single { LogApplier(get(), get(), now = { now() }) }
+    single<ISyncApi> { KtorSyncApi(get()) }
+    single {
+        SyncEngine(
+            database = get(),
+            api = get(),
+            applier = get(),
+            settings = get(),
+            tokens = get<ISyncTokenStore>(),
+            platform = get<IPlatformProvider>(),
+        )
+    }
+
+    single<IStockAdjustmentRepository> {
+        StockAdjustmentRepositoryImpl(
+            get<KeswaDatabase>().stockLedgerDao(),
+            get<KeswaDatabase>().variantDao(),
+        )
     }
 }
 

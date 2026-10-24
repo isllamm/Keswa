@@ -1,6 +1,6 @@
 package com.alsoug.keswa.core.printing
 
-import com.alsoug.keswa.core.database.RealDispatchers
+import com.alsoug.keswa.core.coroutines.RealDispatchers
 import com.alsoug.keswa.core.printing.escpos.EscPos
 import com.alsoug.keswa.core.printing.transport.TcpTransport
 import java.net.ServerSocket

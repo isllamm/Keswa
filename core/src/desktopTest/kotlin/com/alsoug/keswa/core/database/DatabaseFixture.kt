@@ -1,0 +1,79 @@
+package com.alsoug.keswa.core.database
+
+import androidx.room.Room
+import com.alsoug.keswa.core.coroutines.RealDispatchers
+import com.alsoug.keswa.core.database.entities.ColourEntity
+import com.alsoug.keswa.core.database.entities.LocationEntity
+import com.alsoug.keswa.core.database.entities.PriceEntity
+import com.alsoug.keswa.core.database.entities.PriceListEntity
+import com.alsoug.keswa.core.database.entities.ProductEntity
+import com.alsoug.keswa.core.database.entities.StockMovementEntity
+import com.alsoug.keswa.core.database.entities.VariantEntity
+import com.alsoug.keswa.core.domain.model.LocationType
+import com.alsoug.keswa.core.domain.model.MovementReason
+import com.alsoug.keswa.core.domain.model.PriceListType
+
+/**
+ * An in-memory database built through the production factory, so these tests exercise the real
+ * configuration — the foreign-key pragma included.
+ */
+fun createTestDatabase(): KeswaDatabase =
+    getKeswaDatabase(Room.inMemoryDatabaseBuilder<KeswaDatabase>(), RealDispatchers)
+
+const val SHOP_ID = "loc-shop"
+const val CAT_TSHIRTS = "cat-tshirts"
+const val COLOUR_NAVY = "col-navy"
+const val PRODUCT_TEE = "prod-tee"
+const val VARIANT_TEE_NAVY = "var-tee-navy"
+const val PRICE_LIST_ID = "pricelist-retail"
+
+/** Seeds the minimum a stock movement needs to exist: location, category, colour, product, variant. */
+suspend fun KeswaDatabase.seedBaseData() {
+    locationDao().upsert(
+        LocationEntity(SHOP_ID, "Downtown", "وسط البلد", LocationType.SHOP, isDefault = true, isActive = true),
+    )
+    categoryDao().upsert(
+        com.alsoug.keswa.core.database.entities.CategoryEntity(
+            id = CAT_TSHIRTS,
+            parentId = null,
+            name = "T-shirts",
+            nameAr = "تيشيرتات",
+            path = "/$CAT_TSHIRTS/",
+            depth = 0,
+            sortOrder = 0,
+            isActive = true,
+            createdAt = 0,
+            updatedAt = 0,
+        ),
+    )
+    colourDao().upsert(ColourEntity(COLOUR_NAVY, "Navy", "كحلي", "#20304f", 0, isActive = true))
+    productDao().upsert(
+        ProductEntity(PRODUCT_TEE, "Round-neck t-shirt", "تيشيرت رقبة دائرية", CAT_TSHIRTS, null, null, null, true, 0, 0),
+    )
+    variantDao().insert(
+        VariantEntity(VARIANT_TEE_NAVY, PRODUCT_TEE, COLOUR_NAVY, "KSW-TSH-022-NV", 12_000, true, 0, 0),
+    )
+}
+
+/** A retail list with the t-shirt priced, which is the minimum the till needs to ring anything up. */
+suspend fun KeswaDatabase.seedPriceList(pricePiastres: Long = 18_000) {
+    priceDao().upsertList(
+        PriceListEntity(PRICE_LIST_ID, "Retail", "التجزئة", PriceListType.RETAIL, isDefault = true, isActive = true),
+    )
+    priceDao().upsertPrice(
+        PriceEntity("price-1", PRICE_LIST_ID, VARIANT_TEE_NAVY, pricePiastres, validFrom = 0, validTo = null),
+    )
+}
+
+/** Opening stock, so a sale has something to take away from. */
+fun receipt(quantity: Int, at: Long = 1_756_000_000_000) = StockMovementEntity(
+    id = "movement-opening",
+    variantId = VARIANT_TEE_NAVY,
+    locationId = SHOP_ID,
+    quantity = quantity,
+    reason = MovementReason.RECEIPT,
+    refType = null,
+    refId = null,
+    occurredAt = at,
+    userId = "user-1",
+)

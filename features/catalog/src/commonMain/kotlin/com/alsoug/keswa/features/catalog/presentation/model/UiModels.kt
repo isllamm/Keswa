@@ -4,6 +4,7 @@ import com.alsoug.keswa.core.domain.model.Category
 import com.alsoug.keswa.core.domain.model.Colour
 import com.alsoug.keswa.core.domain.model.Product
 import com.alsoug.keswa.core.domain.model.Variant
+import com.alsoug.keswa.core.domain.money.Money
 
 /**
  * A category flattened for display, carrying the depth the tree indents by.
@@ -16,6 +17,9 @@ data class CategoryNodeUiModel(
     val label: String,
     val depth: Int,
     val hasChildren: Boolean,
+    val name: String = label,
+    val nameAr: String = label,
+    val isActive: Boolean = true,
 )
 
 data class ProductUiModel(
@@ -32,6 +36,8 @@ data class ColourRowUiModel(
     val sku: String,
     val barcode: String?,
     val onHand: Int,
+    /** Null until somebody sets one. The till refuses to sell an unpriced SKU rather than guess. */
+    val price: Money?,
 )
 
 /** Arabic when the app is in Arabic, English otherwise — chosen once, at the UI boundary. */
@@ -40,6 +46,9 @@ fun Category.toUiModel(arabic: Boolean, hasChildren: Boolean) = CategoryNodeUiMo
     label = if (arabic) nameAr else name,
     depth = depth,
     hasChildren = hasChildren,
+    name = name,
+    nameAr = nameAr,
+    isActive = isActive,
 )
 
 fun Product.toUiModel(arabic: Boolean, colourCount: Int) = ProductUiModel(
@@ -48,13 +57,19 @@ fun Product.toUiModel(arabic: Boolean, colourCount: Int) = ProductUiModel(
     colourCount = colourCount,
 )
 
-fun Variant.toUiModel(colour: Colour, arabic: Boolean, barcode: String?, onHand: Int) =
-    ColourRowUiModel(
-        variantId = id,
-        colourId = colour.id,
-        label = if (arabic) colour.nameAr else colour.name,
-        hex = colour.hex,
-        sku = sku,
-        barcode = barcode,
-        onHand = onHand,
-    )
+fun Variant.toUiModel(
+    colour: Colour,
+    arabic: Boolean,
+    barcode: String?,
+    onHand: Int,
+    price: Money?,
+) = ColourRowUiModel(
+    variantId = id,
+    colourId = colour.id,
+    label = if (arabic) colour.nameAr else colour.name,
+    hex = colour.hex,
+    sku = sku,
+    barcode = barcode,
+    onHand = onHand,
+    price = price,
+)

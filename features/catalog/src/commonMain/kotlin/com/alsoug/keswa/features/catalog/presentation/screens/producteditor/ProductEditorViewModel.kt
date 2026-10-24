@@ -3,6 +3,7 @@ package com.alsoug.keswa.features.catalog.presentation.screens.producteditor
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alsoug.keswa.core.coroutines.DispatcherProvider
+import com.alsoug.keswa.core.designsystem.message
 import com.alsoug.keswa.core.domain.repository.IColourRepository
 import com.alsoug.keswa.core.domain.repository.IProductRepository
 import com.alsoug.keswa.core.domain.repository.IVariantRepository
@@ -10,8 +11,11 @@ import com.alsoug.keswa.features.catalog.domain.usecase.AddColourResult
 import com.alsoug.keswa.features.catalog.domain.usecase.AddColourToProductUseCase
 import com.alsoug.keswa.features.catalog.domain.usecase.AssignBarcodeResult
 import com.alsoug.keswa.features.catalog.domain.usecase.AssignSupplierBarcodeUseCase
+import com.alsoug.keswa.features.catalog.domain.usecase.GetRetailPriceUseCase
 import com.alsoug.keswa.features.catalog.domain.usecase.RemoveColourFromProductUseCase
 import com.alsoug.keswa.features.catalog.domain.usecase.RemoveColourResult
+import com.alsoug.keswa.features.catalog.domain.usecase.SetPriceResult
+import com.alsoug.keswa.features.catalog.domain.usecase.SetRetailPriceUseCase
 import com.alsoug.keswa.features.catalog.presentation.model.toUiModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,6 +32,8 @@ class ProductEditorViewModel(
     private val addColour: AddColourToProductUseCase,
     private val removeColour: RemoveColourFromProductUseCase,
     private val assignBarcode: AssignSupplierBarcodeUseCase,
+    private val setPrice: SetRetailPriceUseCase,
+    private val getPrice: GetRetailPriceUseCase,
     private val dispatchers: DispatcherProvider,
     private val arabic: Boolean = false,
 ) : ViewModel() {
@@ -56,6 +62,7 @@ class ProductEditorViewModel(
             is ProductEditorUiEvent.RemoveColour -> remove(event.variantId)
             is ProductEditorUiEvent.AssignSupplierBarcode ->
                 assign(event.variantId, event.barcode)
+            is ProductEditorUiEvent.SetPrice -> price(event.variantId, event.amount)
             is ProductEditorUiEvent.Back ->
                 viewModelScope.launch { _navigation.emit(ProductEditorNavigation.Back) }
         }
@@ -80,6 +87,7 @@ class ProductEditorViewModel(
                             barcode = variants.barcodesFor(variant.id).getOrThrow()
                                 .firstOrNull { it.isPrimary }?.barcode,
                             onHand = variants.onHand(variant.id).getOrThrow(),
+                            price = getPrice(variant.id).getOrThrow(),
                         )
                     }
                 Triple(if (arabic) product.nameAr else product.name, rows, palette)
@@ -107,16 +115,16 @@ class ProductEditorViewModel(
                     when (result) {
                         is AddColourResult.Added -> {
                             _effect.emit(
-                                ProductEditorUiEffect.ShowMessage("SKU ${result.variant.sku} created"),
+                                ProductEditorUiEffect.ShowMessage(message { it.skuCreated(result.variant.sku) }),
                             )
                             load(id)
                         }
                         AddColourResult.AlreadyStocked ->
-                            _effect.emit(ProductEditorUiEffect.ShowError("That colour is already stocked"))
+                            _effect.emit(ProductEditorUiEffect.ShowError(message { it.colourAlreadyStocked }))
                         AddColourResult.ProductNotFound ->
-                            _effect.emit(ProductEditorUiEffect.ShowError("Product not found"))
+                            _effect.emit(ProductEditorUiEffect.ShowError(message { it.productNotFound }))
                         AddColourResult.ColourNotFound ->
-                            _effect.emit(ProductEditorUiEffect.ShowError("Colour not found"))
+                            _effect.emit(ProductEditorUiEffect.ShowError(message { it.colourNotFound }))
                     }
                 },
                 onFailure = { fail(it) },
@@ -131,13 +139,13 @@ class ProductEditorViewModel(
                 onSuccess = { result ->
                     when (result) {
                         RemoveColourResult.Removed -> {
-                            _effect.emit(ProductEditorUiEffect.ShowMessage("Colour retired"))
+                            _effect.emit(ProductEditorUiEffect.ShowMessage(message { it.colourRetired }))
                             load(id)
                         }
                         is RemoveColourResult.HasStock ->
                             _effect.emit(ProductEditorUiEffect.BlockedByStock(result.onHand))
                         RemoveColourResult.NotFound ->
-                            _effect.emit(ProductEditorUiEffect.ShowError("Colour not found"))
+                            _effect.emit(ProductEditorUiEffect.ShowError(message { it.colourNotFound }))
                     }
                 },
                 onFailure = { fail(it) },
@@ -152,15 +160,36 @@ class ProductEditorViewModel(
                 onSuccess = { result ->
                     when (result) {
                         AssignBarcodeResult.Assigned -> {
-                            _effect.emit(ProductEditorUiEffect.ShowMessage("Barcode attached"))
+                            _effect.emit(ProductEditorUiEffect.ShowMessage(message { it.barcodeAttached }))
                             load(id)
                         }
                         AssignBarcodeResult.AlreadyInUse ->
-                            _effect.emit(ProductEditorUiEffect.ShowError("That barcode is already in use"))
+                            _effect.emit(ProductEditorUiEffect.ShowError(message { it.barcodeAlreadyInUse }))
                         AssignBarcodeResult.NotAnEan13 ->
-                            _effect.emit(ProductEditorUiEffect.ShowError("Not a valid EAN-13"))
+                            _effect.emit(ProductEditorUiEffect.ShowError(message { it.notValidEanThirteen }))
                         AssignBarcodeResult.VariantNotFound ->
-                            _effect.emit(ProductEditorUiEffect.ShowError("Colour not found"))
+                            _effect.emit(ProductEditorUiEffect.ShowError(message { it.colourNotFound }))
+                    }
+                },
+                onFailure = { fail(it) },
+            )
+        }
+    }
+
+    private fun price(variantId: String, amount: String) {
+        val id = productId ?: return
+        viewModelScope.launch(dispatchers.io) {
+            setPrice(variantId, amount).fold(
+                onSuccess = { result ->
+                    when (result) {
+                        SetPriceResult.Saved -> {
+                            _effect.emit(ProductEditorUiEffect.ShowMessage(message { it.priceSet }))
+                            load(id)
+                        }
+                        SetPriceResult.NotAnAmount ->
+                            _effect.emit(ProductEditorUiEffect.ShowError(message { it.notAnAmount }))
+                        SetPriceResult.NoPriceList ->
+                            _effect.emit(ProductEditorUiEffect.ShowError(message { it.noRetailPriceList }))
                     }
                 },
                 onFailure = { fail(it) },
@@ -170,6 +199,6 @@ class ProductEditorViewModel(
 
     private suspend fun fail(cause: Throwable) {
         _state.update { it.copy(isLoading = false) }
-        _effect.emit(ProductEditorUiEffect.ShowError(cause.message ?: "Something went wrong"))
+        _effect.emit(ProductEditorUiEffect.ShowError(message { it.somethingWentWrong }))
     }
 }

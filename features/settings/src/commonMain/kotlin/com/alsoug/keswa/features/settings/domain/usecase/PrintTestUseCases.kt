@@ -2,8 +2,9 @@ package com.alsoug.keswa.features.settings.domain.usecase
 
 import com.alsoug.keswa.core.domain.model.ShopSettings
 import com.alsoug.keswa.core.domain.repository.ISettingsRepository
-import com.alsoug.keswa.core.platform.IPrinterTransport
+import com.alsoug.keswa.core.platform.ILabelNameRenderer
 import com.alsoug.keswa.core.platform.IReceiptRenderer
+import com.alsoug.keswa.core.platform.TransportFactory
 import com.alsoug.keswa.core.printing.escpos.EscPos
 import com.alsoug.keswa.core.printing.tspl.LabelSpec
 import com.alsoug.keswa.core.printing.tspl.Tspl
@@ -13,11 +14,6 @@ sealed interface PrintResult {
     data object Printed : PrintResult
     data object NotConfigured : PrintResult
     data class Unreachable(val detail: String) : PrintResult
-}
-
-/** Builds a transport for a given address, so host and port can come from settings at call time. */
-fun interface TransportFactory {
-    fun create(host: String, port: Int): IPrinterTransport
 }
 
 /**
@@ -55,17 +51,25 @@ class PrintTestPageUseCase(
  */
 class PrintTestLabelUseCase(
     private val settings: ISettingsRepository,
+    private val names: ILabelNameRenderer,
     private val transports: TransportFactory,
 ) {
     suspend operator fun invoke(): Result<PrintResult> = runCatching {
         val shop = settings.get().getOrThrow()
         if (!shop.hasLabelPrinter) return@runCatching PrintResult.NotConfigured
 
-        val bytes = Tspl.testLabel(shop.toLabelSpec())
+        val spec = shop.toLabelSpec()
+        val nameBitmap = names.render(TEST_LABEL_NAME, spec.widthDots - 20, NAME_HEIGHT_DOTS)
+        val bytes = Tspl.testLabel(spec, nameBitmap = nameBitmap)
         transports.create(shop.labelHost, shop.labelPort).send(bytes).fold(
             onSuccess = { PrintResult.Printed },
             onFailure = { PrintResult.Unreachable(it.message ?: it::class.simpleName.orEmpty()) },
         )
+    }
+
+    private companion object {
+        const val TEST_LABEL_NAME = "اختبار التيكيت — Test"
+        const val NAME_HEIGHT_DOTS = 40
     }
 }
 

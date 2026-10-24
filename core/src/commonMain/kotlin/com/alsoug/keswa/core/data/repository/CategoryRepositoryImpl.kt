@@ -83,6 +83,29 @@ class CategoryRepositoryImpl(
         dao.getById(id)?.path
     }
 
+    override suspend fun rename(id: String, name: String, nameAr: String): Result<Category> =
+        runCatchingCancellable {
+            val category = requireNotNull(dao.getById(id)) { "category not found: $id" }
+            val updated = category.copy(
+                name = name,
+                nameAr = nameAr,
+                updatedAt = now(),
+            )
+            dao.upsert(updated)
+            updated.toDomain()
+        }
+
+    override suspend fun setActive(id: String, isActive: Boolean): Result<Unit> =
+        runCatchingCancellable {
+            val category = requireNotNull(dao.getById(id)) { "category not found: $id" }
+            dao.upsert(category.copy(isActive = isActive, updatedAt = now()))
+        }
+
+    override suspend fun children(parentId: String?): Result<List<Category>> =
+        runCatchingCancellable {
+            dao.getActiveChildren(parentId).map { it.toDomain() }
+        }
+
     private fun pathFor(parentPath: String?, id: String): String =
         if (parentPath == null) "/$id/" else "$parentPath$id/"
 }

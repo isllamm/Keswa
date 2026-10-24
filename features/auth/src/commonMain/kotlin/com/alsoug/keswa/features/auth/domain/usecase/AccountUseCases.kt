@@ -1,6 +1,8 @@
 package com.alsoug.keswa.features.auth.domain.usecase
 
 import com.alsoug.keswa.core.domain.IdGenerator
+import com.alsoug.keswa.core.domain.auth.decodeSalt
+import com.alsoug.keswa.core.domain.auth.encodeSalt
 import com.alsoug.keswa.core.domain.model.Permission
 import com.alsoug.keswa.core.domain.model.SecretKind
 import com.alsoug.keswa.core.domain.model.User

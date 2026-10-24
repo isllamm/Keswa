@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LinearProgressIndicator
@@ -29,6 +30,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.alsoug.keswa.core.designsystem.EmptyState
+import com.alsoug.keswa.core.designsystem.KeswaTheme
+import com.alsoug.keswa.core.designsystem.ScreenHeader
+import com.alsoug.keswa.core.designsystem.resolve
 import com.alsoug.keswa.features.catalog.presentation.components.CategoryTree
 import com.alsoug.keswa.features.catalog.presentation.model.CategoryNodeUiModel
 import com.alsoug.keswa.features.catalog.presentation.model.ProductUiModel
@@ -45,6 +50,7 @@ fun CatalogBrowserScreen(
     modifier: Modifier = Modifier,
 ) {
     val state by viewModel.state.collectAsStateWithLifecycle()
+    val strings = KeswaTheme.strings
 
     LaunchedEffect(Unit) { viewModel.onEvent(CatalogBrowserUiEvent.Load) }
 
@@ -59,8 +65,8 @@ fun CatalogBrowserScreen(
     LaunchedEffect(Unit) {
         viewModel.effect.collect { effect ->
             when (effect) {
-                is CatalogBrowserUiEffect.ShowError -> onMessage(effect.message)
-                is CatalogBrowserUiEffect.ShowMessage -> onMessage(effect.message)
+                is CatalogBrowserUiEffect.ShowError -> onMessage(effect.message.resolve(strings))
+                is CatalogBrowserUiEffect.ShowMessage -> onMessage(effect.message.resolve(strings))
             }
         }
     }
@@ -78,14 +84,32 @@ internal fun CatalogBrowserContent(
     onEvent: (CatalogBrowserUiEvent) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var renaming by remember { mutableStateOf<CategoryNodeUiModel?>(null) }
+
+    renaming?.let { target ->
+        RenameCategoryDialog(
+            category = target,
+            onDismiss = { renaming = null },
+            onConfirm = { name, nameAr ->
+                onEvent(CatalogBrowserUiEvent.RenameCategory(target.id, name, nameAr))
+                renaming = null
+            },
+        )
+    }
+
     Column(modifier = modifier.fillMaxSize()) {
         if (state.isLoading) LinearProgressIndicator(modifier = Modifier.fillMaxWidth())
 
+        ScreenHeader(
+            title = KeswaTheme.strings.catalogue,
+            subtitle = KeswaTheme.strings.catalogueSubtitle,
+        )
+
         Row(modifier = Modifier.fillMaxSize()) {
-            Column(modifier = Modifier.width(280.dp).padding(12.dp)) {
-                Text("Categories", style = MaterialTheme.typography.titleSmall)
+            Column(modifier = Modifier.width(340.dp).padding(12.dp)) {
+                Text(KeswaTheme.strings.categories, style = MaterialTheme.typography.titleSmall)
                 Text(
-                    "You define this tree — nest it as deep as you like.",
+                    KeswaTheme.strings.youDefineThisTree,
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(bottom = 8.dp),
@@ -95,6 +119,31 @@ internal fun CatalogBrowserContent(
                     selectedId = state.selectedCategoryId,
                     onSelect = { onEvent(CatalogBrowserUiEvent.CategorySelected(it)) },
                     modifier = Modifier.weight(1f),
+                    trailing = { node ->
+                        Row(horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                            TextButton(onClick = { renaming = node }) {
+                                Text(
+                                    KeswaTheme.strings.rename,
+                                    style = MaterialTheme.typography.labelSmall,
+                                )
+                            }
+                            TextButton(
+                                onClick = {
+                                    onEvent(
+                                        CatalogBrowserUiEvent.SetCategoryActive(
+                                            categoryId = node.id,
+                                            isActive = !node.isActive,
+                                        ),
+                                    )
+                                },
+                            ) {
+                                Text(
+                                    if (node.isActive) KeswaTheme.strings.hide else KeswaTheme.strings.show,
+                                    style = MaterialTheme.typography.labelSmall,
+                                )
+                            }
+                        }
+                    },
                 )
                 AddCategoryRow(canAddSub = state.canAddSubCategory, onEvent = onEvent)
             }
@@ -105,18 +154,15 @@ internal fun CatalogBrowserContent(
                 OutlinedTextField(
                     value = state.search,
                     onValueChange = { onEvent(CatalogBrowserUiEvent.SearchChanged(it)) },
-                    label = { Text("Search products") },
+                    label = { Text(KeswaTheme.strings.searchProducts) },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 if (state.isEmpty) {
-                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        Text(
-                            "No products in this category yet.",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
+                    EmptyState(
+                        title = KeswaTheme.strings.nothingInCategory,
+                        hint = KeswaTheme.strings.nothingInCategoryHint,
+                    )
                 } else {
                     ProductList(
                         products = state.products,
@@ -128,6 +174,52 @@ internal fun CatalogBrowserContent(
             }
         }
     }
+}
+
+@Composable
+private fun RenameCategoryDialog(
+    category: CategoryNodeUiModel,
+    onDismiss: () -> Unit,
+    onConfirm: (String, String) -> Unit,
+) {
+    var name by remember(category.id) { mutableStateOf(category.name) }
+    var nameAr by remember(category.id) { mutableStateOf(category.nameAr) }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(KeswaTheme.strings.rename) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text(KeswaTheme.strings.englishName) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                OutlinedTextField(
+                    value = nameAr,
+                    onValueChange = { nameAr = it },
+                    label = { Text(KeswaTheme.strings.arabicName) },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        },
+        confirmButton = {
+            Button(
+                enabled = name.isNotBlank(),
+                onClick = { onConfirm(name, nameAr) },
+            ) {
+                Text(KeswaTheme.strings.save)
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(KeswaTheme.strings.cancel)
+            }
+        },
+    )
 }
 
 @Composable
@@ -147,7 +239,7 @@ private fun ProductList(
             ) {
                 Text(product.label, modifier = Modifier.weight(1f))
                 Text(
-                    "${product.colourCount} colours",
+                    KeswaTheme.strings.coloursCount(product.colourCount),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -160,11 +252,19 @@ private fun ProductList(
 @Composable
 private fun AddCategoryRow(canAddSub: Boolean, onEvent: (CatalogBrowserUiEvent) -> Unit) {
     var name by remember { mutableStateOf("") }
+    var nameAr by remember { mutableStateOf("") }
     Column(verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.padding(top = 8.dp)) {
         OutlinedTextField(
             value = name,
             onValueChange = { name = it },
-            label = { Text("New category") },
+            label = { Text(KeswaTheme.strings.englishName) },
+            singleLine = true,
+            modifier = Modifier.fillMaxWidth(),
+        )
+        OutlinedTextField(
+            value = nameAr,
+            onValueChange = { nameAr = it },
+            label = { Text(KeswaTheme.strings.arabicName) },
             singleLine = true,
             modifier = Modifier.fillMaxWidth(),
         )
@@ -172,17 +272,19 @@ private fun AddCategoryRow(canAddSub: Boolean, onEvent: (CatalogBrowserUiEvent) 
             TextButton(
                 enabled = name.isNotBlank(),
                 onClick = {
-                    onEvent(CatalogBrowserUiEvent.CreateCategory(name, name, underSelected = false))
+                    onEvent(CatalogBrowserUiEvent.CreateCategory(name, nameAr, underSelected = false))
                     name = ""
+                    nameAr = ""
                 },
-            ) { Text("Add top level") }
+            ) { Text(KeswaTheme.strings.addTopLevel) }
             TextButton(
                 enabled = name.isNotBlank() && canAddSub,
                 onClick = {
-                    onEvent(CatalogBrowserUiEvent.CreateCategory(name, name, underSelected = true))
+                    onEvent(CatalogBrowserUiEvent.CreateCategory(name, nameAr, underSelected = true))
                     name = ""
+                    nameAr = ""
                 },
-            ) { Text("Add under selected") }
+            ) { Text(KeswaTheme.strings.addUnderSelected) }
         }
     }
 }
@@ -198,9 +300,9 @@ private fun AddProductRow(enabled: Boolean, onEvent: (CatalogBrowserUiEvent) -> 
         OutlinedTextField(
             value = name,
             onValueChange = { name = it },
-            label = { Text("New product") },
+            label = { Text(KeswaTheme.strings.newProduct) },
             singleLine = true,
-            modifier = Modifier.weight(1f),
+            modifier = Modifier.fillMaxWidth().weight(1f),
         )
         Button(
             enabled = enabled && name.isNotBlank(),
@@ -208,7 +310,7 @@ private fun AddProductRow(enabled: Boolean, onEvent: (CatalogBrowserUiEvent) -> 
                 onEvent(CatalogBrowserUiEvent.CreateProduct(name, name))
                 name = ""
             },
-        ) { Text("Create") }
+        ) { Text(KeswaTheme.strings.create) }
     }
 }
 
@@ -223,12 +325,13 @@ private val previewCategories = listOf(
     CategoryNodeUiModel("1", "T-shirts", depth = 0, hasChildren = true),
     CategoryNodeUiModel("2", "Round neck", depth = 1, hasChildren = false),
     CategoryNodeUiModel("3", "Shirts", depth = 0, hasChildren = false),
+    CategoryNodeUiModel("4", "Women", depth = 0, hasChildren = false, isActive = false),
 )
 
 @Preview
 @Composable
 private fun CatalogBrowserSuccessPreview() {
-    MaterialTheme {
+    KeswaTheme {
         CatalogBrowserContent(
             state = CatalogBrowserUiState(
                 categories = previewCategories,
@@ -246,7 +349,7 @@ private fun CatalogBrowserSuccessPreview() {
 @Preview
 @Composable
 private fun CatalogBrowserLoadingPreview() {
-    MaterialTheme {
+    KeswaTheme {
         CatalogBrowserContent(state = CatalogBrowserUiState(isLoading = true), onEvent = {})
     }
 }
@@ -254,7 +357,7 @@ private fun CatalogBrowserLoadingPreview() {
 @Preview
 @Composable
 private fun CatalogBrowserEmptyPreview() {
-    MaterialTheme {
+    KeswaTheme {
         CatalogBrowserContent(
             state = CatalogBrowserUiState(
                 categories = previewCategories,

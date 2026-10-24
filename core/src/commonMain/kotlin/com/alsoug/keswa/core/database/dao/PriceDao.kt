@@ -23,6 +23,9 @@ interface PriceDao {
     @Query("SELECT * FROM price_list WHERE isDefault = 1 LIMIT 1")
     suspend fun getDefaultList(): PriceListEntity?
 
+    @Query("SELECT * FROM price_list WHERE id = :id")
+    suspend fun getListById(id: String): PriceListEntity?
+
     @Query(
         """
         SELECT * FROM price
@@ -32,4 +35,22 @@ interface PriceDao {
         """,
     )
     suspend fun getEffectivePrice(variantId: String, priceListId: String, at: Long): PriceEntity?
+
+    /**
+     * Ends whatever price is in force at [at].
+     *
+     * A price change closes the old row and opens a new one rather than overwriting, so an old
+     * receipt stays explicable and "what was this selling for in March" has an answer.
+     */
+    @Query(
+        """
+        UPDATE price SET validTo = :at
+        WHERE variantId = :variantId AND priceListId = :priceListId
+          AND validFrom <= :at AND (validTo IS NULL OR validTo > :at)
+        """,
+    )
+    suspend fun closeCurrent(variantId: String, priceListId: String, at: Long)
+
+    @Query("SELECT * FROM price WHERE variantId = :variantId ORDER BY validFrom DESC")
+    suspend fun historyFor(variantId: String): List<PriceEntity>
 }
