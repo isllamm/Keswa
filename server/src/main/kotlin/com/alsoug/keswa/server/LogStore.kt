@@ -55,6 +55,16 @@ class LogStore(path: String, private val json: Json = Json) {
 
     data class Device(val id: String, val name: String, val ordinal: Int, val revoked: Boolean)
 
+    data class DeviceDetails(
+        val id: String,
+        val name: String,
+        val ordinal: Int,
+        val enrolledAt: Long,
+        val revokedAt: Long?,
+    ) {
+        val isRevoked: Boolean get() = revokedAt != null
+    }
+
     // ---- the log ------------------------------------------------------------------------------
 
     /**
@@ -206,6 +216,24 @@ class LogStore(path: String, private val json: Json = Json) {
                 statement.step()
             }
         Unit
+    }
+
+    suspend fun listDevices(): List<DeviceDetails> = lock.withLock {
+        connection.prepare(
+            "SELECT id, name, ordinal, enrolledAt, revokedAt FROM device ORDER BY ordinal ASC",
+        ).use { statement ->
+            val list = mutableListOf<DeviceDetails>()
+            while (statement.step()) {
+                list += DeviceDetails(
+                    id = statement.getText(0),
+                    name = statement.getText(1),
+                    ordinal = statement.getLong(2).toInt(),
+                    enrolledAt = statement.getLong(3),
+                    revokedAt = if (statement.isNull(4)) null else statement.getLong(4),
+                )
+            }
+            list
+        }
     }
 
     fun close() = connection.close()

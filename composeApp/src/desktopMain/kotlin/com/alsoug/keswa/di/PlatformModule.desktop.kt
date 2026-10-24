@@ -10,6 +10,8 @@ import com.alsoug.keswa.core.platform.IPlatformProvider
 import com.alsoug.keswa.core.platform.IPasswordHasher
 import com.alsoug.keswa.core.platform.ILabelNameRenderer
 import com.alsoug.keswa.core.platform.IReceiptRenderer
+import com.alsoug.keswa.core.platform.IFilePicker
+import com.alsoug.keswa.core.platform.DesktopFilePicker
 import com.alsoug.keswa.core.platform.DesktopSyncTokenStore
 import com.alsoug.keswa.core.platform.ISyncTokenStore
 import com.alsoug.keswa.core.sync.SyncScheduler
@@ -29,6 +31,7 @@ actual val platformModule: Module = module {
     single<IPlatformProvider> { DesktopPlatformProvider() }
     single<IReceiptRenderer> { DesktopReceiptRenderer() }
     single<ILabelNameRenderer> { DesktopLabelNameRenderer() }
+    single<IFilePicker> { DesktopFilePicker(get()) }
     single<IPasswordHasher> { JvmPasswordHasher(get<DispatcherProvider>()) }
 
     // Application-lifetime scope. Injected rather than GlobalScope, per the forbidden-patterns

@@ -57,6 +57,7 @@ class StringsTest {
         assertTrue(arabic.onlyInStock(1) != english.onlyInStock(1))
         assertTrue(arabic.chooseNewSecret(isPin = true) != english.chooseNewSecret(isPin = true))
         assertTrue(arabic.chooseNewSecret(isPin = false) != english.chooseNewSecret(isPin = false))
+        assertTrue(arabic.fileSelected("sample.csv") != english.fileSelected("sample.csv"))
 
         assertTrue(arabic.notInCatalogue("X") != english.notInCatalogue("X"))
         assertTrue(arabic.shortBy("1.00") != english.shortBy("1.00"))
@@ -173,6 +174,7 @@ private val STRING_READERS: List<(Strings) -> String> = listOf(
     { it.newInstallationNobody }, { it.recoveryOnlyWayBack }, { it.eachColourOwnSkuLong },
     { it.addAColour }, { it.scanCodeOnGarment }, { it.youDefineThisTree },
     { it.adjustNoteLong }, { it.appendOnlyCorrection }, { it.pasteSpreadsheetNote },
+    { it.chooseSpreadsheetFile },
     { it.nothingWasImported }, { it.oneBadRowNone }, { it.stockArrivedAsDelivery },
     { it.blindCountNote }, { it.nothingMovesUntilPosted }, { it.noSupplier },
     { it.weightedAverageNote }, { it.noCustomersYet }, { it.cashOnlyShort },

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alsoug.keswa.core.coroutines.DispatcherProvider
 import com.alsoug.keswa.core.designsystem.message
+import com.alsoug.keswa.core.platform.IFilePicker
 import com.alsoug.keswa.features.inventory.domain.usecase.ApplyCatalogueImportUseCase
 import com.alsoug.keswa.features.inventory.domain.usecase.ImportResult
 import com.alsoug.keswa.features.inventory.domain.usecase.ParseCatalogueImportUseCase
@@ -26,6 +27,7 @@ class ImportViewModel(
     private val resolveLocation: ResolveStockLocationUseCase,
     private val parse: ParseCatalogueImportUseCase,
     private val apply: ApplyCatalogueImportUseCase,
+    private val filePicker: IFilePicker,
     private val dispatchers: DispatcherProvider,
 ) : ViewModel() {
 
@@ -44,7 +46,8 @@ class ImportViewModel(
         when (event) {
             ImportUiEvent.Load -> load()
             is ImportUiEvent.TextChanged ->
-                _state.update { it.copy(text = event.value, rows = emptyList(), problems = emptyList()) }
+                _state.update { it.copy(text = event.value, fileName = null, rows = emptyList(), problems = emptyList()) }
+            ImportUiEvent.PickFile -> pickFile()
             ImportUiEvent.Check -> check()
             ImportUiEvent.Apply -> applyImport()
             ImportUiEvent.Reset -> _state.update { ImportUiState() }
@@ -58,6 +61,29 @@ class ImportViewModel(
                 onSuccess = { resolved ->
                     locationId = resolved
                     _state.update { it.copy(isLoading = false) }
+                },
+                onFailure = { fail(it) },
+            )
+        }
+    }
+
+    private fun pickFile() {
+        viewModelScope.launch(dispatchers.main) {
+            _state.update { it.copy(isLoading = true) }
+            filePicker.pickSpreadsheet().fold(
+                onSuccess = { file ->
+                    _state.update { it.copy(isLoading = false) }
+                    if (file != null) {
+                        _state.update {
+                            it.copy(
+                                text = file.content,
+                                fileName = file.name,
+                                rows = emptyList(),
+                                problems = emptyList(),
+                            )
+                        }
+                        check()
+                    }
                 },
                 onFailure = { fail(it) },
             )

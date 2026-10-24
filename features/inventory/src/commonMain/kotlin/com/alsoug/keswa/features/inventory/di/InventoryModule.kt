@@ -152,6 +152,7 @@ val inventoryModule = module {
             resolveLocation = get(),
             parse = get(),
             apply = get(),
+            filePicker = get(),
             dispatchers = get(),
         )
     }

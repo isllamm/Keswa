@@ -81,3 +81,32 @@ numbering continue undisturbed.
 
 Revocation is `POST /v1/admin/revoke?deviceId=…`. It is the control KD-007 leans on — a stolen
 laptop stops syncing on its next attempt — so it is tested rather than asserted.
+
+## Web Back Office & Reporting Dashboard
+
+The server embeds a complete, zero-dependency HTML/CSS/JS back office interface and JSON reporting APIs, allowing shop owners and managers to monitor trade from any browser on the local network (or over VPN).
+
+### Accessing the Web Dashboard
+
+Open `http://<server-ip>:<port>/` in any desktop, tablet, or mobile browser:
+1. Sign in with the shop's `KESWA_ADMIN_TOKEN`.
+2. A secure `HttpOnly`, `SameSite=Strict` cookie (`keswa_admin_token`) is stored for the session.
+
+### Features
+- **Executive KPI Cards**: Real-time Gross Revenue, Refunds, Net Revenue, Transaction count, Units sold/returned, COGS, Gross Margin %, and Average Basket size.
+- **Top Movers**: Real-time sales ranking by SKU and variant with units sold, revenue, stock on hand, units received, and gross margin %.
+- **Colour Performance**: Variant-level performance breakdown by colourway.
+- **Stock Valuation**: Real-time pieces on hand, total inventory cost value in EGP, and active tracked SKU count (automatically projected from the append-only stock ledger).
+- **Device Management**: Live till register list showing assigned receipt number ranges, enrolment dates, active/revoked status, and a 1-click modal to generate one-time enrolment codes for new tills.
+- **Bilingual & Responsive**: Instant toggle between English and Arabic (`dir="rtl"`) with native typography (Cairo and Inter).
+
+### JSON Reporting APIs
+
+All back-office data is also available to reporting tools via standard HTTP endpoints (authenticated with `Authorization: Bearer <admin token>` or session cookie):
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/api/reports/summary?days=7` | `GET` | Headline KPIs, daily revenue, colour performance, top movers |
+| `/api/reports/valuation` | `GET` | Total inventory pieces on hand, total inventory cost, active SKUs |
+| `/api/devices` | `GET` | Registered tills, ordinals, receipt number ranges, status |
+
