@@ -150,6 +150,10 @@ if require_paths "domain purity (ADR-005)" "$DOMAIN"; then
   gate "domain use cases preserve cancellation (ADR-040)" \
        "$(code_grep '\<runCatching[[:space:]]*{' $DOMAIN | grep -v 'Cancellable' || true)" \
        "use runCatchingCancellable in domain use cases to avoid swallowing CancellationException"
+
+  gate "no direct clock calls in domain layer (ADR-015)" \
+       "$(code_grep '(System\.currentTimeMillis|Instant\.now|Clock\.System\.now)' $DOMAIN)" \
+       "inject a clock or pass timestamps to keep domain deterministic"
 fi
 
 if require_paths "injected dispatchers (KD-003)" "$PROD"; then
@@ -157,6 +161,28 @@ if require_paths "injected dispatchers (KD-003)" "$PROD"; then
        "$(code_grep 'Dispatchers\.' $PROD | grep -v 'DispatcherProvider.kt' || true)" \
        "inject DispatcherProvider instead of referencing Dispatchers directly"
 fi
+
+MISSING_PREVIEWS=""
+for screen in $(find features -path "*commonMain*/screens/*" -name "*Screen.kt" 2>/dev/null); do
+  if ! grep -q '@Preview' "$screen"; then
+    MISSING_PREVIEWS="$MISSING_PREVIEWS
+$screen has no @Preview"
+  fi
+done
+gate "all feature screens ship Compose previews (ADR-027)" \
+     "$MISSING_PREVIEWS" \
+     "every screen composable must ship previews for loading, empty/error, and success (ADR-027)"
+
+MISSING_PROOFS=""
+for feat in $(find features -mindepth 1 -maxdepth 1 -type d 2>/dev/null | sort); do
+  if [ -z "$(find "$feat/src/desktopTest" -name "*Proofs.kt" 2>/dev/null)" ]; then
+    MISSING_PROOFS="$MISSING_PROOFS
+$feat has no visual regression proofs (*Proofs.kt)"
+  fi
+done
+gate "all feature modules provide automated Skia visual regression proofs" \
+     "$MISSING_PROOFS" \
+     "every feature module must render automated visual snapshots into build/ui-proofs/ via desktopTest"
 
 gate "no mocking frameworks (ADR-019)" \
      "$(grep -rn --include="*.kt" --include="*.kts" -E '(mockk|mockito|io\.mockk|org\.mockito)' $MODULES 2>/dev/null || true)" \

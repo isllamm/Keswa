@@ -79,4 +79,4 @@ is the better marker for something finished, because it does not move.
 - Phase 8: Returns & exchanges (with receipt QR lookup) and real-time business analytics
 - Phase 9: Sync engine, multi-device log-shipping server, till device enrolment, and Web Back Office dashboard
 
-Historical phase branches point at the commit where each phase landed. Release tags `v0.1.0` … `v0.4.3` mark production-ready checkpoints.
+Historical phase branches point at the commit where each phase landed. Release tags `v0.1.0` … `v0.4.4` mark production-ready checkpoints.
