@@ -86,9 +86,10 @@ with the credit and supplier work in Phase 7. What a shop needs now is to record
 what it cost — the van is already outside. A PO can become an optional parent document later
 without changing a receipt's shape.
 
-**Import takes pasted text, not a file.** The parser, the validation and the apply path are all
-here; choosing a file needs a new platform bridge on two targets and is the least interesting part
-of the feature. Flagged as unfinished rather than quietly dropped.
+**Import supports native file picking and pasted text.** File selection uses `IFilePicker`
+(native OS AWT `FileDialog` on Desktop and the Storage Access Framework document contract on
+Android), auto-populating the editor and checking rows immediately. Users can still paste or
+modify text directly.
 
 ## Not here yet
 

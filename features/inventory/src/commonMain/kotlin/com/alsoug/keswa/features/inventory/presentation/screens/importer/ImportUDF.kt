@@ -9,6 +9,7 @@ data class ImportUiState(
     val isLoading: Boolean = false,
     val isApplying: Boolean = false,
     val text: String = "",
+    val fileName: String? = null,
     /** Populated only by a clean parse — a file with one bad row produces problems, not rows. */
     val rows: List<ImportRow> = emptyList(),
     val problems: List<ImportProblem> = emptyList(),
@@ -24,6 +25,7 @@ data class ImportUiState(
 sealed interface ImportUiEvent {
     data object Load : ImportUiEvent
     data class TextChanged(val value: String) : ImportUiEvent
+    data object PickFile : ImportUiEvent
     data object Check : ImportUiEvent
     data object Apply : ImportUiEvent
     data object Reset : ImportUiEvent

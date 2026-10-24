@@ -96,6 +96,26 @@ internal fun ImportContent(
             return@Column
         }
 
+        Row(
+            modifier = Modifier.padding(top = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Button(
+                onClick = { onEvent(ImportUiEvent.PickFile) },
+                enabled = !state.isLoading && !state.isApplying,
+            ) {
+                Text(KeswaTheme.strings.chooseSpreadsheetFile)
+            }
+            if (state.fileName != null) {
+                Text(
+                    KeswaTheme.strings.fileSelected(state.fileName),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            }
+        }
+
         OutlinedTextField(
             value = state.text,
             onValueChange = { onEvent(ImportUiEvent.TextChanged(it)) },

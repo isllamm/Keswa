@@ -38,8 +38,10 @@ import com.alsoug.keswa.core.domain.repository.IStockReceiptRepository
 import com.alsoug.keswa.core.domain.repository.IVariantRepository
 import com.alsoug.keswa.core.domain.repository.PostedReceipt
 import com.alsoug.keswa.core.domain.repository.ReceiptLineInput
+import com.alsoug.keswa.core.platform.IFilePicker
 import com.alsoug.keswa.core.platform.ILabelNameRenderer
 import com.alsoug.keswa.core.platform.IPrinterTransport
+import com.alsoug.keswa.core.platform.SpreadsheetFile
 import com.alsoug.keswa.core.platform.TransportFactory
 import com.alsoug.keswa.core.printing.MonoBitmap
 import com.alsoug.keswa.core.session.InMemorySessionManager
@@ -497,5 +499,16 @@ class FakeLabelNameRenderer : ILabelNameRenderer {
     override fun render(text: String, widthDots: Int, maxHeightDots: Int): MonoBitmap {
         renderedTexts += text
         return MonoBitmap(widthDots.coerceAtLeast(8), 8)
+    }
+}
+
+class FakeFilePicker(
+    var result: Result<SpreadsheetFile?> = Result.success(null),
+) : IFilePicker {
+    var callCount = 0
+
+    override suspend fun pickSpreadsheet(): Result<SpreadsheetFile?> {
+        callCount++
+        return result
     }
 }

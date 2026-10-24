@@ -9,6 +9,8 @@ import com.alsoug.keswa.core.platform.IPasswordHasher
 import com.alsoug.keswa.core.platform.IPlatformProvider
 import com.alsoug.keswa.core.platform.ILabelNameRenderer
 import com.alsoug.keswa.core.platform.IReceiptRenderer
+import com.alsoug.keswa.core.platform.IFilePicker
+import com.alsoug.keswa.core.platform.AndroidFilePicker
 import com.alsoug.keswa.core.platform.AndroidSyncTokenStore
 import com.alsoug.keswa.core.platform.ISyncTokenStore
 import com.alsoug.keswa.core.sync.SyncScheduler
@@ -28,6 +30,7 @@ actual val platformModule: Module = module {
     single<IPlatformProvider> { AndroidPlatformProvider() }
     single<IReceiptRenderer> { AndroidReceiptRenderer() }
     single<ILabelNameRenderer> { AndroidLabelNameRenderer() }
+    single<IFilePicker> { AndroidFilePicker(androidContext(), get()) }
     // The same hasher as the till, deliberately: a user created there signs in here, and a
     // different iteration count would mean nobody could.
     single<IPasswordHasher> { JvmPasswordHasher(get<DispatcherProvider>()) }
