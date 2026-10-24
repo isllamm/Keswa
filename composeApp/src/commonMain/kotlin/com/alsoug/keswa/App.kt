@@ -328,12 +328,26 @@ private fun StockroomHub(
             }
         }
 
-        Spacer(Modifier.height(20.dp))
-        Text(
-            strings.printersAndScanner,
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.clickable(onClick = onSettings),
-        )
+        Spacer(Modifier.height(16.dp))
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .widthIn(max = 560.dp)
+                .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(7.dp))
+                .border(1.dp, KeswaTheme.semantics.grid, RoundedCornerShape(7.dp))
+                .clickable { onSettings() }
+                .padding(14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f)) {
+                Text(strings.settings, style = MaterialTheme.typography.titleMedium)
+                Text(
+                    strings.settingsSubtitle,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = KeswaTheme.semantics.muted,
+                )
+            }
+            Text("›", style = MaterialTheme.typography.titleLarge, color = KeswaTheme.semantics.axis)
+        }
     }
 }
