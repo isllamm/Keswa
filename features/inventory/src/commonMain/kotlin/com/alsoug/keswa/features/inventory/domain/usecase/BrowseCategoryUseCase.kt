@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.inventory.domain.usecase
 
+import com.alsoug.keswa.core.coroutines.runCatchingCancellable
 import com.alsoug.keswa.core.domain.model.Category
 import com.alsoug.keswa.core.domain.model.SellableItem
 import com.alsoug.keswa.core.domain.repository.ICategoryRepository
@@ -16,7 +17,7 @@ class BrowseCategoryUseCase(
 ) {
     /** [categoryId] null is the top level. It has no items: a product is always filed under a category. */
     suspend operator fun invoke(categoryId: String?, locationId: String): Result<CategoryLevel> =
-        runCatching {
+        runCatchingCancellable {
             val children = categories.children(categoryId).getOrThrow()
             val items = if (categoryId == null) {
                 emptyList()

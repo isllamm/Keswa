@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.inventory.domain.usecase
 
+import com.alsoug.keswa.core.coroutines.runCatchingCancellable
 import com.alsoug.keswa.core.domain.IdGenerator
 import com.alsoug.keswa.core.domain.model.Permission
 import com.alsoug.keswa.core.domain.model.SellableItem
@@ -36,7 +37,7 @@ class AddReceiptLinesUseCase(
     suspend operator fun invoke(
         receiptId: String,
         entries: List<PickedEntry>,
-    ): Result<AddLinesResult> = runCatching {
+    ): Result<AddLinesResult> = runCatchingCancellable {
         sessions.require(Permission.RECEIVE_STOCK)
 
         val active = entries.filter { it.quantity.isNotBlank() }
@@ -80,7 +81,7 @@ class AddReceiptLinesUseCase(
         }
 
         if (problems.isNotEmpty()) {
-            return@runCatching AddLinesResult.Rejected(problems)
+            return@runCatchingCancellable AddLinesResult.Rejected(problems)
         }
 
         if (parsed.any { it.sellPrice != null }) {

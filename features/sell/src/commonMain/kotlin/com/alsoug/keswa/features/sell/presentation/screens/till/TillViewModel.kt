@@ -3,6 +3,7 @@ package com.alsoug.keswa.features.sell.presentation.screens.till
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alsoug.keswa.core.coroutines.DispatcherProvider
+import com.alsoug.keswa.core.coroutines.runCatchingCancellable
 import com.alsoug.keswa.core.designsystem.Message
 import com.alsoug.keswa.core.designsystem.message
 import com.alsoug.keswa.core.domain.model.User
@@ -216,7 +217,7 @@ class TillViewModel(
         val pending = _state.value.pendingApproval ?: return
         if (pending is PendingApproval.Void) return
         viewModelScope.launch(dispatchers.io) {
-            runCatching { applyApproved(pending, approvedBy = null) }
+            runCatchingCancellable { applyApproved(pending, approvedBy = null) }
                 .onSuccess { _state.update { it.copy(pendingApproval = null) } }
                 .onFailure { /* Not permitted from the session alone: the dialog stays up. */ }
         }
@@ -230,7 +231,7 @@ class TillViewModel(
                 onSuccess = { result ->
                     when (result) {
                         is ReauthResult.Approved -> {
-                            runCatching { applyApproved(pending, result.user) }
+                            runCatchingCancellable { applyApproved(pending, result.user) }
                                 .onSuccess { _state.update { it.copy(pendingApproval = null) } }
                                 .onFailure { fail(it) }
                         }

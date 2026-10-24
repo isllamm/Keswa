@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.inventory.domain.usecase
 
+import com.alsoug.keswa.core.coroutines.runCatchingCancellable
 import com.alsoug.keswa.core.domain.model.SellableItem
 import com.alsoug.keswa.core.domain.repository.IPriceRepository
 import com.alsoug.keswa.core.domain.repository.ISellableRepository
@@ -18,22 +19,22 @@ class FindStockItemUseCase(
     private val now: () -> Long,
 ) {
     suspend fun byBarcode(barcode: String, locationId: String): Result<SellableItem?> =
-        runCatching {
+        runCatchingCancellable {
             sellables.byBarcode(barcode, priceListId(), locationId, now()).getOrThrow()
         }
 
     suspend fun search(term: String, locationId: String): Result<List<SellableItem>> =
-        runCatching {
+        runCatchingCancellable {
             sellables.search(term, priceListId(), locationId, now()).getOrThrow()
         }
 
     suspend fun byVariantId(variantId: String, locationId: String): Result<SellableItem?> =
-        runCatching {
+        runCatchingCancellable {
             sellables.byVariantId(variantId, priceListId(), locationId, now()).getOrThrow()
         }
 
     suspend fun inCategory(categoryId: String, locationId: String): Result<List<SellableItem>> =
-        runCatching {
+        runCatchingCancellable {
             sellables.inCategory(categoryId, priceListId(), locationId, now()).getOrThrow()
         }
 

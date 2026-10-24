@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.wholesale.domain.usecase
 
+import com.alsoug.keswa.core.coroutines.runCatchingCancellable
 import com.alsoug.keswa.core.domain.IdGenerator
 import com.alsoug.keswa.core.domain.model.Customer
 import com.alsoug.keswa.core.domain.model.LedgerEntry
@@ -42,10 +43,10 @@ class CheckCreditUseCase(
     private val receivables: IReceivablesRepository,
 ) {
     suspend operator fun invoke(customerId: String, amount: Money): Result<CreditDecision> =
-        runCatching {
+        runCatchingCancellable {
             val customer = customers.getById(customerId).getOrThrow()
-                ?: return@runCatching CreditDecision.NoSuchCustomer
-            if (!customer.sellsOnAccount) return@runCatching CreditDecision.CashOnly
+                ?: return@runCatchingCancellable CreditDecision.NoSuchCustomer
+            if (!customer.sellsOnAccount) return@runCatchingCancellable CreditDecision.CashOnly
 
             val balance = receivables.balance(customerId).getOrThrow()
             val after = balance + amount
@@ -83,7 +84,7 @@ class OpenReceivableUseCase(
         occurredAt: Long,
         userId: String,
         authorisedByUserId: String? = null,
-    ): Result<LedgerEntry> = runCatching {
+    ): Result<LedgerEntry> = runCatchingCancellable {
         val customer = requireNotNull(customers.getById(customerId).getOrThrow()) {
             "customer not found: $customerId"
         }
@@ -128,7 +129,7 @@ class TakePaymentOnAccountUseCase(
         customerId: String,
         amount: Money,
         note: String?,
-    ): Result<LedgerEntry> = runCatching {
+    ): Result<LedgerEntry> = runCatchingCancellable {
         requirePermission(sessions.current.value?.user, Permission.SELL)
         require(!amount.isNegative && !amount.isZero) { "a payment must be more than zero" }
         val user = requireNotNull(sessions.current.value) { "no session" }.user
@@ -166,7 +167,7 @@ class IssueCreditNoteUseCase(
         reason: String,
         againstRefId: String?,
         authorisedBy: User,
-    ): Result<LedgerEntry> = runCatching {
+    ): Result<LedgerEntry> = runCatchingCancellable {
         requirePermission(authorisedBy, Permission.REFUND_ANY)
         require(!amount.isNegative && !amount.isZero) { "a credit note must be more than zero" }
         if (reason.isBlank()) throw Error.InvalidData("a credit note needs a reason")
@@ -210,8 +211,8 @@ class GetCustomerAccountUseCase(
         val ageing: com.alsoug.keswa.core.domain.model.Ageing,
     )
 
-    suspend operator fun invoke(customerId: String): Result<Account?> = runCatching {
-        val customer = customers.getById(customerId).getOrThrow() ?: return@runCatching null
+    suspend operator fun invoke(customerId: String): Result<Account?> = runCatchingCancellable {
+        val customer = customers.getById(customerId).getOrThrow() ?: return@runCatchingCancellable null
         val balance = receivables.balance(customerId).getOrThrow()
 
         Account(

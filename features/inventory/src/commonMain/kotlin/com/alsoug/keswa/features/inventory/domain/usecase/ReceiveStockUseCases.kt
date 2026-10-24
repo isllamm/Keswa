@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.inventory.domain.usecase
 
+import com.alsoug.keswa.core.coroutines.runCatchingCancellable
 import com.alsoug.keswa.core.domain.IdGenerator
 import com.alsoug.keswa.core.domain.model.Permission
 import com.alsoug.keswa.core.domain.model.StockReceipt
@@ -17,7 +18,7 @@ import com.alsoug.keswa.core.session.require
  * price list has no business in a stockroom. `features:A` cannot import `features:B` in any case.
  */
 class ResolveStockLocationUseCase(private val locations: ILocationRepository) {
-    suspend operator fun invoke(): Result<String> = runCatching {
+    suspend operator fun invoke(): Result<String> = runCatchingCancellable {
         requireNotNull(locations.default().getOrThrow()) {
             "no default location — a fresh install seeds one at startup"
         }.id
@@ -34,7 +35,7 @@ class StartReceiptUseCase(
         reference: String,
         supplierName: String,
         locationId: String,
-    ): Result<StockReceipt> = runCatching {
+    ): Result<StockReceipt> = runCatchingCancellable {
         sessions.require(Permission.RECEIVE_STOCK)
         val user = requireNotNull(sessions.current.value) { "no session" }.user
 
@@ -68,7 +69,7 @@ class AddReceiptLineUseCase(
         quantity: Int,
         unitCost: Money,
         sellPrice: Money? = null,
-    ): Result<StockReceipt> = runCatching {
+    ): Result<StockReceipt> = runCatchingCancellable {
         sessions.require(Permission.RECEIVE_STOCK)
         ensureBarcode?.invoke(variantId)?.getOrThrow()
         receipts.putLine(ids.newId(), receiptId, variantId, quantity, unitCost, sellPrice).getOrThrow()
@@ -80,7 +81,7 @@ class RemoveReceiptLineUseCase(
     private val sessions: ISessionManager,
 ) {
     suspend operator fun invoke(receiptId: String, lineId: String): Result<StockReceipt> =
-        runCatching {
+        runCatchingCancellable {
             sessions.require(Permission.RECEIVE_STOCK)
             receipts.removeLine(receiptId, lineId).getOrThrow()
         }
@@ -97,7 +98,7 @@ class PostReceiptUseCase(
     private val sessions: ISessionManager,
     private val now: () -> Long,
 ) {
-    suspend operator fun invoke(receiptId: String): Result<PostedReceipt> = runCatching {
+    suspend operator fun invoke(receiptId: String): Result<PostedReceipt> = runCatchingCancellable {
         sessions.require(Permission.RECEIVE_STOCK)
         val user = requireNotNull(sessions.current.value) { "no session" }.user
         val receipt = receipts.getById(receiptId).getOrThrow()
@@ -112,7 +113,7 @@ class DiscardReceiptUseCase(
     private val receipts: IStockReceiptRepository,
     private val sessions: ISessionManager,
 ) {
-    suspend operator fun invoke(receiptId: String): Result<Unit> = runCatching {
+    suspend operator fun invoke(receiptId: String): Result<Unit> = runCatchingCancellable {
         sessions.require(Permission.RECEIVE_STOCK)
         receipts.discardDraft(receiptId).getOrThrow()
     }

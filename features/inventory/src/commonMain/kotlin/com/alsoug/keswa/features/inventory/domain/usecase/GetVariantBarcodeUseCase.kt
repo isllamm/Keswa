@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.inventory.domain.usecase
 
+import com.alsoug.keswa.core.coroutines.runCatchingCancellable
 import com.alsoug.keswa.core.domain.repository.IVariantRepository
 
 /**
@@ -10,7 +11,7 @@ import com.alsoug.keswa.core.domain.repository.IVariantRepository
 class GetVariantBarcodeUseCase(
     private val variants: IVariantRepository,
 ) {
-    suspend operator fun invoke(variantId: String): Result<String?> = runCatching {
+    suspend operator fun invoke(variantId: String): Result<String?> = runCatchingCancellable {
         val barcodes = variants.barcodesFor(variantId).getOrThrow()
         barcodes.firstOrNull { it.isPrimary }?.barcode ?: barcodes.firstOrNull()?.barcode
     }

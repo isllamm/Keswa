@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.catalog.domain.usecase
 
+import com.alsoug.keswa.core.coroutines.runCatchingCancellable
 import com.alsoug.keswa.core.domain.repository.ICategoryRepository
 import com.alsoug.keswa.core.domain.repository.IColourRepository
 import com.alsoug.keswa.core.domain.repository.ILocationRepository
@@ -26,7 +27,7 @@ class SeedShopUseCase(
     private val locations: ILocationRepository,
     private val prices: IPriceRepository,
 ) {
-    suspend operator fun invoke(): Result<Unit> = runCatching {
+    suspend operator fun invoke(): Result<Unit> = runCatchingCancellable {
         if (colours.getAll().getOrThrow().isEmpty()) {
             DEFAULT_COLOURS.forEachIndexed { index, (id, names) ->
                 val (name, nameAr, hex) = names

@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.inventory.domain.usecase
 
+import com.alsoug.keswa.core.coroutines.runCatchingCancellable
 import com.alsoug.keswa.core.domain.IdGenerator
 import com.alsoug.keswa.core.domain.model.MovementReason
 import com.alsoug.keswa.core.domain.model.Permission
@@ -22,7 +23,7 @@ class StartCountUseCase(
     private val ids: IdGenerator,
     private val now: () -> Long,
 ) {
-    suspend operator fun invoke(locationId: String): Result<StockCount> = runCatching {
+    suspend operator fun invoke(locationId: String): Result<StockCount> = runCatchingCancellable {
         sessions.require(Permission.COUNT_STOCK)
         val user = requireNotNull(sessions.current.value) { "no session" }.user
         counts.start(ids.newId(), locationId, user.id, now()).getOrThrow()
@@ -44,7 +45,7 @@ class CountVariantUseCase(
         countId: String,
         variantId: String,
         counted: Int,
-    ): Result<StockCount> = runCatching {
+    ): Result<StockCount> = runCatchingCancellable {
         sessions.require(Permission.COUNT_STOCK)
         counts.putLine(ids.newId(), countId, variantId, counted).getOrThrow()
     }
@@ -60,7 +61,7 @@ class PostCountUseCase(
     private val sessions: ISessionManager,
     private val now: () -> Long,
 ) {
-    suspend operator fun invoke(countId: String, note: String?): Result<StockCount> = runCatching {
+    suspend operator fun invoke(countId: String, note: String?): Result<StockCount> = runCatchingCancellable {
         sessions.require(Permission.COUNT_STOCK)
         val user = requireNotNull(sessions.current.value) { "no session" }.user
         counts.post(countId, user.id, note?.trim()?.ifBlank { null }, now()).getOrThrow()
@@ -71,7 +72,7 @@ class DiscardCountUseCase(
     private val counts: IStockCountRepository,
     private val sessions: ISessionManager,
 ) {
-    suspend operator fun invoke(countId: String): Result<Unit> = runCatching {
+    suspend operator fun invoke(countId: String): Result<Unit> = runCatchingCancellable {
         sessions.require(Permission.COUNT_STOCK)
         counts.discard(countId).getOrThrow()
     }
@@ -118,7 +119,7 @@ class AdjustStockUseCase(
         quantity: Int,
         reason: MovementReason,
         note: String,
-    ): Result<StockMovement> = runCatching {
+    ): Result<StockMovement> = runCatchingCancellable {
         sessions.require(Permission.RECEIVE_STOCK)
         require(reason == MovementReason.ADJUSTMENT || reason == MovementReason.DAMAGE) {
             "a hand adjustment is either an ADJUSTMENT or DAMAGE — anything else has a document"

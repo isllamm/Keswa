@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.sell.domain.usecase
 
+import com.alsoug.keswa.core.coroutines.runCatchingCancellable
 import com.alsoug.keswa.core.domain.model.SellableItem
 import com.alsoug.keswa.core.domain.repository.ILocationRepository
 import com.alsoug.keswa.core.domain.repository.IPriceRepository
@@ -20,7 +21,7 @@ class ResolveTillContextUseCase(
     private val locations: ILocationRepository,
     private val prices: IPriceRepository,
 ) {
-    suspend operator fun invoke(): Result<TillContext> = runCatching {
+    suspend operator fun invoke(): Result<TillContext> = runCatchingCancellable {
         val location = requireNotNull(locations.default().getOrThrow()) {
             "no default location — a fresh install seeds one at startup"
         }
@@ -51,7 +52,7 @@ class FindSellableUseCase(
     private val now: () -> Long,
 ) {
     suspend fun byBarcode(barcode: String, context: TillContext): Result<LookupResult> =
-        runCatching {
+        runCatchingCancellable {
             classify(
                 sellables.byBarcode(barcode, context.priceListId, context.locationId, now())
                     .getOrThrow(),
@@ -62,7 +63,7 @@ class FindSellableUseCase(
         sellables.search(term, context.priceListId, context.locationId, now())
 
     suspend fun refresh(variantId: String, context: TillContext): Result<LookupResult> =
-        runCatching {
+        runCatchingCancellable {
             classify(
                 sellables.byVariantId(variantId, context.priceListId, context.locationId, now())
                     .getOrThrow(),

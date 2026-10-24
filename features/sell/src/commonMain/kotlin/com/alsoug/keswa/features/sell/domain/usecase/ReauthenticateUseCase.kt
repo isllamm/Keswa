@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.sell.domain.usecase
 
+import com.alsoug.keswa.core.coroutines.runCatchingCancellable
 import com.alsoug.keswa.core.domain.model.Permission
 import com.alsoug.keswa.core.domain.model.User
 import com.alsoug.keswa.core.session.ApprovalResult
@@ -24,7 +25,7 @@ class ReauthenticateUseCase(private val verifier: ICredentialVerifier) {
         username: String,
         secret: CharArray,
         permission: Permission,
-    ): Result<ReauthResult> = runCatching {
+    ): Result<ReauthResult> = runCatchingCancellable {
         when (val result = verifier.approve(username, secret, permission)) {
             is ApprovalResult.Approved -> ReauthResult.Approved(result.user)
             ApprovalResult.BadCredentials -> ReauthResult.BadCredentials

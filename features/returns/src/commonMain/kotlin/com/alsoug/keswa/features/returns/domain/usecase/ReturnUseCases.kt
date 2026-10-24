@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.returns.domain.usecase
 
+import com.alsoug.keswa.core.coroutines.runCatchingCancellable
 import com.alsoug.keswa.core.domain.IdGenerator
 import com.alsoug.keswa.core.domain.model.Permission
 import com.alsoug.keswa.core.domain.model.ReturnCondition
@@ -50,10 +51,10 @@ class FindSaleForReturnUseCase(
     private val now: () -> Long,
 ) {
     suspend fun byQrCode(saleId: String): Result<SaleLookup> =
-        runCatching { classify(sales.getById(saleId.trim()).getOrThrow()) }
+        runCatchingCancellable { classify(sales.getById(saleId.trim()).getOrThrow()) }
 
     suspend fun byReceiptNumber(receiptNumber: Long): Result<SaleLookup> =
-        runCatching { classify(sales.getByReceiptNumber(receiptNumber).getOrThrow()) }
+        runCatchingCancellable { classify(sales.getByReceiptNumber(receiptNumber).getOrThrow()) }
 
     private suspend fun classify(sale: Sale?): SaleLookup {
         if (sale == null) return SaleLookup.NotFound
@@ -128,9 +129,9 @@ class CompleteReturnUseCase(
         shiftId: String?,
         authorisedByUserId: String?,
         needsAuthority: Boolean,
-    ): Result<ReturnResult> = runCatching {
+    ): Result<ReturnResult> = runCatchingCancellable {
         if (lines.isEmpty() || lines.all { it.quantity <= 0 }) {
-            return@runCatching ReturnResult.NothingToReturn
+            return@runCatchingCancellable ReturnResult.NothingToReturn
         }
 
         // A plain in-policy return with a receipt is a seller's job. Anything else is an admin's,
@@ -148,7 +149,7 @@ class CompleteReturnUseCase(
             lines.forEach { line ->
                 val against = line.saleLineId?.let { returnable[it] }
                 if (against != null && line.quantity > against.returnable) {
-                    return@runCatching ReturnResult.ExceedsSold(
+                    return@runCatchingCancellable ReturnResult.ExceedsSold(
                         description = against.description,
                         returnable = against.returnable,
                     )
@@ -240,7 +241,7 @@ class VoidReturnUseCase(
         returnId: String,
         reason: String,
         authorisedBy: User,
-    ): Result<SaleReturn> = runCatching {
+    ): Result<SaleReturn> = runCatchingCancellable {
         if (Permission.REFUND_ANY !in authorisedBy.role.permissions) {
             throw Error.ForbiddenAccess("not permitted: ${Permission.REFUND_ANY.name}")
         }
