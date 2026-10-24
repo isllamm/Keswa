@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.catalog.domain.usecase
 
+import com.alsoug.keswa.core.coroutines.runCatchingCancellable
 import com.alsoug.keswa.core.domain.model.BarcodeSource
 import com.alsoug.keswa.core.domain.repository.IVariantRepository
 import com.alsoug.keswa.features.catalog.domain.Ean13
@@ -13,11 +14,11 @@ import com.alsoug.keswa.features.catalog.domain.Ean13
 class GenerateInternalBarcodeUseCase(
     private val variants: IVariantRepository,
 ) {
-    suspend operator fun invoke(): Result<String> = runCatching {
+    suspend operator fun invoke(): Result<String> = runCatchingCancellable {
         var sequence = variants.ownBarcodeCount().getOrThrow().toLong() + 1
         while (true) {
             val candidate = Ean13.inStore(sequence)
-            if (variants.findByBarcode(candidate).getOrThrow() == null) return@runCatching candidate
+            if (variants.findByBarcode(candidate).getOrThrow() == null) return@runCatchingCancellable candidate
             sequence += 1
         }
         @Suppress("UNREACHABLE_CODE")
@@ -42,15 +43,15 @@ class AssignSupplierBarcodeUseCase(
     private val variants: IVariantRepository,
 ) {
     suspend operator fun invoke(variantId: String, barcode: String): Result<AssignBarcodeResult> =
-        runCatching {
+        runCatchingCancellable {
             val cleaned = barcode.trim()
-            if (!Ean13.isValid(cleaned)) return@runCatching AssignBarcodeResult.NotAnEan13
+            if (!Ean13.isValid(cleaned)) return@runCatchingCancellable AssignBarcodeResult.NotAnEan13
 
             variants.getById(variantId).getOrThrow()
-                ?: return@runCatching AssignBarcodeResult.VariantNotFound
+                ?: return@runCatchingCancellable AssignBarcodeResult.VariantNotFound
 
             if (variants.findByBarcode(cleaned).getOrThrow() != null) {
-                return@runCatching AssignBarcodeResult.AlreadyInUse
+                return@runCatchingCancellable AssignBarcodeResult.AlreadyInUse
             }
 
             variants.attachBarcode(cleaned, variantId, BarcodeSource.SUPPLIER).getOrThrow()

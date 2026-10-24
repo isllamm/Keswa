@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.analytics.domain.usecase
 
+import com.alsoug.keswa.core.coroutines.runCatchingCancellable
 import com.alsoug.keswa.core.domain.model.AnalyticsPeriod
 import com.alsoug.keswa.core.domain.model.BusyHours
 import com.alsoug.keswa.core.domain.model.ColourBucket
@@ -44,7 +45,7 @@ class GetHeadlineKpisUseCase(
     private val sessions: ISessionManager,
     private val now: () -> Long,
 ) {
-    suspend operator fun invoke(period: AnalyticsPeriod): Result<HeadlineKpis> = runCatching {
+    suspend operator fun invoke(period: AnalyticsPeriod): Result<HeadlineKpis> = runCatchingCancellable {
         val withCost = sessions.requireAnalytics()
         val window = period.windowEndingAt(now())
         analytics.headline(window.from, window.to, withCost).getOrThrow()
@@ -56,7 +57,7 @@ class GetRevenueTrendUseCase(
     private val sessions: ISessionManager,
     private val now: () -> Long,
 ) {
-    suspend operator fun invoke(period: AnalyticsPeriod): Result<List<DailyPoint>> = runCatching {
+    suspend operator fun invoke(period: AnalyticsPeriod): Result<List<DailyPoint>> = runCatchingCancellable {
         sessions.requireAnalytics()
         val window = period.windowEndingAt(now())
         analytics.revenueByDay(window.from, window.to).getOrThrow()
@@ -74,7 +75,7 @@ class GetColourPerformanceUseCase(
     private val sessions: ISessionManager,
     private val now: () -> Long,
 ) {
-    suspend operator fun invoke(period: AnalyticsPeriod): Result<List<ColourBucket>> = runCatching {
+    suspend operator fun invoke(period: AnalyticsPeriod): Result<List<ColourBucket>> = runCatchingCancellable {
         sessions.requireAnalytics()
         val window = period.windowEndingAt(now())
         analytics.colourPerformance(window.from, window.to).getOrThrow()
@@ -88,7 +89,7 @@ class GetSellThroughUseCase(
     private val now: () -> Long,
 ) {
     suspend operator fun invoke(period: AnalyticsPeriod): Result<List<SellThroughRowModel>> =
-        runCatching {
+        runCatchingCancellable {
             sessions.requireAnalytics()
             val window = period.windowEndingAt(now())
             analytics.sellThrough(window.from, window.to).getOrThrow()
@@ -100,7 +101,7 @@ class GetBusyHoursUseCase(
     private val sessions: ISessionManager,
     private val now: () -> Long,
 ) {
-    suspend operator fun invoke(period: AnalyticsPeriod): Result<BusyHours> = runCatching {
+    suspend operator fun invoke(period: AnalyticsPeriod): Result<BusyHours> = runCatchingCancellable {
         sessions.requireAnalytics()
         val window = period.windowEndingAt(now())
         analytics.busyHours(window.from, window.to).getOrThrow()
@@ -115,7 +116,7 @@ class GetTopMoversUseCase(
     suspend operator fun invoke(
         period: AnalyticsPeriod,
         limit: Int = DEFAULT_LIMIT,
-    ): Result<List<Mover>> = runCatching {
+    ): Result<List<Mover>> = runCatchingCancellable {
         val withCost = sessions.requireAnalytics()
         val window = period.windowEndingAt(now())
         analytics.topMovers(window.from, window.to, limit, withCost).getOrThrow()

@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.inventory.domain.usecase
 
+import com.alsoug.keswa.core.coroutines.runCatchingCancellable
 import com.alsoug.keswa.core.domain.IdGenerator
 import com.alsoug.keswa.core.domain.model.Permission
 import com.alsoug.keswa.core.domain.money.Money
@@ -213,7 +214,7 @@ class ApplyCatalogueImportUseCase(
 ) {
 
     suspend operator fun invoke(rows: List<ImportRow>, locationId: String): Result<ImportSummary> =
-        runCatching {
+        runCatchingCancellable {
             sessions.require(Permission.MANAGE_CATALOGUE)
             require(rows.isNotEmpty()) { "nothing to import" }
 

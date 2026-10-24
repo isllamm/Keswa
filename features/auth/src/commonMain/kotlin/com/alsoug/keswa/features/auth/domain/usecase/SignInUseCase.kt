@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.auth.domain.usecase
 
+import com.alsoug.keswa.core.coroutines.runCatchingCancellable
 import com.alsoug.keswa.core.domain.auth.LockoutPolicy
 import com.alsoug.keswa.core.domain.auth.decodeSalt
 import com.alsoug.keswa.core.domain.model.User
@@ -30,13 +31,13 @@ class SignInUseCase(
 
     /** Admins sign in by username. */
     suspend operator fun invoke(username: String, secret: CharArray): Result<SignInResult> =
-        runCatching {
+        runCatchingCancellable {
             authenticate(users.findByUsername(username).getOrThrow(), secret)
         }
 
     /** Sellers pick themselves from a list and enter a PIN, so the lookup is by id. */
     suspend fun byUserId(userId: String, secret: CharArray): Result<SignInResult> =
-        runCatching {
+        runCatchingCancellable {
             authenticate(users.findById(userId).getOrThrow(), secret)
         }
 

@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.inventory.domain.usecase
 
+import com.alsoug.keswa.core.coroutines.runCatchingCancellable
 import com.alsoug.keswa.core.domain.model.Permission
 import com.alsoug.keswa.core.domain.money.Money
 import com.alsoug.keswa.core.domain.repository.ISettingsRepository
@@ -38,11 +39,11 @@ class PrintHangTagsUseCase(
     private val transports: TransportFactory,
 ) {
 
-    suspend operator fun invoke(receiptId: String): Result<LabelRunResult> = runCatching {
+    suspend operator fun invoke(receiptId: String): Result<LabelRunResult> = runCatchingCancellable {
         sessions.require(Permission.RECEIVE_STOCK)
 
         val shop = settings.get().getOrThrow()
-        if (!shop.hasLabelPrinter) return@runCatching LabelRunResult.NoPrinter
+        if (!shop.hasLabelPrinter) return@runCatchingCancellable LabelRunResult.NoPrinter
 
         val receipt = requireNotNull(receipts.getById(receiptId).getOrThrow()) {
             "receipt not found: $receiptId"
@@ -87,7 +88,7 @@ class PrintHangTagsUseCase(
         }
 
         if (payload.isEmpty()) {
-            return@runCatching LabelRunResult.Incomplete(tags = 0, skipped = skipped)
+            return@runCatchingCancellable LabelRunResult.Incomplete(tags = 0, skipped = skipped)
         }
 
         val bytes = payload.reduce { all, next -> all + next }

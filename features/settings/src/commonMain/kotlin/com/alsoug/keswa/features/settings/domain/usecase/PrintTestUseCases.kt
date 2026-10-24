@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.settings.domain.usecase
 
+import com.alsoug.keswa.core.coroutines.runCatchingCancellable
 import com.alsoug.keswa.core.domain.model.ShopSettings
 import com.alsoug.keswa.core.domain.repository.ISettingsRepository
 import com.alsoug.keswa.core.platform.ILabelNameRenderer
@@ -28,9 +29,9 @@ class PrintTestPageUseCase(
     private val renderer: IReceiptRenderer,
     private val transports: TransportFactory,
 ) {
-    suspend operator fun invoke(): Result<PrintResult> = runCatching {
+    suspend operator fun invoke(): Result<PrintResult> = runCatchingCancellable {
         val shop = settings.get().getOrThrow()
-        if (!shop.hasReceiptPrinter) return@runCatching PrintResult.NotConfigured
+        if (!shop.hasReceiptPrinter) return@runCatchingCancellable PrintResult.NotConfigured
 
         val bitmap = renderer.renderTestPage(shop.paperWidthDots)
         send(shop.receiptHost, shop.receiptPort, EscPos.document(bitmap))
@@ -54,9 +55,9 @@ class PrintTestLabelUseCase(
     private val names: ILabelNameRenderer,
     private val transports: TransportFactory,
 ) {
-    suspend operator fun invoke(): Result<PrintResult> = runCatching {
+    suspend operator fun invoke(): Result<PrintResult> = runCatchingCancellable {
         val shop = settings.get().getOrThrow()
-        if (!shop.hasLabelPrinter) return@runCatching PrintResult.NotConfigured
+        if (!shop.hasLabelPrinter) return@runCatchingCancellable PrintResult.NotConfigured
 
         val spec = shop.toLabelSpec()
         val nameBitmap = names.render(TEST_LABEL_NAME, spec.widthDots - 20, NAME_HEIGHT_DOTS)

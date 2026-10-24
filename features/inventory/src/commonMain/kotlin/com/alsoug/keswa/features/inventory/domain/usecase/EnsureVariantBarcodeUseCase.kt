@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.inventory.domain.usecase
 
+import com.alsoug.keswa.core.coroutines.runCatchingCancellable
 import com.alsoug.keswa.core.domain.barcode.Ean13
 import com.alsoug.keswa.core.domain.model.BarcodeSource
 import com.alsoug.keswa.core.domain.repository.IVariantRepository
@@ -13,13 +14,13 @@ import com.alsoug.keswa.core.domain.repository.IVariantRepository
 class EnsureVariantBarcodeUseCase(
     private val variants: IVariantRepository,
 ) {
-    suspend operator fun invoke(variantId: String): Result<String> = runCatching {
+    suspend operator fun invoke(variantId: String): Result<String> = runCatchingCancellable {
         val existingBarcodes = variants.barcodesFor(variantId).getOrThrow()
         val primary = existingBarcodes.firstOrNull { it.isPrimary }?.barcode
             ?: existingBarcodes.firstOrNull()?.barcode
 
         if (primary != null) {
-            return@runCatching primary
+            return@runCatchingCancellable primary
         }
 
         var sequence = variants.ownBarcodeCount().getOrThrow().toLong() + 1

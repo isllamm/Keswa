@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.catalog.domain.usecase
 
+import com.alsoug.keswa.core.coroutines.runCatchingCancellable
 import com.alsoug.keswa.core.domain.IdGenerator
 import com.alsoug.keswa.core.domain.model.Permission
 import com.alsoug.keswa.core.domain.money.Money
@@ -29,14 +30,14 @@ class SetRetailPriceUseCase(
     private val now: () -> Long,
 ) {
     suspend operator fun invoke(variantId: String, amount: String): Result<SetPriceResult> =
-        runCatching {
+        runCatchingCancellable {
             sessions.require(Permission.MANAGE_CATALOGUE)
 
-            val price = Money.parse(amount) ?: return@runCatching SetPriceResult.NotAnAmount
-            if (price.isNegative) return@runCatching SetPriceResult.NotAnAmount
+            val price = Money.parse(amount) ?: return@runCatchingCancellable SetPriceResult.NotAnAmount
+            if (price.isNegative) return@runCatchingCancellable SetPriceResult.NotAnAmount
 
             val list = prices.defaultList().getOrThrow()
-                ?: return@runCatching SetPriceResult.NoPriceList
+                ?: return@runCatchingCancellable SetPriceResult.NoPriceList
 
             prices.setPrice(ids.newId(), variantId, list.id, price, now()).getOrThrow()
             SetPriceResult.Saved
@@ -47,8 +48,8 @@ class GetRetailPriceUseCase(
     private val prices: IPriceRepository,
     private val now: () -> Long,
 ) {
-    suspend operator fun invoke(variantId: String): Result<Money?> = runCatching {
-        val list = prices.defaultList().getOrThrow() ?: return@runCatching null
+    suspend operator fun invoke(variantId: String): Result<Money?> = runCatchingCancellable {
+        val list = prices.defaultList().getOrThrow() ?: return@runCatchingCancellable null
         prices.effectivePrice(variantId, list.id, now()).getOrThrow()
     }
 }

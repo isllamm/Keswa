@@ -3,6 +3,7 @@ package com.alsoug.keswa.features.catalog.presentation.screens.producteditor
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alsoug.keswa.core.coroutines.DispatcherProvider
+import com.alsoug.keswa.core.coroutines.runCatchingCancellable
 import com.alsoug.keswa.core.designsystem.message
 import com.alsoug.keswa.core.domain.repository.IColourRepository
 import com.alsoug.keswa.core.domain.repository.IProductRepository
@@ -72,7 +73,7 @@ class ProductEditorViewModel(
         productId = id
         viewModelScope.launch(dispatchers.io) {
             _state.update { it.copy(isLoading = true) }
-            runCatching {
+            runCatchingCancellable {
                 val product = products.getById(id).getOrThrow()
                     ?: error("product not found: $id")
                 val palette = colours.getAll().getOrThrow()

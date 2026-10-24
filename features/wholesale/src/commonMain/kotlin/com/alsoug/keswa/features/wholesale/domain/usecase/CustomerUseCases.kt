@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.wholesale.domain.usecase
 
+import com.alsoug.keswa.core.coroutines.runCatchingCancellable
 import com.alsoug.keswa.core.domain.IdGenerator
 import com.alsoug.keswa.core.domain.model.Customer
 import com.alsoug.keswa.core.domain.model.Permission
@@ -32,7 +33,7 @@ class CreateCustomerUseCase(
         creditLimit: Money = Money.ZERO,
         paymentTermsDays: Int = DEFAULT_TERMS_DAYS,
         priceListId: String? = null,
-    ): Result<Customer> = runCatching {
+    ): Result<Customer> = runCatchingCancellable {
         sessions.require(Permission.MANAGE_CATALOGUE)
 
         // The trade list by default, created if this is the first wholesale customer. A trade
@@ -59,7 +60,7 @@ class UpdateCustomerUseCase(
     private val customers: ICustomerRepository,
     private val sessions: ISessionManager,
 ) {
-    suspend operator fun invoke(customer: Customer): Result<Unit> = runCatching {
+    suspend operator fun invoke(customer: Customer): Result<Unit> = runCatchingCancellable {
         sessions.require(Permission.MANAGE_USERS)
         customers.update(customer).getOrThrow()
     }
@@ -83,7 +84,7 @@ class GetStatementUseCase(
     private val sessions: ISessionManager,
 ) {
     suspend operator fun invoke(customerId: String, from: Long, to: Long): Result<Statement?> =
-        runCatching {
+        runCatchingCancellable {
             // What a customer owes is a business figure, not a till one.
             sessions.require(Permission.VIEW_SHOP_ANALYTICS)
             receivables.statement(customerId, from, to).getOrThrow()
@@ -92,7 +93,7 @@ class GetStatementUseCase(
 
 /** Ensures a WHOLESALE list exists, so a trade customer has somewhere to be put. */
 class EnsureTradePriceListUseCase(private val prices: IPriceRepository) {
-    suspend operator fun invoke(): Result<String> = runCatching {
+    suspend operator fun invoke(): Result<String> = runCatchingCancellable {
         prices.listsOfType(PriceListType.WHOLESALE).getOrThrow().firstOrNull()?.id
             ?: prices.createList(TRADE_LIST_ID, "Trade", "الجملة", PriceListType.WHOLESALE)
                 .getOrThrow().id

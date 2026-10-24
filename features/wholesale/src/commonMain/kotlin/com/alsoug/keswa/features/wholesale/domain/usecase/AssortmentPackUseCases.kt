@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.wholesale.domain.usecase
 
+import com.alsoug.keswa.core.coroutines.runCatchingCancellable
 import com.alsoug.keswa.core.domain.IdGenerator
 import com.alsoug.keswa.core.domain.model.AssortmentPack
 import com.alsoug.keswa.core.domain.model.Permission
@@ -57,12 +58,12 @@ class ExpandAssortmentPackUseCase(
         priceListId: String,
         locationId: String,
         cartons: Int = 1,
-    ): Result<PackExpansion> = runCatching {
+    ): Result<PackExpansion> = runCatchingCancellable {
         sessions.require(Permission.SELL)
         require(cartons > 0) { "a carton count must be positive" }
 
-        val pack = packs.getById(packId).getOrThrow() ?: return@runCatching PackExpansion.NotFound
-        if (pack.lines.isEmpty()) return@runCatching PackExpansion.Empty
+        val pack = packs.getById(packId).getOrThrow() ?: return@runCatchingCancellable PackExpansion.NotFound
+        if (pack.lines.isEmpty()) return@runCatchingCancellable PackExpansion.Empty
 
         val missing = mutableListOf<String>()
         val resolved = pack.lines.mapNotNull { line ->
@@ -77,7 +78,7 @@ class ExpandAssortmentPackUseCase(
         }
 
         if (resolved.isEmpty()) {
-            return@runCatching PackExpansion.Incomplete(emptyList(), missing)
+            return@runCatchingCancellable PackExpansion.Incomplete(emptyList(), missing)
         }
 
         val total = pack.price * cartons
@@ -118,7 +119,7 @@ class CreatePackUseCase(
     private val ids: IdGenerator,
 ) {
     suspend operator fun invoke(name: String, nameAr: String, price: Money): Result<AssortmentPack> =
-        runCatching {
+        runCatchingCancellable {
             sessions.require(Permission.MANAGE_CATALOGUE)
             packs.create(ids.newId(), name, nameAr, price).getOrThrow()
         }
@@ -133,7 +134,7 @@ class AddPackLineUseCase(
         packId: String,
         variantId: String,
         quantity: Int,
-    ): Result<AssortmentPack> = runCatching {
+    ): Result<AssortmentPack> = runCatchingCancellable {
         sessions.require(Permission.MANAGE_CATALOGUE)
         packs.addLine(ids.newId(), packId, variantId, quantity).getOrThrow()
     }

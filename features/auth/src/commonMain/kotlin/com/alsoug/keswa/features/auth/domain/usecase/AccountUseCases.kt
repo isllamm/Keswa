@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.auth.domain.usecase
 
+import com.alsoug.keswa.core.coroutines.runCatchingCancellable
 import com.alsoug.keswa.core.domain.IdGenerator
 import com.alsoug.keswa.core.domain.auth.decodeSalt
 import com.alsoug.keswa.core.domain.auth.encodeSalt
@@ -39,7 +40,7 @@ class BootstrapFirstAdminUseCase(
         username: String,
         displayName: String,
         password: CharArray,
-    ): Result<BootstrapResult> = runCatching {
+    ): Result<BootstrapResult> = runCatchingCancellable {
         require(users.countActive().getOrThrow() == 0) { "an account already exists" }
         require(password.size >= MIN_PASSWORD_LENGTH) {
             "an admin password needs at least $MIN_PASSWORD_LENGTH characters"
@@ -96,15 +97,15 @@ class RecoverWithCodeUseCase(
         username: String,
         code: CharArray,
         newPassword: CharArray,
-    ): Result<RecoveryResult> = runCatching {
-        val stored = recovery.read() ?: return@runCatching RecoveryResult.NoCodeIssued
+    ): Result<RecoveryResult> = runCatchingCancellable {
+        val stored = recovery.read() ?: return@runCatchingCancellable RecoveryResult.NoCodeIssued
         val (hash, salt) = stored
         if (!hasher.verify(code, salt.decodeSalt(), hash)) {
-            return@runCatching RecoveryResult.WrongCode
+            return@runCatchingCancellable RecoveryResult.WrongCode
         }
 
         val credential = users.findByUsername(username).getOrThrow()
-            ?: return@runCatching RecoveryResult.WrongCode
+            ?: return@runCatchingCancellable RecoveryResult.WrongCode
         val newSalt = hasher.newSalt()
         users.replaceSecret(
             userId = credential.user.id,
@@ -134,7 +135,7 @@ class CreateUserUseCase(
         displayNameAr: String,
         role: UserRole,
         secret: CharArray,
-    ): Result<User> = runCatching {
+    ): Result<User> = runCatchingCancellable {
         sessions.require(Permission.MANAGE_USERS)
 
         val kind = if (role == UserRole.SELLER) SecretKind.PIN else SecretKind.PASSWORD
@@ -163,7 +164,7 @@ class ResetUserSecretUseCase(
     private val sessions: ISessionManager,
 ) {
     suspend operator fun invoke(userId: String, temporarySecret: CharArray): Result<Unit> =
-        runCatching {
+        runCatchingCancellable {
             sessions.require(Permission.MANAGE_USERS)
             val salt = hasher.newSalt()
             users.replaceSecret(
@@ -180,7 +181,7 @@ class ChangeOwnSecretUseCase(
     private val hasher: IPasswordHasher,
     private val sessions: ISessionManager,
 ) {
-    suspend operator fun invoke(userId: String, newSecret: CharArray): Result<Unit> = runCatching {
+    suspend operator fun invoke(userId: String, newSecret: CharArray): Result<Unit> = runCatchingCancellable {
         val credential = users.findById(userId).getOrThrow() ?: error("user not found")
         require(newSecret.size >= credential.secretKind.minimumLength) {
             "too short for a ${credential.secretKind.name.lowercase()}"

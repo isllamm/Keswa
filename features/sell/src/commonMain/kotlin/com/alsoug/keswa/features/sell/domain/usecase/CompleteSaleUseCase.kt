@@ -1,5 +1,6 @@
 package com.alsoug.keswa.features.sell.domain.usecase
 
+import com.alsoug.keswa.core.coroutines.runCatchingCancellable
 import com.alsoug.keswa.core.domain.IdGenerator
 import com.alsoug.keswa.core.domain.model.Payment
 import com.alsoug.keswa.core.domain.model.Permission
@@ -90,9 +91,9 @@ class CompleteSaleUseCase(
         vatBasisPoints: Int,
         customerId: String? = null,
         creditAuthorisedByUserId: String? = null,
-    ): Result<SaleResult> = runCatching {
+    ): Result<SaleResult> = runCatchingCancellable {
         sessions.require(Permission.SELL)
-        if (basket.isEmpty) return@runCatching SaleResult.EmptyBasket
+        if (basket.isEmpty) return@runCatchingCancellable SaleResult.EmptyBasket
 
         val user = requireNotNull(sessions.current.value) { "no session" }.user
         requireAuthorisation(basket)
@@ -100,7 +101,7 @@ class CompleteSaleUseCase(
         val totals = calculate(basket, vatBasisPoints)
         val settled = tenders.fold(Money.ZERO) { sum, tender -> sum + tender.amount }
         if (settled < totals.total) {
-            return@runCatching SaleResult.UnderTendered(totals.total - settled)
+            return@runCatchingCancellable SaleResult.UnderTendered(totals.total - settled)
         }
 
         val onAccount = tenders
@@ -109,7 +110,7 @@ class CompleteSaleUseCase(
         if (!onAccount.isZero) {
             // Nothing is written until the limit has been checked against the real balance.
             checkCredit(customerId, onAccount, creditAuthorisedByUserId)
-                ?.let { return@runCatching it }
+                ?.let { return@runCatchingCancellable it }
         }
 
         val saleId = ids.newId()
@@ -257,7 +258,7 @@ class VoidSaleUseCase(
         saleId: String,
         reason: String,
         authorisedBy: User,
-    ): Result<Sale> = runCatching {
+    ): Result<Sale> = runCatchingCancellable {
         if (Permission.VOID_SALE !in authorisedBy.role.permissions) {
             throw Error.ForbiddenAccess("not permitted: ${Permission.VOID_SALE.name}")
         }
