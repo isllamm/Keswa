@@ -92,6 +92,8 @@ class StringsTest {
         assertTrue(arabic.linesAdded(2) != english.linesAdded(2))
         assertTrue(arabic.rowsNeedFixing(2) != english.rowsNeedFixing(2))
         assertTrue(arabic.newPriceOnPosting("250.00") != english.newPriceOnPosting("250.00"))
+        assertTrue(arabic.enrolledStatus(1, "Till") != english.enrolledStatus(1, "Till"))
+        assertTrue(arabic.syncCompleted(2, 3) != english.syncCompleted(2, 3))
 
         // And the value itself still appears, in both.
         assertTrue("42" in arabic.importRows(42))
@@ -133,6 +135,9 @@ private val STRING_READERS: List<(Strings) -> String> = listOf(
     { it.customersSubtitle }, { it.pickACustomer }, { it.pickACustomerHint },
     { it.shiftSubtitle }, { it.noShiftOpen }, { it.noShiftOpenHint },
     { it.settings }, { it.settingsSubtitle },
+    { it.syncAndServer }, { it.syncSubtitle }, { it.serverUrl }, { it.tillName },
+    { it.enrolmentCode }, { it.enrolTill }, { it.syncNow }, { it.notEnrolledStatus },
+    { it.receiptRange }, { it.enterEnrolmentCode }, { it.enrolSuccess },
     { it.numbersSubtitle }, { it.forTheOwner }, { it.forTheOwnerHint },
     { it.today }, { it.sevenDays }, { it.thirtyDays }, { it.ninetyDays }, { it.netOf },
     { it.sales }, { it.basket }, { it.units }, { it.returnRate }, { it.margin },

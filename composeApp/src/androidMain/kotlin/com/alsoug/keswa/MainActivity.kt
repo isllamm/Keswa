@@ -7,6 +7,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import com.alsoug.keswa.core.platform.AndroidFilePicker
 import com.alsoug.keswa.core.platform.IFilePicker
+import com.alsoug.keswa.core.sync.SyncScheduler
 import kotlinx.coroutines.CompletableDeferred
 import org.koin.android.ext.android.inject
 
@@ -21,6 +22,7 @@ import org.koin.android.ext.android.inject
 class MainActivity : ComponentActivity() {
 
     private val filePicker: IFilePicker by inject()
+    private val syncScheduler: SyncScheduler by inject()
     private var pendingPickerDeferred: CompletableDeferred<Uri?>? = null
 
     private val openDocumentLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
@@ -31,6 +33,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        syncScheduler.start()
 
         (filePicker as? AndroidFilePicker)?.bindLauncher {
             val deferred = CompletableDeferred<Uri?>()
