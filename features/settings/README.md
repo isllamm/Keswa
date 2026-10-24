@@ -9,6 +9,7 @@ Where the shop's hardware is configured, and where a printer is proven before an
 | **Receipt printer** — host, port, paper width | Every shop's printer has a different address; 80 mm and 58 mm rolls are both common |
 | **Label printer** — host, port, label size | Label media varies by supplier, and the size is physical |
 | **Scanner** — max gap between keystrokes | Cheap scanners differ, and this is the first thing to tune on real hardware |
+| **Server & Sync** — server URL, device name, enrolment code | Connects tills to the central shop sync server with assigned receipt blocks and live multi-till sync |
 
 Both **Test print** and **Test label** save first, so the button tests what is on screen rather than
 what was last stored — otherwise someone changes an address, tests, and gets the old printer.

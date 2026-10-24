@@ -4,11 +4,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.alsoug.keswa.core.coroutines.DispatcherProvider
 import com.alsoug.keswa.core.designsystem.message
+import com.alsoug.keswa.features.settings.domain.usecase.EnrolDeviceUseCase
 import com.alsoug.keswa.features.settings.domain.usecase.GetSettingsUseCase
+import com.alsoug.keswa.features.settings.domain.usecase.GetSyncStatusUseCase
 import com.alsoug.keswa.features.settings.domain.usecase.PrintResult
 import com.alsoug.keswa.features.settings.domain.usecase.PrintTestLabelUseCase
 import com.alsoug.keswa.features.settings.domain.usecase.PrintTestPageUseCase
 import com.alsoug.keswa.features.settings.domain.usecase.SaveSettingsUseCase
+import com.alsoug.keswa.features.settings.domain.usecase.SyncNowUseCase
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,6 +25,9 @@ class SettingsViewModel(
     private val saveSettings: SaveSettingsUseCase,
     private val printTestPage: PrintTestPageUseCase,
     private val printTestLabel: PrintTestLabelUseCase,
+    private val getSyncStatus: GetSyncStatusUseCase,
+    private val enrolDevice: EnrolDeviceUseCase,
+    private val syncNow: SyncNowUseCase,
     private val dispatchers: DispatcherProvider,
 ) : ViewModel() {
 
@@ -41,6 +47,11 @@ class SettingsViewModel(
             SettingsUiEvent.Save -> save()
             SettingsUiEvent.TestReceipt -> runPrint { printTestPage() }
             SettingsUiEvent.TestLabel -> runPrint { printTestLabel() }
+            is SettingsUiEvent.EditSyncServerUrl -> _state.update { it.copy(syncServerUrlInput = event.url) }
+            is SettingsUiEvent.EditSyncDeviceName -> _state.update { it.copy(syncDeviceNameInput = event.name) }
+            is SettingsUiEvent.EditSyncCode -> _state.update { it.copy(syncCodeInput = event.code) }
+            SettingsUiEvent.EnrolDevice -> enrol()
+            SettingsUiEvent.SyncNow -> sync()
             SettingsUiEvent.Back -> viewModelScope.launch { _navigation.emit(SettingsNavigation.Back) }
         }
     }
@@ -49,8 +60,23 @@ class SettingsViewModel(
         viewModelScope.launch(dispatchers.io) {
             _state.update { it.copy(isLoading = true) }
             getSettings().fold(
-                onSuccess = { settings -> _state.update { it.copy(isLoading = false, settings = settings) } },
+                onSuccess = { settings -> _state.update { it.copy(settings = settings) } },
                 onFailure = { fail(it) },
+            )
+            getSyncStatus().fold(
+                onSuccess = { status ->
+                    _state.update {
+                        it.copy(
+                            isLoading = false,
+                            syncStatus = status,
+                            syncServerUrlInput = status.serverUrl ?: it.syncServerUrlInput,
+                            syncDeviceNameInput = status.deviceName,
+                        )
+                    }
+                },
+                onFailure = {
+                    _state.update { it.copy(isLoading = false) }
+                },
             )
         }
     }
@@ -64,10 +90,65 @@ class SettingsViewModel(
         }
     }
 
-    /**
-     * Saves before printing, so the button tests what is on screen rather than what was last
-     * stored — the alternative is someone changing the address and testing the old one.
-     */
+    private fun enrol() {
+        val current = _state.value
+        viewModelScope.launch(dispatchers.io) {
+            _state.update { it.copy(isSyncing = true) }
+            enrolDevice(
+                serverUrl = current.syncServerUrlInput,
+                deviceName = current.syncDeviceNameInput,
+                code = current.syncCodeInput,
+            ).fold(
+                onSuccess = {
+                    _effect.emit(SettingsUiEffect.ShowMessage(message { it.enrolSuccess }))
+                    getSyncStatus().onSuccess { status ->
+                        _state.update { it.copy(syncStatus = status, syncCodeInput = "") }
+                    }
+                    syncNow().fold(
+                        onSuccess = { result ->
+                            _state.update { it.copy(isSyncing = false) }
+                            _effect.emit(
+                                SettingsUiEffect.ShowMessage(
+                                    message { it.syncCompleted(result.pushed, result.pulled) },
+                                ),
+                            )
+                        },
+                        onFailure = {
+                            _state.update { it.copy(isSyncing = false) }
+                        },
+                    )
+                },
+                onFailure = {
+                    _state.update { it.copy(isSyncing = false) }
+                    _effect.emit(SettingsUiEffect.ShowError(message { it.somethingWentWrong }))
+                },
+            )
+        }
+    }
+
+    private fun sync() {
+        viewModelScope.launch(dispatchers.io) {
+            _state.update { it.copy(isSyncing = true) }
+            syncNow().fold(
+                onSuccess = { result ->
+                    _state.update { it.copy(isSyncing = false) }
+                    _effect.emit(
+                        SettingsUiEffect.ShowMessage(
+                            message { it.syncCompleted(result.pushed, result.pulled) },
+                        ),
+                    )
+                    getSyncStatus().onSuccess { status ->
+                        _state.update { it.copy(syncStatus = status) }
+                    }
+                },
+                onFailure = {
+                    _state.update { it.copy(isSyncing = false) }
+                    _effect.emit(SettingsUiEffect.ShowError(message { it.somethingWentWrong }))
+                },
+            )
+        }
+    }
+
     private fun runPrint(attempt: suspend () -> Result<PrintResult>) {
         viewModelScope.launch(dispatchers.io) {
             _state.update { it.copy(isBusy = true) }
@@ -92,7 +173,7 @@ class SettingsViewModel(
     }
 
     private suspend fun fail(cause: Throwable) {
-        _state.update { it.copy(isLoading = false, isBusy = false) }
+        _state.update { it.copy(isLoading = false, isBusy = false, isSyncing = false) }
         _effect.emit(SettingsUiEffect.ShowError(message { it.somethingWentWrong }))
     }
 }

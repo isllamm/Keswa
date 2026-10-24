@@ -19,6 +19,7 @@ import com.alsoug.keswa.core.data.repository.SettingsRepositoryImpl
 import com.alsoug.keswa.core.data.repository.StockAdjustmentRepositoryImpl
 import com.alsoug.keswa.core.data.repository.StockCountRepositoryImpl
 import com.alsoug.keswa.core.data.repository.StockReceiptRepositoryImpl
+import com.alsoug.keswa.core.data.repository.SyncRepositoryImpl
 import com.alsoug.keswa.core.data.repository.ShiftRepositoryImpl
 import com.alsoug.keswa.core.data.repository.UserRepositoryImpl
 import com.alsoug.keswa.core.data.repository.VariantRepositoryImpl
@@ -40,6 +41,7 @@ import com.alsoug.keswa.core.domain.repository.IStockAdjustmentRepository
 import com.alsoug.keswa.core.domain.repository.IStockCountRepository
 import com.alsoug.keswa.core.domain.repository.IStockReceiptRepository
 import com.alsoug.keswa.core.domain.repository.IShiftRepository
+import com.alsoug.keswa.core.domain.repository.ISyncRepository
 import com.alsoug.keswa.core.domain.repository.IColourRepository
 import com.alsoug.keswa.core.domain.repository.IProductRepository
 import com.alsoug.keswa.core.domain.repository.ISettingsRepository
@@ -189,6 +191,7 @@ val coreModule = module {
             platform = get<IPlatformProvider>(),
         )
     }
+    single<ISyncRepository> { SyncRepositoryImpl(engine = get(), settings = get()) }
 
     single<IStockAdjustmentRepository> {
         StockAdjustmentRepositoryImpl(

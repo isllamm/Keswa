@@ -109,6 +109,19 @@ interface Strings {
     // Settings
     val settings: String
     val settingsSubtitle: String
+    val syncAndServer: String
+    val syncSubtitle: String
+    val serverUrl: String
+    val tillName: String
+    val enrolmentCode: String
+    val enrolTill: String
+    val syncNow: String
+    val notEnrolledStatus: String
+    val receiptRange: String
+    val enterEnrolmentCode: String
+    val enrolSuccess: String
+    fun enrolledStatus(ordinal: Int, name: String): String
+    fun syncCompleted(pushed: Int, pulled: Int): String
 
     // Dashboard
     val numbersSubtitle: String
@@ -525,6 +538,19 @@ object EnglishStrings : Strings {
 
     override val settings = "Settings"
     override val settingsSubtitle = "Printers, scanner and the shop's own details"
+    override val syncAndServer = "Server & Sync"
+    override val syncSubtitle = "Connect this till to the central sync server for live multi-till sync"
+    override val serverUrl = "Server URL"
+    override val tillName = "Till Name"
+    override val enrolmentCode = "Enrolment Code"
+    override val enrolTill = "Enrol Till"
+    override val syncNow = "Sync Now"
+    override val notEnrolledStatus = "Not enrolled (standalone mode)"
+    override val receiptRange = "Receipt Range"
+    override val enterEnrolmentCode = "Enter the 8-character code generated on the server"
+    override val enrolSuccess = "Till enrolled successfully"
+    override fun enrolledStatus(ordinal: Int, name: String) = "Enrolled as Till #$ordinal ($name)"
+    override fun syncCompleted(pushed: Int, pulled: Int) = "Sync completed: $pushed pushed, $pulled pulled"
 
     override val numbersSubtitle = "How the shop is doing"
     override val forTheOwner = "These figures are for the owner"
@@ -959,6 +985,19 @@ object ArabicStrings : Strings {
 
     override val settings = "الإعدادات"
     override val settingsSubtitle = "الطابعات والماسح وبيانات المحل"
+    override val syncAndServer = "الخادم والمزامنة"
+    override val syncSubtitle = "ربط نقطة البيع هذه بخادم المزامنة المركزي للمحل"
+    override val serverUrl = "عنوان الخادم"
+    override val tillName = "اسم نقطة البيع"
+    override val enrolmentCode = "رمز تسجيل الجهاز"
+    override val enrolTill = "تسجيل نقطة البيع"
+    override val syncNow = "مزامنة الآن"
+    override val notEnrolledStatus = "غير مسجل (وضع العمل المنفرد)"
+    override val receiptRange = "نطاق أرقام الإيصالات"
+    override val enterEnrolmentCode = "أدخل رمز التسجيل المكون من ٨ خانات والمنشأ من لوحة الخادم"
+    override val enrolSuccess = "تم تسجيل نقطة البيع بنجاح"
+    override fun enrolledStatus(ordinal: Int, name: String) = "مسجل كنقطة بيع رقم $ordinal ($name)"
+    override fun syncCompleted(pushed: Int, pulled: Int) = "اكتملت المزامنة: تم إرسال $pushed واستلام $pulled"
 
     override val numbersSubtitle = "أداء المحل"
     override val forTheOwner = "هذه الأرقام لصاحب المحل"
