@@ -1,6 +1,7 @@
 package com.alsoug.keswa.server
 
 import com.alsoug.keswa.core.coroutines.DefaultDispatcherProvider
+import com.alsoug.keswa.core.database.KeswaDatabase
 import com.alsoug.keswa.core.database.getDatabaseBuilder
 import com.alsoug.keswa.core.database.getKeswaDatabase
 import com.alsoug.keswa.core.domain.UuidIdGenerator
@@ -55,7 +56,12 @@ fun main() {
 
     platform.log(LogLevel.INFO, TAG, "serving on port $port from ${directory.absolutePath}")
     embeddedServer(CIO, port = port) {
-        syncModule(log, materialiser, adminToken)
+        syncModule(
+            log = log,
+            materialiser = materialiser,
+            adminToken = adminToken,
+            database = database,
+        )
     }.start(wait = true)
 }
 
@@ -65,9 +71,15 @@ fun Application.syncModule(
     adminToken: String,
     now: () -> Long = System::currentTimeMillis,
     newSecret: () -> String = ::randomSecret,
+    database: KeswaDatabase? = null,
 ) {
     install(ContentNegotiation) { json() }
-    routing { syncRoutes(log, materialiser, adminToken, now, newSecret) }
+    routing {
+        syncRoutes(log, materialiser, adminToken, now, newSecret)
+        if (database != null) {
+            backOfficeRoutes(database, log, adminToken, now)
+        }
+    }
 }
 
 /** 256 bits from the platform's CSPRNG, hex-encoded. Only its hash is ever stored. */
