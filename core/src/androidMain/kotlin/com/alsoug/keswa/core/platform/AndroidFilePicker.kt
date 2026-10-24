@@ -4,6 +4,7 @@ import android.content.Context
 import android.net.Uri
 import android.provider.OpenableColumns
 import com.alsoug.keswa.core.coroutines.DispatcherProvider
+import com.alsoug.keswa.core.coroutines.runCatchingCancellable
 import kotlinx.coroutines.withContext
 
 /**
@@ -25,9 +26,9 @@ class AndroidFilePicker(
         this.launcher = launcher
     }
 
-    override suspend fun pickSpreadsheet(): Result<SpreadsheetFile?> = runCatching {
+    override suspend fun pickSpreadsheet(): Result<SpreadsheetFile?> = runCatchingCancellable {
         val launch = launcher ?: error("File picker launcher not attached")
-        val uri = launch() ?: return@runCatching null
+        val uri = launch() ?: return@runCatchingCancellable null
 
         withContext(dispatchers.io) {
             val content = context.contentResolver.openInputStream(uri)?.use { stream ->
