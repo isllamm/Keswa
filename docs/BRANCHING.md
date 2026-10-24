@@ -67,7 +67,7 @@ is the better marker for something finished, because it does not move.
 
 ## Current state
 
-`dev` and `prod` are both at **v0.4.1**, with all nine core phases complete:
+`dev` and `prod` are both at **v0.4.2**, with all nine core phases complete:
 - Phase 0: Scaffolding, targets, DI, and architectural gates
 - Phase 1: Domain models, minor-unit `Money`, category tree, append-only stock ledger, and tested Room migrations
 - Phase 2: Catalogue, variant management, and colour tracking
@@ -79,4 +79,4 @@ is the better marker for something finished, because it does not move.
 - Phase 8: Returns & exchanges (with receipt QR lookup) and real-time business analytics
 - Phase 9: Sync engine, multi-device log-shipping server, till device enrolment, and Web Back Office dashboard
 
-Historical phase branches point at the commit where each phase landed. Release tags `v0.1.0` … `v0.4.1` mark production-ready checkpoints.
+Historical phase branches point at the commit where each phase landed. Release tags `v0.1.0` … `v0.4.2` mark production-ready checkpoints.
