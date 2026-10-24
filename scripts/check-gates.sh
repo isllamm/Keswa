@@ -58,6 +58,14 @@ if require_paths "destructive migration (KD-002)" "$SRC"; then
   gate "no android.util.Log outside the logger (ADR-029)" \
        "$(code_grep 'Log\.\(d\|i\|w\|e\|v\)(' $SRC | grep -v 'AndroidPlatformProvider.kt' || true)" \
        "use IPlatformProvider.log()"
+
+  gate "no Kermit logger (ADR-029)" \
+       "$(code_grep 'co\.touchlab\.kermit' $SRC)" \
+       "use IPlatformProvider.log()"
+
+  gate "no wildcard imports" \
+       "$(code_grep '^import .*\.\*' $SRC)" \
+       "use explicit imports rather than wildcard imports"
 fi
 
 # An exported schema for a version that has already shipped describes a database that exists in
@@ -130,6 +138,25 @@ if require_paths "domain purity (ADR-005)" "$DOMAIN"; then
   gate "domain has zero framework imports (ADR-005)" \
        "$(code_grep '^import' $DOMAIN | grep -E 'androidx\.|compose|ktor|koin' || true)" \
        "the domain layer is pure Kotlin"
+
+  gate "domain models avoid Float and Double (KD-001)" \
+       "$(code_grep ':[[:space:]]*(Float|Double)' $DOMAIN | grep -vE '(\/\/|\*|\/\*)' || true)" \
+       "use Money(Long) piastres for money amounts"
 fi
+
+if require_paths "injected dispatchers (KD-003)" "$PROD"; then
+  gate "no hardcoded Dispatchers in production code (KD-003)" \
+       "$(code_grep 'Dispatchers\.' $PROD | grep -v 'DispatcherProvider.kt' || true)" \
+       "inject DispatcherProvider instead of referencing Dispatchers directly"
+fi
+
+gate "no mocking frameworks (ADR-019)" \
+     "$(grep -rn --include="*.kt" --include="*.kts" -E '(mockk|mockito|io\.mockk|org\.mockito)' $MODULES 2>/dev/null || true)" \
+     "use hand-written fakes; mocking frameworks are prohibited"
+
+GRADLE_FEATURE_DEPS=$(grep -rn 'project(":features:' features core 2>/dev/null || true)
+gate "no cross-feature or core-to-feature dependencies (CODE_GUIDELINES)" \
+     "$GRADLE_FEATURE_DEPS" \
+     "features must not depend on other features; core must not depend on features"
 
 exit $FAILED
