@@ -67,19 +67,16 @@ is the better marker for something finished, because it does not move.
 
 ## Current state
 
-`dev` sits at the end of Phase 9's first half — the server and the sync engine. `prod` is still at
-Phase 4. Nothing has been installed in a shop yet, so `prod` means "last known-good, ready to
-install" rather than "running somewhere" — it will start meaning the latter the day the first till
-is set up.
+`dev` and `prod` are both at **v0.3.3**, with all nine core phases complete:
+- Phase 0: Scaffolding, targets, DI, and architectural gates
+- Phase 1: Domain models, minor-unit `Money`, category tree, append-only stock ledger, and tested Room migrations
+- Phase 2: Catalogue, variant management, and colour tracking
+- Phase 3: Hardware abstraction (ESC/POS receipt printing, TSPL label printing, barcode scanning, and TCP transports)
+- Phase 4: Users, roles (Admin/Seller), PIN/password auth, lockout policy, and permission gates
+- Phase 5: Sell flow, basket calculation, split tender, shift management, held sales, and receipt generation
+- Phase 6: Receiving, stock counts, adjustments, Android target support, and native spreadsheet catalogue importer
+- Phase 7: Wholesale (B2B), customer credit limits, statements, invoices, and assortment pack explosion
+- Phase 8: Returns & exchanges (with receipt QR lookup) and real-time business analytics
+- Phase 9: Sync engine, multi-device log-shipping server, till device enrolment, and Web Back Office dashboard
 
-**Phase 5 is the last one that can be installed carelessly.** From here the database can hold a
-shop's real trading history, and KD-002's migration tests stop being a discipline and start being
-the only thing standing between an upgrade and a permanent loss.
-
-Historical phase branches (`feature/phase-0-scaffold` … `feature/phase-9-sync`) point at the commit
-where each phase landed. They are kept for reference and are safe to delete once you are happy the
-tags are enough.
-
-> **On the remote.** `origin` currently has only `feature/phase-1-domain-schema`, and GitHub's
-> default branch still points at it. Once `prod` and `dev` are pushed, change the default to `dev`
-> in the repository settings — otherwise a clone lands on a branch that stops at Phase 1.
+Historical phase branches point at the commit where each phase landed. Release tags `v0.1.0` … `v0.3.3` mark production-ready checkpoints.
